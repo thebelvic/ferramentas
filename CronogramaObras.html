@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cronograma de Obras — Brasil Vidros</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c1220;--s1:#111827;--s2:#1a2236;--s3:#222d42;
+  --bd:#2a3550;--bd2:#354060;
+  --tx:#f0f4ff;--mu:#6b7fa8;--fa:#2a3550;
+  --acc:#4f8ef7;--acc2:#3a6fd4;
+  --grn:#00e5a0;--grn2:#00b87d;
+  --gold:#f5c842;--red:#ff4d6d;
+  --r:12px;--rs:7px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+input,select,textarea,button{font-family:'DM Sans',sans-serif;}
+
+/* HEADER */
+#hdr{background:var(--s1);border-bottom:1px solid var(--bd);padding:0 20px;height:54px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.hdr-logo{display:flex;align-items:center;gap:10px;}
+.hdr-ico{width:30px;height:30px;background:linear-gradient(135deg,var(--acc),var(--grn));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.hdr-name{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;letter-spacing:1px;}
+.hdr-sub{font-size:10px;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;}
+.hdr-sep{flex:1;}
+.hdr-btn{display:flex;align-items:center;gap:6px;border:none;border-radius:var(--rs);padding:7px 14px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.3px;transition:all .15s;white-space:nowrap;}
+.btn-new{background:var(--grn);color:#0c1220;}
+.btn-new:hover{background:var(--grn2);}
+.btn-rpt{background:var(--s2);color:var(--tx);border:1px solid var(--bd);}
+.btn-rpt:hover{border-color:var(--acc);color:var(--acc);}
+
+/* TOOLBAR */
+#toolbar{background:var(--s1);border-bottom:1px solid var(--bd);padding:8px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;}
+.view-btn{border:1px solid var(--bd);background:transparent;color:var(--mu);border-radius:var(--rs);padding:5px 12px;cursor:pointer;font-size:12px;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:5px;}
+.view-btn.on{background:var(--acc);color:#fff;border-color:var(--acc);}
+.view-btn:hover:not(.on){border-color:var(--bd2);color:var(--tx);}
+.tb-sep{width:1px;height:24px;background:var(--bd);}
+.tb-search{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rs);padding:6px 12px;font-size:12px;color:var(--tx);outline:none;width:180px;}
+.tb-search:focus{border-color:var(--acc);}
+.tb-search::placeholder{color:var(--fa);}
+.tb-filter{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rs);padding:6px 10px;font-size:12px;color:var(--tx);outline:none;cursor:pointer;}
+.cal-nav{display:flex;align-items:center;gap:6px;}
+.cal-nav-btn{background:var(--s2);border:1px solid var(--bd);border-radius:5px;width:26px;height:26px;color:var(--mu);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.cal-nav-btn:hover{border-color:var(--acc);color:var(--acc);}
+.cal-month-lbl{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:.5px;min-width:120px;text-align:center;}
+
+/* MAIN */
+#main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+#content{flex:1;overflow-y:auto;padding:20px;}
+#content::-webkit-scrollbar{width:5px;}
+#content::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px;}
+
+/* CARDS VIEW */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.obra-card{
+  background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);
+  overflow:hidden;transition:all .2s;cursor:pointer;position:relative;
+}
+.obra-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3);}
+.obra-card-stripe{height:4px;}
+.obra-card-body{padding:14px 16px;}
+.obra-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px;}
+.obra-card-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;letter-spacing:.3px;line-height:1.2;}
+.obra-card-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s;}
+.obra-card:hover .obra-card-actions{opacity:1;}
+.card-act-btn{background:var(--s2);border:1px solid var(--bd);border-radius:5px;width:26px;height:26px;cursor:pointer;color:var(--mu);font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.card-act-btn:hover{border-color:var(--acc);color:var(--acc);}
+.card-act-btn.del:hover{border-color:var(--red);color:var(--red);}
+.obra-dates{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.date-badge{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mu);background:var(--s2);border-radius:5px;padding:3px 7px;}
+.obra-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+.colab-tag{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;border-radius:20px;padding:2px 8px;border:1px solid;}
+.obra-obs{font-size:12px;color:var(--mu);line-height:1.4;border-left:2px solid var(--bd2);padding-left:8px;}
+.obra-pdf-link{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--acc);margin-top:8px;text-decoration:none;}
+.obra-pdf-link:hover{color:var(--grn);}
+.status-badge{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;border-radius:20px;padding:2px 7px;border:1px solid;}
+.st-pendente{background:rgba(245,200,66,.1);border-color:rgba(245,200,66,.3);color:var(--gold);}
+.st-andamento{background:rgba(79,142,247,.1);border-color:rgba(79,142,247,.3);color:var(--acc);}
+.st-concluida{background:rgba(0,229,160,.1);border-color:rgba(0,229,160,.3);color:var(--grn);}
+
+/* LIST VIEW */
+.list-table{width:100%;border-collapse:collapse;}
+.list-table th{padding:8px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid var(--bd);white-space:nowrap;}
+.list-table td{padding:10px 14px;border-bottom:1px solid var(--bd);font-size:13px;vertical-align:middle;}
+.list-table tr:hover td{background:var(--s2);}
+.list-color-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* CALENDAR VIEW */
+.cal-wrap{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;}
+.cal-head{display:grid;grid-template-columns:repeat(7,1fr);}
+.cal-dow{padding:8px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.5px;border-bottom:1px solid var(--bd);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);}
+.cal-cell{min-height:100px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:6px 4px;position:relative;}
+.cal-cell:nth-child(7n){border-right:none;}
+.cal-cell.other-month .cal-day-num{color:var(--fa);}
+.cal-cell.today{background:rgba(79,142,247,.05);}
+.cal-day-num{font-size:11px;font-weight:700;color:var(--mu);margin-bottom:4px;}
+.cal-cell.today .cal-day-num{color:var(--acc);background:var(--acc);color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;}
+.cal-obra-pill{font-size:10px;font-weight:700;border-radius:4px;padding:2px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:opacity .15s;}
+.cal-obra-pill:hover{opacity:.8;}
+
+/* EMPTY */
+.empty-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:12px;}
+.empty-ico{font-size:48px;opacity:.2;}
+.empty-ttl{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--mu);}
+.empty-sub{font-size:12px;color:var(--fa);text-align:center;}
+
+/* MODAL */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1000;align-items:center;justify-content:center;padding:16px;}
+.ov.open{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r);width:min(620px,100%);max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.5);}
+.modal::-webkit-scrollbar{width:4px;}
+.modal::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
+.modal-hdr{padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between;}
+.modal-ttl{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:.5px;}
+.modal-close{background:var(--s2);border:1px solid var(--bd);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--mu);font-size:14px;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{border-color:var(--red);color:var(--red);}
+.modal-body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field-row{display:grid;gap:12px;}
+.fr2{grid-template-columns:1fr 1fr;}
+.fr3{grid-template-columns:1fr 1fr 1fr;}
+.flbl{font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.7px;text-transform:uppercase;}
+.finp{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rs);padding:8px 11px;font-size:13px;color:var(--tx);outline:none;transition:border-color .15s;width:100%;}
+.finp:focus{border-color:var(--acc);background:var(--s3);}
+.finp::placeholder{color:var(--fa);}
+.finp option{background:var(--s2);}
+
+/* color picker */
+.color-grid{display:flex;gap:8px;flex-wrap:wrap;}
+.cpick{width:28px;height:28px;border-radius:7px;cursor:pointer;border:2px solid transparent;transition:all .15s;}
+.cpick.sel{border-color:#fff;transform:scale(1.15);}
+
+/* colabs */
+.colab-grid{display:flex;gap:8px;flex-wrap:wrap;}
+.ctag{display:flex;align-items:center;gap:5px;border:1px solid var(--bd);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--mu);transition:all .15s;}
+.ctag.sel{border-color:var(--acc);color:var(--acc);background:rgba(79,142,247,.1);}
+.ctag input{display:none;}
+
+/* pdf upload */
+.pdf-zone{border:1.5px dashed var(--bd2);border-radius:var(--rs);padding:14px;text-align:center;cursor:pointer;transition:all .15s;}
+.pdf-zone:hover{border-color:var(--acc);}
+.pdf-zone input{display:none;}
+.pdf-list{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+.pdf-item{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:6px 10px;font-size:12px;}
+.pdf-item-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pdf-rm{background:none;border:none;cursor:pointer;color:var(--fa);font-size:13px;transition:color .15s;}
+.pdf-rm:hover{color:var(--red);}
+
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;padding-top:4px;}
+.mbtn{border:1px solid var(--bd);border-radius:var(--rs);padding:8px 18px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;background:transparent;color:var(--mu);transition:all .15s;letter-spacing:.3px;}
+.mbtn:hover{border-color:var(--bd2);color:var(--tx);}
+.mbtn.ok{background:var(--grn);color:#0c1220;border-color:var(--grn);}
+.mbtn.ok:hover{background:var(--grn2);}
+
+/* REPORT MODAL */
+#rptModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center;padding:16px;}
+#rptModal.open{display:flex;}
+.rpt-box{background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r);width:min(980px,100%);max-height:93vh;overflow:hidden;display:flex;flex-direction:column;}
+.rpt-toolbar{background:var(--bg);padding:12px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--bd);}
+.rpt-ttl{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;letter-spacing:1px;flex:1;color:var(--tx);}
+.rpt-sel{background:var(--s2);border:1px solid var(--bd);color:var(--tx);border-radius:var(--rs);padding:5px 10px;font-size:12px;cursor:pointer;outline:none;}
+.rbtn{background:rgba(255,255,255,.08);border:none;color:#e2e8f0;border-radius:6px;padding:6px 14px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;white-space:nowrap;transition:all .15s;}
+.rbtn:hover{background:rgba(255,255,255,.16);}
+.rbtn.dl{background:var(--grn);color:#0c1220;}
+.rbtn.pr{background:var(--acc);color:#fff;}
+.rpt-preview{flex:1;overflow:auto;background:#e5e7eb;display:flex;align-items:flex-start;justify-content:center;padding:20px;}
+#rptCanvas{border-radius:6px;box-shadow:0 8px 32px rgba(0,0,0,.3);max-width:100%;}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <div class="hdr-logo">
+    <div class="hdr-ico">📅</div>
+    <div>
+      <div class="hdr-name">CRONOGRAMA DE OBRAS</div>
+      <div class="hdr-sub">Brasil Vidros</div>
+    </div>
+  </div>
+  <div class="hdr-sep"></div>
+  <button class="hdr-btn btn-rpt" onclick="abrirRelatorio()">📄 Relatório</button>
+  <button class="hdr-btn btn-new" onclick="abrirModal()">＋ Nova obra</button>
+</div>
+
+<div id="toolbar">
+  <button class="view-btn on" id="vb-cards" onclick="setView('cards')">🗂 Cards</button>
+  <button class="view-btn" id="vb-lista" onclick="setView('lista')">☰ Lista</button>
+  <button class="view-btn" id="vb-cal" onclick="setView('cal')">📅 Calendário</button>
+  <div class="tb-sep"></div>
+  <div id="cal-nav-wrap" style="display:none;" class="cal-nav">
+    <button class="cal-nav-btn" onclick="navMes(-1)">‹</button>
+    <div class="cal-month-lbl" id="calMonthLbl"></div>
+    <button class="cal-nav-btn" onclick="navMes(1)">›</button>
+  </div>
+  <div class="tb-sep" id="cal-sep" style="display:none;"></div>
+  <input class="tb-search" id="srch" placeholder="🔍 Buscar obra…" oninput="render()">
+  <select class="tb-filter" id="fStatus" onchange="render()">
+    <option value="">Todos os status</option>
+    <option value="Pendente">Pendente</option>
+    <option value="Em andamento">Em andamento</option>
+    <option value="Concluída">Concluída</option>
+  </select>
+  <select class="tb-filter" id="fColab" onchange="render()">
+    <option value="">Todos os colaboradores</option>
+    <option value="Michael Douglas">Michael Douglas</option>
+    <option value="Michael Gonçalves">Michael Gonçalves</option>
+    <option value="Evandro">Evandro</option>
+  </select>
+</div>
+
+<div id="main"><div id="content"></div></div>
+
+<!-- FORM MODAL -->
+<div class="ov" id="formOv">
+<div class="modal" id="formModal">
+  <div class="modal-hdr">
+    <div class="modal-ttl" id="formTtl">Nova Obra</div>
+    <button class="modal-close" onclick="fecharModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="field-row fr2">
+      <div class="field">
+        <label class="flbl">Nome da Obra *</label>
+        <input class="finp" id="fn-nome" placeholder="Ex: Residencial Silva">
+      </div>
+      <div class="field">
+        <label class="flbl">Cliente</label>
+        <input class="finp" id="fn-cliente" placeholder="Nome do cliente">
+      </div>
+    </div>
+    <div class="field-row fr3">
+      <div class="field">
+        <label class="flbl">Data Início</label>
+        <input class="finp" id="fn-inicio" type="date">
+      </div>
+      <div class="field">
+        <label class="flbl">Data Fim</label>
+        <input class="finp" id="fn-fim" type="date">
+      </div>
+      <div class="field">
+        <label class="flbl">Status</label>
+        <select class="finp" id="fn-status">
+          <option value="Pendente">Pendente</option>
+          <option value="Em andamento">Em andamento</option>
+          <option value="Concluída">Concluída</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label class="flbl">Endereço</label>
+      <input class="finp" id="fn-end" placeholder="Rua, número, bairro…">
+    </div>
+    <div class="field">
+      <label class="flbl">Cor da obra</label>
+      <div class="color-grid" id="colorGrid"></div>
+    </div>
+    <div class="field">
+      <label class="flbl">Colaboradores</label>
+      <div class="colab-grid" id="colabGrid"></div>
+    </div>
+    <div class="field">
+      <label class="flbl">Observações</label>
+      <textarea class="finp" id="fn-obs" rows="3" placeholder="Detalhes, materiais, instruções…" style="resize:vertical;"></textarea>
+    </div>
+    <div class="field">
+      <label class="flbl">Anexar PDFs</label>
+      <div class="pdf-zone" onclick="document.getElementById('pdfInput').click()">
+        <div style="font-size:20px;margin-bottom:4px;">📎</div>
+        <div style="font-size:12px;color:var(--mu);">Clique para selecionar PDFs</div>
+        <input type="file" id="pdfInput" accept="application/pdf" multiple onchange="handlePDFs(this)">
+      </div>
+      <div class="pdf-list" id="pdfList"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn" onclick="fecharModal()">Cancelar</button>
+      <button class="mbtn ok" onclick="salvarObra()">✓ Salvar</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- REPORT MODAL -->
+<div id="rptModal">
+  <div class="rpt-box">
+    <div class="rpt-toolbar">
+      <span class="rpt-ttl">📄 RELATÓRIO — CRONOGRAMA</span>
+      <select class="rpt-sel" id="rptView" onchange="gerarRpt()">
+        <option value="cards">Cards (Paisagem A4)</option>
+        <option value="lista">Lista (Retrato A4)</option>
+        <option value="cal">Calendário (Paisagem A4)</option>
+      </select>
+      <select class="rpt-sel" id="rptMesAno" onchange="gerarRpt()"></select>
+      <button class="rbtn" onclick="fecharRpt()">✕</button>
+      <button class="rbtn dl" onclick="baixarRpt()">⬇️ PNG</button>
+      <button class="rbtn pr" onclick="imprimirPDF()">🖨️ Imprimir / PDF</button>
+    </div>
+    <div class="rpt-preview">
+      <canvas id="rptCanvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORE='cronograma_v1';
+const COLABS=['Michael Douglas','Michael Gonçalves','Evandro'];
+const CORES=['#4f8ef7','#00e5a0','#f5c842','#ff4d6d','#a78bfa','#06b6d4','#f97316','#84cc16','#e879f9','#10b981','#fb7185','#38bdf8'];
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const MESES_CURTOS=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const STATUS_CLS={Pendente:'st-pendente','Em andamento':'st-andamento','Concluída':'st-concluida'};
+
+let obras=[],view='cards',calAno=new Date().getFullYear(),calMes=new Date().getMonth();
+let editId=null,pendingPDFs=[],existingPDFs=[];
+let selCor=CORES[0];
+
+// ── STORAGE ──────────────────────────────────────────────────────
+function load(){try{obras=JSON.parse(localStorage.getItem(STORE))||[];}catch{obras=[];}}
+function save(){try{localStorage.setItem(STORE,JSON.stringify(obras));}catch(e){}}
+
+// ── HELPERS ──────────────────────────────────────────────────────
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmtDate(d){if(!d)return'—';const[y,m,day]=d.split('-');return`${day}/${m}/${y}`;}
+function obrasByQuery(){
+  const q=(document.getElementById('srch').value||'').toLowerCase();
+  const fs=document.getElementById('fStatus').value;
+  const fc=document.getElementById('fColab').value;
+  return obras.filter(o=>{
+    if(q&&!((o.nome||'').toLowerCase().includes(q)||(o.cliente||'').toLowerCase().includes(q)||(o.end||'').toLowerCase().includes(q)))return false;
+    if(fs&&o.status!==fs)return false;
+    if(fc&&!(o.colabs||[]).includes(fc))return false;
+    return true;
+  });
+}
+
+// ── VIEW ──────────────────────────────────────────────────────────
+function setView(v){
+  view=v;
+  ['cards','lista','cal'].forEach(x=>{document.getElementById('vb-'+x).classList.toggle('on',x===v);});
+  const calNav=document.getElementById('cal-nav-wrap'),calSep=document.getElementById('cal-sep');
+  calNav.style.display=v==='cal'?'flex':'none';
+  calSep.style.display=v==='cal'?'block':'none';
+  render();
+}
+
+function navMes(d){calMes+=d;if(calMes<0){calMes=11;calAno--;}if(calMes>11){calMes=0;calAno++;}updateCalLbl();render();}
+function updateCalLbl(){const el=document.getElementById('calMonthLbl');if(el)el.textContent=MESES[calMes]+' '+calAno;}
+
+// ── RENDER ────────────────────────────────────────────────────────
+function render(){
+  const el=document.getElementById('content');
+  const list=obrasByQuery();
+  if(view==='cards')el.innerHTML=buildCards(list);
+  else if(view==='lista')el.innerHTML=buildLista(list);
+  else el.innerHTML=buildCal(list);
+}
+
+function buildCards(list){
+  if(!list.length)return emptyState();
+  return`<div class="cards-grid">${list.map(o=>obraCard(o)).join('')}</div>`;
+}
+
+function obraCard(o){
+  const cor=o.cor||CORES[0];
+  const colabs=(o.colabs||[]).map(c=>`<span class="colab-tag" style="color:${cor};border-color:${cor}33;background:${cor}11;">👷 ${c}</span>`).join('');
+  const pdfs=(o.pdfs||[]).map(p=>`<a class="obra-pdf-link" href="${p.data}" download="${esc(p.name)}">📄 ${esc(p.name)}</a>`).join('');
+  return`<div class="obra-card" onclick="abrirModal('${o.id}')">
+    <div class="obra-card-stripe" style="background:${cor};"></div>
+    <div class="obra-card-body">
+      <div class="obra-card-top">
+        <div>
+          <div class="obra-card-name">${esc(o.nome||'Sem nome')}</div>
+          ${o.cliente?`<div style="font-size:11px;color:var(--mu);margin-top:2px;">${esc(o.cliente)}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <span class="status-badge ${STATUS_CLS[o.status]||'st-pendente'}">${o.status||'Pendente'}</span>
+          <div class="obra-card-actions">
+            <button class="card-act-btn" onclick="event.stopPropagation();abrirModal('${o.id}')" title="Editar">✏️</button>
+            <button class="card-act-btn" onclick="event.stopPropagation();duplicarObra('${o.id}')" title="Duplicar">⧉</button>
+            <button class="card-act-btn del" onclick="event.stopPropagation();delObra('${o.id}')" title="Excluir">🗑</button>
+          </div>
+        </div>
+      </div>
+      ${o.inicio||o.fim?`<div class="obra-dates">
+        ${o.inicio?`<span class="date-badge">▶ ${fmtDate(o.inicio)}</span>`:''}
+        ${o.fim?`<span class="date-badge">◼ ${fmtDate(o.fim)}</span>`:''}
+        ${o.inicio&&o.fim?`<span class="date-badge" style="color:${cor};">${diasDuracao(o.inicio,o.fim)}d</span>`:''}
+      </div>`:''}
+      ${colabs?`<div class="obra-tags">${colabs}</div>`:''}
+      ${o.end?`<div style="font-size:11px;color:var(--mu);margin-bottom:6px;">📍 ${esc(o.end)}</div>`:''}
+      ${o.obs?`<div class="obra-obs">${esc(o.obs)}</div>`:''}
+      ${pdfs}
+    </div>
+  </div>`;
+}
+
+function buildLista(list){
+  if(!list.length)return emptyState();
+  return`<div style="background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;">
+    <table class="list-table">
+      <thead><tr>
+        <th></th><th>OBRA</th><th>CLIENTE</th><th>INÍCIO</th><th>FIM</th><th>STATUS</th><th>COLABORADORES</th><th>ENDEREÇO</th><th></th>
+      </tr></thead>
+      <tbody>${list.map(o=>{
+        const cor=o.cor||CORES[0];
+        return`<tr onclick="abrirModal('${o.id}')" style="cursor:pointer;">
+          <td><div class="list-color-dot" style="background:${cor};"></div></td>
+          <td><strong>${esc(o.nome||'—')}</strong>${o.obs?`<div style="font-size:11px;color:var(--mu);">${esc(o.obs.slice(0,40))}${o.obs.length>40?'…':''}</div>`:''}</td>
+          <td style="color:var(--mu);">${esc(o.cliente||'—')}</td>
+          <td style="color:var(--mu);white-space:nowrap;">${fmtDate(o.inicio)}</td>
+          <td style="color:var(--mu);white-space:nowrap;">${fmtDate(o.fim)}</td>
+          <td><span class="status-badge ${STATUS_CLS[o.status]||'st-pendente'}">${o.status||'Pendente'}</span></td>
+          <td>${(o.colabs||[]).map(c=>`<span style="font-size:11px;color:var(--acc);">${c.split(' ')[0]}</span>`).join(', ')||'—'}</td>
+          <td style="font-size:11px;color:var(--mu);">${esc((o.end||'').slice(0,30))}</td>
+          <td><div style="display:flex;gap:4px;">
+          <button class="card-act-btn" onclick="event.stopPropagation();duplicarObra('${o.id}')" title="Duplicar" style="opacity:1;">⧉</button>
+          <button class="card-act-btn del" onclick="event.stopPropagation();delObra('${o.id}')" style="opacity:1;">✕</button>
+        </div></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function buildCal(list){
+  updateCalLbl();
+  const primeiroDia=new Date(calAno,calMes,1).getDay();
+  const ultimoDia=new Date(calAno,calMes+1,0).getDate();
+  const hoje=new Date();
+  let cells='';
+  // empty before
+  for(let i=0;i<primeiroDia;i++){
+    const d=new Date(calAno,calMes,0-primeiroDia+i+1);
+    cells+=`<div class="cal-cell other-month"><div class="cal-day-num">${d.getDate()}</div></div>`;
+  }
+  for(let d=1;d<=ultimoDia;d++){
+    const isHoje=hoje.getDate()===d&&hoje.getMonth()===calMes&&hoje.getFullYear()===calAno;
+    const dateStr=`${calAno}-${String(calMes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const obrasDodia=list.filter(o=>obraAtiva(o,dateStr));
+    const pills=obrasDodia.map(o=>{
+        const cor=o.cor||CORES[0];
+        const colabInit=(o.colabs||[]).map(c=>c.split(' ').map(w=>w[0]).join('')).join(' ');
+        return`<div class="cal-obra-pill" style="background:${cor}22;color:${cor};border-left:2px solid ${cor};" onclick="event.stopPropagation();abrirModal('${o.id}')" title="${esc(o.nome)} — ${esc((o.colabs||[]).join(', '))}">
+          <span style="font-weight:800;">${esc((o.nome||'').slice(0,14))}</span>
+          ${colabInit?`<span style="opacity:.7;font-size:9px;margin-left:3px;">${colabInit}</span>`:''}
+        </div>`;
+      }).join('');
+    cells+=`<div class="cal-cell${isHoje?' today':''}"><div class="cal-day-num">${isHoje?`<div style="width:20px;height:20px;background:var(--acc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">${d}</div>`:d}</div>${pills}</div>`;
+  }
+  const remaining=(7-((primeiroDia+ultimoDia)%7))%7;
+  for(let i=1;i<=remaining;i++)cells+=`<div class="cal-cell other-month"><div class="cal-day-num">${i}</div></div>`;
+  return`<div class="cal-wrap">
+    <div class="cal-head">${['DOM','SEG','TER','QUA','QUI','SEX','SÁB'].map(d=>`<div class="cal-dow">${d}</div>`).join('')}</div>
+    <div class="cal-grid">${cells}</div>
+  </div>`;
+}
+
+function obraAtiva(o,dateStr){
+  if(!o.inicio&&!o.fim)return false;
+  if(o.inicio&&o.fim)return dateStr>=o.inicio&&dateStr<=o.fim;
+  if(o.inicio)return dateStr===o.inicio;
+  if(o.fim)return dateStr===o.fim;
+  return false;
+}
+
+function diasDuracao(ini,fim){
+  const a=new Date(ini),b=new Date(fim);
+  return Math.max(1,Math.round((b-a)/(1000*60*60*24))+1);
+}
+
+function emptyState(){
+  return`<div class="empty-wrap">
+    <div class="empty-ico">📅</div>
+    <div class="empty-ttl">NENHUMA OBRA ENCONTRADA</div>
+    <div class="empty-sub">Crie uma nova obra ou ajuste os filtros.</div>
+  </div>`;
+}
+
+// ── FORM MODAL ────────────────────────────────────────────────────
+function buildColorGrid(){
+  const el=document.getElementById('colorGrid');
+  el.innerHTML=CORES.map(c=>`<div class="cpick${c===selCor?' sel':''}" style="background:${c};" onclick="pickCor('${c}')"></div>`).join('');
+}
+function pickCor(c){selCor=c;buildColorGrid();}
+
+function buildColabGrid(sel){
+  const el=document.getElementById('colabGrid');
+  el.innerHTML=COLABS.map(c=>`<label class="ctag${(sel||[]).includes(c)?' sel':''}"><input type="checkbox" value="${c}" ${(sel||[]).includes(c)?'checked':''} onchange="updColabTag(this)">${c}</label>`).join('');
+}
+function updColabTag(inp){inp.closest('.ctag').classList.toggle('sel',inp.checked);}
+
+function abrirModal(id){
+  editId=id||null;
+  pendingPDFs=[];existingPDFs=[];
+  const o=id?obras.find(x=>x.id===id):null;
+  document.getElementById('formTtl').textContent=o?'Editar Obra':'Nova Obra';
+  document.getElementById('fn-nome').value=o?.nome||'';
+  document.getElementById('fn-cliente').value=o?.cliente||'';
+  document.getElementById('fn-inicio').value=o?.inicio||'';
+  document.getElementById('fn-fim').value=o?.fim||'';
+  document.getElementById('fn-status').value=o?.status||'Pendente';
+  document.getElementById('fn-end').value=o?.end||'';
+  document.getElementById('fn-obs').value=o?.obs||'';
+  selCor=o?.cor||CORES[0];
+  buildColorGrid();
+  buildColabGrid(o?.colabs||[]);
+  existingPDFs=o?.pdfs||[];
+  renderPDFList();
+  document.getElementById('formOv').classList.add('open');
+  setTimeout(()=>document.getElementById('fn-nome').focus(),50);
+}
+
+function fecharModal(){document.getElementById('formOv').classList.remove('open');editId=null;}
+
+function renderPDFList(){
+  const el=document.getElementById('pdfList');
+  const todos=[...existingPDFs,...pendingPDFs];
+  el.innerHTML=todos.map((p,i)=>`<div class="pdf-item">
+    <span style="font-size:16px;">📄</span>
+    <span class="pdf-item-name">${esc(p.name)}</span>
+    <button class="pdf-rm" onclick="rmPDF(${i})">✕</button>
+  </div>`).join('');
+}
+
+function handlePDFs(input){
+  const files=Array.from(input.files);
+  files.forEach(f=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      pendingPDFs.push({name:f.name,data:e.target.result});
+      renderPDFList();
+    };
+    reader.readAsDataURL(f);
+  });
+  input.value='';
+}
+
+function rmPDF(i){
+  const existLen=existingPDFs.length;
+  if(i<existLen)existingPDFs.splice(i,1);
+  else pendingPDFs.splice(i-existLen,1);
+  renderPDFList();
+}
+
+function salvarObra(){
+  const nome=document.getElementById('fn-nome').value.trim();
+  if(!nome){alert('Preencha o nome da obra.');return;}
+  const colabs=Array.from(document.querySelectorAll('#colabGrid input:checked')).map(x=>x.value);
+  const pdfs=[...existingPDFs,...pendingPDFs];
+  const dados={
+    nome,cliente:document.getElementById('fn-cliente').value.trim(),
+    inicio:document.getElementById('fn-inicio').value,
+    fim:document.getElementById('fn-fim').value,
+    status:document.getElementById('fn-status').value,
+    end:document.getElementById('fn-end').value.trim(),
+    obs:document.getElementById('fn-obs').value.trim(),
+    cor:selCor,colabs,pdfs,
+  };
+  if(editId){
+    obras=obras.map(o=>o.id===editId?{...o,...dados}:o);
+  } else {
+    obras.unshift({id:'o'+Date.now()+Math.random().toString(36).slice(2),...dados,criadoEm:Date.now()});
+  }
+  save();fecharModal();render();
+}
+
+function duplicarObra(id){
+  const o=obras.find(x=>x.id===id);
+  if(!o)return;
+  const copia={
+    ...JSON.parse(JSON.stringify(o)),
+    id:'o'+Date.now()+Math.random().toString(36).slice(2),
+    nome:(o.nome||'Sem nome')+' (cópia)',
+    criadoEm:Date.now()
+  };
+  const idx=obras.findIndex(x=>x.id===id);
+  obras.splice(idx+1,0,copia);
+  save();render();
+}
+function delObra(id){
+  if(!confirm('Excluir esta obra?'))return;
+  obras=obras.filter(o=>o.id!==id);
+  save();render();
+}
+
+// ── REPORT ────────────────────────────────────────────────────────
+function abrirRelatorio(){
+  // populate mes/ano selector
+  const sel=document.getElementById('rptMesAno');
+  sel.innerHTML=MESES.map((m,i)=>`<option value="${new Date().getFullYear()}-${i}" ${i===new Date().getMonth()?'selected':''}>${m} ${new Date().getFullYear()}</option>`).join('');
+  // add prev/next years
+  const y=new Date().getFullYear();
+  [y-1,y+1].forEach(yr=>MESES.forEach((m,i)=>{
+    const opt=document.createElement('option');opt.value=`${yr}-${i}`;opt.textContent=`${m} ${yr}`;sel.appendChild(opt);
+  }));
+  document.getElementById('rptModal').classList.add('open');
+  gerarRpt();
+}
+function fecharRpt(){document.getElementById('rptModal').classList.remove('open');}
+
+function imprimirPDF(){
+  const cv=document.getElementById('rptCanvas');
+  const dataUrl=cv.toDataURL('image/png');
+  const vt=document.getElementById('rptView').value;
+  // landscape for cards and calendar, portrait for list
+  const orientation=vt==='lista'?'portrait':'landscape';
+  const w=cv.width,h=cv.height;
+  const pw=document.createElement('div');
+  pw.innerHTML=`<!DOCTYPE html>
+<html><head>
+<title>Cronograma de Obras — Brasil Vidros</title>
+<style>
+  @page{size:${orientation};margin:0;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+  img{max-width:100%;max-height:100vh;display:block;}
+</style>
+</head><body>
+<img src="${dataUrl}" alt="Cronograma">
+</body></html>`;
+  const win=window.open('','_blank','width=900,height=650');
+  if(!win){alert('Permita pop-ups para abrir a janela de impressão.');return;}
+  win.document.open();
+  win.document.write(`<!DOCTYPE html>
+<html><head>
+<title>Cronograma de Obras — Brasil Vidros</title>
+<style>
+  @page{size:${orientation};margin:0;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:100%;height:100%;background:#fff;}
+  body{display:flex;align-items:center;justify-content:center;}
+  img{width:100%;height:auto;display:block;}
+</style>
+</head><body>
+<img src="${dataUrl}" onload="window.focus();window.print();">
+</body></html>`);
+  win.document.close();
+}
+function baixarRpt(){
+  const cv=document.getElementById('rptCanvas');
+  const a=document.createElement('a');
+  a.href=cv.toDataURL('image/png');
+  a.download='Cronograma_'+new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')+'.png';
+  a.click();
+}
+
+function gerarRpt(){
+  const vt=document.getElementById('rptView').value;
+  const [ano,mes]=document.getElementById('rptMesAno').value.split('-').map(Number);
+  const list=obras.filter(o=>{
+    if(!o.inicio&&!o.fim)return true;
+    const mesStr=`${ano}-${String(mes+1).padStart(2,'0')}`;
+    if(o.inicio&&o.inicio.slice(0,7)===mesStr)return true;
+    if(o.fim&&o.fim.slice(0,7)===mesStr)return true;
+    if(o.inicio&&o.fim&&o.inicio.slice(0,7)<=mesStr&&o.fim.slice(0,7)>=mesStr)return true;
+    return false;
+  });
+
+  if(vt==='cards')rptCards(list,ano,mes);
+  else if(vt==='lista')rptLista(list,ano,mes);
+  else rptCal(list,ano,mes);
+}
+
+// ── REPORT: CARDS (landscape A4) ─────────────────────────────────
+function rptCards(list,ano,mes){
+  const W=1754,H=1240,PAD=52;
+  const cv=document.getElementById('rptCanvas');
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  rptBg(ctx,W,H);
+  rptHeader(ctx,W,PAD,'CRONOGRAMA DE OBRAS',`${MESES[mes].toUpperCase()} ${ano}`,list.length);
+  if(!list.length){noData(ctx,W,H);return;}
+
+  // Status legend
+  const legItems=[{label:'Pendente',c:'#d97706'},{label:'Em andamento',c:'#2563eb'},{label:'Concluída',c:'#059669'}];
+  let lx=PAD; const ly=126;
+  legItems.forEach(li=>{
+    ctx.fillStyle=li.c+'33';rr(ctx,lx,ly,130,22,11);ctx.fill();
+    ctx.strokeStyle=li.c+'66';ctx.lineWidth=1;rr(ctx,lx,ly,130,22,11);ctx.stroke();
+    ctx.fillStyle=li.c;ctx.beginPath();ctx.arc(lx+14,ly+11,4,0,Math.PI*2);ctx.fill();
+    t(ctx,li.label,lx+26,ly+11,'700 11px Barlow Condensed,Arial',li.c,'left');
+    lx+=140;
+  });
+
+  const cols=3,rows=3,GAP=16;
+  const cw=Math.floor((W-PAD*2-GAP*(cols-1))/cols);
+  const ch=Math.floor((H-164-GAP*(rows-1)-60)/rows);
+  const startY=158;
+
+  list.slice(0,cols*rows).forEach((o,i)=>{
+    const col=i%cols,row=Math.floor(i/cols);
+    const cx=PAD+col*(cw+GAP),cy=startY+row*(ch+GAP);
+    const cor=o.cor||CORES[0];
+    const scol={Pendente:'#d97706','Em andamento':'#2563eb','Concluída':'#059669'}[o.status]||'#d97706';
+
+    // card shadow + bg
+    ctx.save();ctx.shadowColor='rgba(0,0,0,.1)';ctx.shadowBlur=18;ctx.shadowOffsetY=5;
+    ctx.fillStyle='#fff';rr(ctx,cx,cy,cw,ch,14);ctx.fill();ctx.restore();
+
+    // left color stripe
+    const sg=ctx.createLinearGradient(cx,cy,cx,cy+ch);
+    sg.addColorStop(0,cor);sg.addColorStop(1,cor+'88');
+    ctx.fillStyle=sg;
+    ctx.save();ctx.beginPath();
+    ctx.moveTo(cx,cy+14);ctx.lineTo(cx,cy+ch-14);
+    ctx.quadraticCurveTo(cx,cy+ch,cx+14,cy+ch);
+    ctx.lineTo(cx+14,cy);ctx.quadraticCurveTo(cx,cy,cx,cy+14);
+    ctx.closePath();ctx.fill();ctx.restore();
+
+    // status badge (top right)
+    const sbw=120;
+    ctx.fillStyle=scol+'18';rr(ctx,cx+cw-sbw-12,cy+12,sbw,24,12);ctx.fill();
+    ctx.strokeStyle=scol+'44';ctx.lineWidth=1;rr(ctx,cx+cw-sbw-12,cy+12,sbw,24,12);ctx.stroke();
+    t(ctx,o.status||'Pendente',cx+cw-sbw/2-12,cy+24,'700 11px Barlow Condensed,Arial',scol,'center');
+
+    // name
+    const nome=o.nome||'Sem nome';
+    const nomeClip=nome.length>32?nome.slice(0,31)+'…':nome;
+    t(ctx,nomeClip,cx+20,cy+28,'bold 18px Barlow Condensed,Arial','#0f172a','left');
+    if(o.cliente)t(ctx,o.cliente,cx+20,cy+46,'500 12px Inter,Arial','#64748b','left');
+
+    // divider
+    ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(cx+20,cy+64);ctx.lineTo(cx+cw-20,cy+64);ctx.stroke();
+
+    let iy=cy+82;
+
+    // dates row
+    if(o.inicio||o.fim){
+      ctx.fillStyle='#f1f5f9';rr(ctx,cx+20,iy-10,cw-40,28,6);ctx.fill();
+      t(ctx,'▶',cx+32,iy+4,'bold 12px Barlow Condensed,Arial','#64748b','left');
+      t(ctx,fmtDate(o.inicio||'—'),cx+46,iy+4,'600 12px Barlow Condensed,Arial','#334155','left');
+      t(ctx,'◼',cx+cw/2+10,iy+4,'bold 12px Barlow Condensed,Arial','#64748b','left');
+      t(ctx,fmtDate(o.fim||'—'),cx+cw/2+24,iy+4,'600 12px Barlow Condensed,Arial','#334155','left');
+      if(o.inicio&&o.fim){
+        const dur=diasDuracao(o.inicio,o.fim);
+        t(ctx,dur+'d',cx+cw-28,iy+4,'700 11px Barlow Condensed,Arial',cor,'right');
+      }
+      iy+=36;
+    }
+
+    // collaborators
+    if((o.colabs||[]).length){
+      t(ctx,'👷 EQUIPE',cx+20,iy,'700 10px Barlow Condensed,Arial','#94a3b8','left');
+      iy+=16;
+      let tagX=cx+20;
+      o.colabs.forEach(c=>{
+        ctx.font='700 11px Barlow Condensed,Arial';
+        const tw=ctx.measureText(c).width+18;
+        if(tagX+tw>cx+cw-20){tagX=cx+20;iy+=24;}
+        ctx.fillStyle=cor+'18';rr(ctx,tagX,iy-2,tw,20,10);ctx.fill();
+        ctx.strokeStyle=cor+'44';ctx.lineWidth=1;rr(ctx,tagX,iy-2,tw,20,10);ctx.stroke();
+        t(ctx,c,tagX+tw/2,iy+8,'700 11px Barlow Condensed,Arial',cor,'center');
+        tagX+=tw+6;
+      });
+      iy+=28;
+    }
+
+    // address
+    if(o.end&&iy<cy+ch-30){
+      t(ctx,'📍 '+o.end.slice(0,45)+(o.end.length>45?'…':''),cx+20,iy,'500 11px Inter,Arial','#94a3b8','left');
+      iy+=18;
+    }
+
+    // obs
+    if(o.obs&&iy<cy+ch-20){
+      ctx.fillStyle='#f8fafc';rr(ctx,cx+20,iy,cw-40,Math.min(36,cy+ch-iy-16),6);ctx.fill();
+      ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;rr(ctx,cx+20,iy,cw-40,Math.min(36,cy+ch-iy-16),6);ctx.stroke();
+      const obsText=o.obs.slice(0,70)+(o.obs.length>70?'…':'');
+      t(ctx,obsText,cx+28,iy+10,'500 11px Inter,Arial','#64748b','left');
+    }
+  });
+
+  if(list.length>cols*rows){
+    t(ctx,`+ ${list.length-cols*rows} obra(s) não exibida(s)`,W/2,H-66,'600 13px Inter,Arial','#94a3b8','center');
+  }
+  rptFooter(ctx,W,H);
+}
+
+// ── REPORT: LISTA (portrait A4) ───────────────────────────────────
+function rptLista(list,ano,mes){
+  const W=1240,H=1754,PAD=52;
+  const cv=document.getElementById('rptCanvas');
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  rptBg(ctx,W,H);
+  rptHeader(ctx,W,PAD,'CRONOGRAMA — LISTAGEM',`${MESES[mes].toUpperCase()} ${ano}`,list.length);
+  if(!list.length){noData(ctx,W,H);return;}
+
+  // Table
+  const TY=134,ROW=52;
+  // col: [label, width, align]
+  const TCOLS=[
+    ['',28,'center'],['OBRA / CLIENTE',270,'left'],['INÍCIO',90,'center'],
+    ['FIM',90,'center'],['DUR.',48,'center'],['STATUS',100,'center'],
+    ['EQUIPE',200,'left'],['ENDEREÇO',180,'left'],
+  ];
+  const TW=W-PAD*2;
+  // Scale widths to fit
+  const rawTotal=TCOLS.reduce((s,c)=>s+c[1],0);
+  const scale=TW/rawTotal;
+  const CW=TCOLS.map(c=>Math.floor(c[1]*scale));
+
+  // Table header
+  ctx.fillStyle='#1e293b';rr(ctx,PAD,TY,TW,36,8);ctx.fill();
+  let hx=PAD;
+  TCOLS.forEach((col,i)=>{
+    t(ctx,col[0],hx+CW[i]/2,TY+18,'700 10px Barlow Condensed,Arial','rgba(255,255,255,.65)','center');
+    hx+=CW[i];
+  });
+
+  // Rows
+  const maxRows=Math.floor((H-TY-36-70)/ROW);
+  list.slice(0,maxRows).forEach((o,ri)=>{
+    const ry=TY+36+ri*ROW;
+    const cor=o.cor||CORES[0];
+    const scol={Pendente:'#d97706','Em andamento':'#2563eb','Concluída':'#059669'}[o.status]||'#d97706';
+
+    // row bg
+    ctx.fillStyle=ri%2===0?'#fff':'#f8fafc';
+    ctx.fillRect(PAD,ry,TW,ROW);
+    // left color accent
+    ctx.fillStyle=cor;ctx.fillRect(PAD,ry,4,ROW);
+
+    let rx=PAD;
+    // color dot instead of number
+    ctx.fillStyle=cor;ctx.beginPath();ctx.arc(rx+CW[0]/2,ry+ROW/2,7,0,Math.PI*2);ctx.fill();
+    rx+=CW[0];
+
+    // obra + cliente
+    const nomeText=(o.nome||'—').slice(0,32)+(o.nome?.length>32?'…':'');
+    t(ctx,nomeText,rx+8,ry+ROW/2-8,'bold 14px Barlow Condensed,Arial','#1e293b','left');
+    if(o.cliente)t(ctx,o.cliente.slice(0,30),rx+8,ry+ROW/2+10,'500 11px Inter,Arial','#64748b','left');
+    rx+=CW[1];
+
+    // dates
+    t(ctx,fmtDate(o.inicio),rx+CW[2]/2,ry+ROW/2,'600 11px Barlow Condensed,Arial','#475569','center');rx+=CW[2];
+    t(ctx,fmtDate(o.fim),rx+CW[3]/2,ry+ROW/2,'600 11px Barlow Condensed,Arial','#475569','center');rx+=CW[3];
+
+    // duration
+    const dur=o.inicio&&o.fim?diasDuracao(o.inicio,o.fim)+'d':'—';
+    t(ctx,dur,rx+CW[4]/2,ry+ROW/2,'700 11px Barlow Condensed,Arial',cor,'center');rx+=CW[4];
+
+    // status badge
+    ctx.fillStyle=scol+'18';rr(ctx,rx+4,ry+ROW/2-12,CW[5]-8,24,12);ctx.fill();
+    ctx.strokeStyle=scol+'44';ctx.lineWidth=1;rr(ctx,rx+4,ry+ROW/2-12,CW[5]-8,24,12);ctx.stroke();
+    t(ctx,o.status||'—',rx+CW[5]/2,ry+ROW/2,'700 10px Barlow Condensed,Arial',scol,'center');rx+=CW[5];
+
+    // colabs with initials badges
+    let tagX=rx+6;
+    (o.colabs||[]).forEach(c=>{
+      const init=c.split(' ').map(w=>w[0]).join('');
+      ctx.fillStyle=cor+'22';ctx.beginPath();ctx.arc(tagX+10,ry+ROW/2,10,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle=cor+'55';ctx.lineWidth=1;ctx.beginPath();ctx.arc(tagX+10,ry+ROW/2,10,0,Math.PI*2);ctx.stroke();
+      t(ctx,init,tagX+10,ry+ROW/2,'700 9px Barlow Condensed,Arial',cor,'center');
+      t(ctx,c.split(' ')[0],tagX+24,ry+ROW/2,'600 10px Inter,Arial','#475569','left');
+      tagX+=ctx.measureText(c.split(' ')[0]).width+38;
+    });
+    if(!(o.colabs||[]).length)t(ctx,'—',rx+CW[6]/2,ry+ROW/2,'500 11px Inter,Arial','#94a3b8','center');
+    rx+=CW[6];
+
+    // address
+    if(o.end)t(ctx,o.end.slice(0,24)+(o.end.length>24?'…':''),rx+6,ry+ROW/2,'500 10px Inter,Arial','#94a3b8','left');
+
+    // row divider
+    ctx.strokeStyle='#e2e8f0';ctx.lineWidth=.5;
+    ctx.beginPath();ctx.moveTo(PAD,ry+ROW);ctx.lineTo(PAD+TW,ry+ROW);ctx.stroke();
+  });
+
+  if(list.length>maxRows){
+    t(ctx,`+ ${list.length-maxRows} obra(s) não listada(s)`,W/2,H-66,'600 12px Inter,Arial','#94a3b8','center');
+  }
+  rptFooter(ctx,W,H);
+}
+
+// ── REPORT: CALENDAR (landscape A4) ──────────────────────────────
+function rptCal(list,ano,mes){
+  const W=1754,H=1240,PAD=52;
+  const cv=document.getElementById('rptCanvas');
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  rptBg(ctx,W,H);
+  rptHeader(ctx,W,PAD,'CRONOGRAMA — CALENDÁRIO',`${MESES[mes].toUpperCase()} ${ano}`,list.length);
+
+  const primeiroDia=new Date(ano,mes,1).getDay();
+  const ultimoDia=new Date(ano,mes+1,0).getDate();
+  const rows=Math.ceil((primeiroDia+ultimoDia)/7);
+  const calY=132,calH=H-calY-60;
+  const cellW=Math.floor((W-PAD*2)/7);
+  const cellH=Math.floor(calH/(rows+1)); // +1 for header row
+  const hoje=new Date();
+  const DOW=['DOMINGO','SEGUNDA','TERÇA','QUARTA','QUINTA','SEXTA','SÁBADO'];
+
+  // Day headers
+  DOW.forEach((d,i)=>{
+    const cx=PAD+i*cellW;
+    const isWknd=i===0||i===6;
+    ctx.fillStyle=isWknd?'#1e3a5f':'#1e293b';
+    ctx.fillRect(cx,calY,cellW,cellH);
+    if(i>0){ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx,calY);ctx.lineTo(cx,calY+cellH);ctx.stroke();}
+    t(ctx,d,cx+cellW/2,calY+cellH/2,'700 10px Barlow Condensed,Arial',isWknd?'rgba(255,255,255,.5)':'rgba(255,255,255,.7)','center');
+  });
+
+  // Cells
+  let dayCount=0;
+  for(let row=0;row<rows;row++){
+    for(let col=0;col<7;col++){
+      const day=dayCount-primeiroDia+1;
+      const cx=PAD+col*cellW,cy=calY+cellH+row*cellH;
+      const isWknd=col===0||col===6;
+      const isHoje=day===hoje.getDate()&&mes===hoje.getMonth()&&ano===hoje.getFullYear();
+      const isValid=day>=1&&day<=ultimoDia;
+
+      ctx.fillStyle=isHoje?'#eff6ff':isWknd?'#fafafa':'#fff';
+      ctx.fillRect(cx,cy,cellW,cellH);
+      // borders
+      ctx.strokeStyle='#e2e8f0';ctx.lineWidth=.8;ctx.strokeRect(cx,cy,cellW,cellH);
+
+      if(isValid){
+        // day number
+        if(isHoje){
+          ctx.fillStyle='#3b82f6';ctx.beginPath();ctx.arc(cx+16,cy+14,12,0,Math.PI*2);ctx.fill();
+          t(ctx,String(day),cx+16,cy+14,'bold 12px Barlow Condensed,Arial','#fff','center');
+        } else {
+          t(ctx,String(day),cx+14,cy+14,'bold 12px Barlow Condensed,Arial',isWknd?'#94a3b8':'#475569','left');
+        }
+
+        // obras pills
+        const dateStr=`${ano}-${String(mes+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const obrasDodia=list.filter(o=>obraAtiva(o,dateStr));
+        const pillH=18,pillGap=2,maxPills=Math.floor((cellH-32)/( pillH+pillGap));
+
+        obrasDodia.slice(0,maxPills).forEach((o,oi)=>{
+          const py=cy+28+oi*(pillH+pillGap);
+          const cor=o.cor||CORES[0];
+          // pill bg
+          ctx.fillStyle=cor+'20';ctx.fillRect(cx+3,py,cellW-6,pillH);
+          ctx.fillStyle=cor;ctx.fillRect(cx+3,py,3,pillH);
+          // nome
+          const maxChars=Math.floor(cellW/7.5);
+          const nomeShort=(o.nome||'').slice(0,maxChars)+(o.nome?.length>maxChars?'…':'');
+          t(ctx,nomeShort,cx+10,py+pillH/2,'700 9px Barlow Condensed,Arial',cor,'left');
+          // colab initials on right
+          if((o.colabs||[]).length){
+            const inits=o.colabs.map(c=>c.split(' ').map(w=>w[0]).join('')).join(' ');
+            t(ctx,inits,cx+cellW-6,py+pillH/2,'600 8px Barlow Condensed,Arial',cor+'99','right');
+          }
+        });
+
+        if(obrasDodia.length>maxPills){
+          t(ctx,`+${obrasDodia.length-maxPills}`,cx+cellW-8,cy+cellH-8,'700 9px Barlow Condensed,Arial','#94a3b8','right');
+        }
+      } else {
+        // other month
+        ctx.fillStyle='rgba(0,0,0,.03)';ctx.fillRect(cx,cy,cellW,cellH);
+      }
+      dayCount++;
+    }
+  }
+
+  // Legend - obras colors
+  if(list.length>0&&list.length<=12){
+    // mini legend bottom
+    const legY=H-58;
+    t(ctx,'OBRAS:',PAD,legY,'700 10px Barlow Condensed,Arial','#94a3b8','left');
+    let lx=PAD+60;
+    list.forEach(o=>{
+      const cor=o.cor||CORES[0];
+      ctx.fillStyle=cor;ctx.beginPath();ctx.arc(lx+4,legY,5,0,Math.PI*2);ctx.fill();
+      const label=(o.nome||'').slice(0,18);
+      ctx.font='600 10px Barlow Condensed,Arial';
+      t(ctx,label,lx+13,legY,'600 10px Barlow Condensed,Arial','#475569','left');
+      lx+=ctx.measureText(label).width+30;
+      if(lx>W-PAD-100)lx=PAD+60;
+    });
+  }
+
+  rptFooter(ctx,W,H);
+}
+
+
+// ── REPORT HELPERS ────────────────────────────────────────────────
+function rptBg(ctx,W,H){
+  ctx.fillStyle='#f8fafc';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(148,163,184,.1)';
+  for(let x=0;x<W;x+=24)for(let y=0;y<H;y+=24){ctx.beginPath();ctx.arc(x,y,1.2,0,Math.PI*2);ctx.fill();}
+}
+function rptHeader(ctx,W,PAD,title,sub,count){
+  // Vibrant teal-to-indigo gradient header
+  const hg=ctx.createLinearGradient(0,0,W,120);
+  hg.addColorStop(0,'#0f4c75');hg.addColorStop(.45,'#1b6ca8');hg.addColorStop(1,'#0d7377');
+  ctx.fillStyle=hg;ctx.fillRect(0,0,W,120);
+  // decorative circle
+  ctx.save();ctx.globalAlpha=.08;ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.arc(W-80,60,130,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(W-80,60,70,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  // gold accent line
+  const gl=ctx.createLinearGradient(PAD,116,PAD+400,116);
+  gl.addColorStop(0,'#f5c842');gl.addColorStop(1,'transparent');
+  ctx.fillStyle=gl;ctx.fillRect(PAD,116,400,4);
+  t(ctx,'BRASIL VIDROS',PAD,24,'700 14px Barlow Condensed,Arial','rgba(255,255,255,.5)','left');
+  t(ctx,title,PAD,66,'bold 42px Barlow Condensed,Arial','#ffffff','left');
+  t(ctx,sub,PAD,96,'500 15px Inter,Arial','rgba(255,255,255,.55)','left');
+  t(ctx,count+' obra(s)',W-PAD,58,'bold 28px Barlow Condensed,Arial','#f5c842','right');
+  t(ctx,'Gerado em '+new Date().toLocaleDateString('pt-BR'),W-PAD,88,'500 13px Inter,Arial','rgba(255,255,255,.4)','right');
+}
+function rptFooter(ctx,W,H){
+  ctx.fillStyle='#0a0f1a';ctx.fillRect(0,H-48,W,48);
+  t(ctx,'Brasil Vidros  •  Cronograma de Obras  •  '+new Date().toLocaleDateString('pt-BR'),W/2,H-24,'500 13px Inter,Arial','rgba(255,255,255,.3)','center');
+}
+function noData(ctx,W,H){
+  t(ctx,'Nenhuma obra no período selecionado.',W/2,H/2,'500 18px Inter,Arial','#94a3b8','center');
+}
+function rr(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+function t(ctx,text,x,y,font,color,align='left',base='middle'){
+  ctx.save();ctx.font=font;ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline=base;
+  ctx.fillText(String(text||''),x,y);ctx.restore();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+load();
+updateCalLbl();
+render();
+document.getElementById('formOv').addEventListener('click',e=>{if(e.target===document.getElementById('formOv'))fecharModal();});
+document.getElementById('rptModal').addEventListener('click',e=>{if(e.target===document.getElementById('rptModal'))fecharRpt();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharModal();fecharRpt();}});
+</script>
+</body>
+</html>
