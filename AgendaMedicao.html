@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Agenda de Medição</title>
+<title>Agenda de Medição — Brasil Vidros</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -417,7 +417,7 @@ window.dispatchEvent(new Event('fbReady'));
 </div>
 
 <script>
-const STORE='medicao_v4';
+const STORE='medicao_v4_vidros';
 const PALS=['pal0','pal1','pal2','pal3','pal4','pal5'];
 let cid=null,editMode=false,saveTimer=null,confirmCb=null;
 
@@ -860,7 +860,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 
 // ── FIREBASE SYNC ──────────────────────────────────────────────
 (function(){
-  const FB_KEY = 'agenda_medicao';
+  const FB_KEY = 'agenda_medicao_vidros';
   const LSKEY = typeof STORE!=='undefined' ? STORE : 'app_data';
   let _fbIgnore = false;
 
