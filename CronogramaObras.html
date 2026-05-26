@@ -220,7 +220,7 @@ const fbApp = initializeApp(firebaseConfig);
 const db = getDatabase(fbApp);
 let __st = null;
 
-// Firebase converts arrays to objects {0:...,1:...} — this fixes them back
+// Firebase arrays fix
 function __fixArrays(d){
   if(d===null||d===undefined||typeof d!=='object'||Array.isArray(d)) return d;
   const keys=Object.keys(d);
@@ -231,28 +231,77 @@ function __fixArrays(d){
 }
 window.__fixArrays=__fixArrays;
 
+// ── SYNC BADGE ──────────────────────────────────────────────────
+function __getOrCreateBadge(){
+  let el=document.getElementById('fbSync');
+  if(!el){
+    el=document.createElement('div');
+    el.id='fbSync';
+    el.style.cssText='position:fixed;bottom:14px;right:14px;font-size:11px;font-weight:600;'+
+      'padding:5px 14px;border-radius:20px;pointer-events:none;z-index:9999;'+
+      'transition:all .4s;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;gap:6px;';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function __showSync(msg, c, bg, persist){
+  const el=__getOrCreateBadge();
+  el.innerHTML=msg;
+  el.style.color=c||'#00e5a0';
+  el.style.background=bg||'rgba(0,0,0,.7)';
+  el.style.opacity='1';
+  clearTimeout(el.__t);
+  if(!persist) el.__t=setTimeout(()=>el.style.opacity='0', 3000);
+}
+
+// ── OFFLINE DETECTION ──────────────────────────────────────────
+function __updateOnlineStatus(){
+  if(!navigator.onLine){
+    __showSync('📵 Sem internet — salvando localmente','#f5c842','rgba(120,80,0,.85)', true);
+  } else {
+    // Back online - hide offline badge
+    const el=document.getElementById('fbSync');
+    if(el&&el.textContent.includes('Sem internet')) el.style.opacity='0';
+  }
+}
+
+window.addEventListener('online',  ()=>{
+  __showSync('✅ Internet reconectada — sincronizando...','#00e5a0','rgba(0,0,0,.7)', false);
+  // Trigger a sync if possible
+  setTimeout(()=>{ if(window.__syncToCloud) window.__syncToCloud(); }, 500);
+});
+window.addEventListener('offline', __updateOnlineStatus);
+// Check on load
+document.addEventListener('DOMContentLoaded', __updateOnlineStatus);
+
+// ── FIREBASE FUNCTIONS ─────────────────────────────────────────
 window.__fbSave=function(key,data){
-  clearTimeout(__st);__showSync('☁ salvando...','#f5c842');
+  if(!navigator.onLine){
+    __showSync('📵 Sem internet — salvando localmente','#f5c842','rgba(120,80,0,.85)', true);
+    return;
+  }
+  clearTimeout(__st);
+  __showSync('☁ sincronizando...','#f5c842','rgba(0,0,0,.7)', false);
   __st=setTimeout(()=>{
     set(ref(db,key),data)
-      .then(()=>__showSync('☁ sincronizado','#00e5a0'))
-      .catch(e=>{console.warn('FB:',e);__showSync('⚠ erro','#ff4d6d');});
-  },800);
+      .then(()=>__showSync('☁ sincronizado','#00e5a0','rgba(0,0,0,.7)', false))
+      .catch(e=>{
+        console.warn('FB:',e);
+        __showSync('⚠ erro ao sincronizar','#ff4d6d','rgba(80,0,0,.8)', false);
+      });
+  },600);
 };
+
 window.__fbLoad=function(key,cb){
+  if(!navigator.onLine){ cb(null); return; }
   get(ref(db,key)).then(s=>cb(s.exists()?__fixArrays(s.val()):null)).catch(()=>cb(null));
 };
+
 window.__fbListen=function(key,cb){
-  onValue(ref(db,key),s=>{if(s.exists())cb(__fixArrays(s.val()));});
+  onValue(ref(db,key),s=>{ if(s.exists()) cb(__fixArrays(s.val())); });
 };
-function __showSync(msg,c){
-  let el=document.getElementById('fbSync');
-  if(!el){el=document.createElement('div');el.id='fbSync';
-    el.style.cssText='position:fixed;bottom:14px;right:14px;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;pointer-events:none;z-index:9999;transition:all .4s;background:rgba(0,0,0,.6);';
-    document.body.appendChild(el);}
-  el.textContent=msg;el.style.color=c||'#00e5a0';el.style.opacity='1';
-  clearTimeout(el.__t);el.__t=setTimeout(()=>el.style.opacity='0',3000);
-}
+
 window.__fbReady=true;
 window.dispatchEvent(new Event('fbReady'));
 </script>
@@ -1317,50 +1366,74 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharModal();fecha
 // ── FIREBASE SYNC ──────────────────────────────────────────────
 (function(){
   const FB_KEY = 'cronograma';
-  const LSKEY = typeof STORE!=='undefined' ? STORE : 'app_data';
-  let _fbIgnore = false;
 
-  // Override persist/save to also push to Firebase
+  // Manual sync: call this to push current data to Firebase
+  window.__syncToCloud = function(){
+    const raw = localStorage.getItem('cronograma_v1');
+    if(!raw || !window.__fbSave) return;
+    try{
+      const data = JSON.parse(raw);
+      if(data) window.__fbSave('cronograma', data);
+    }catch(e){}
+  };
+
+  // Patch save functions to also sync to cloud
   const _origPersist = typeof persist==='function' ? persist : null;
   const _origSave = typeof saveAll==='function' ? saveAll : (typeof save==='function' ? save : null);
 
-  function _afterSave(){
-    const raw = localStorage.getItem(LSKEY);
-    if(raw && window.__fbSave) window.__fbSave(FB_KEY, JSON.parse(raw));
-  }
+  if(_origPersist) window.persist = function(){
+    _origPersist();
+    window.__syncToCloud();
+  };
+  if(_origSave && _origSave !== _origPersist) window.saveAll = window.save = function(d){
+    if(d!==undefined) _origSave(d); else _origSave();
+    window.__syncToCloud();
+  };
 
-  if(_origPersist) window.persist = function(){ _origPersist(); _afterSave(); };
-  if(_origSave && _origSave !== _origPersist) window.saveAll = window.save = function(){ _origSave(); _afterSave(); };
+  // Patch toggleEdit to sync when exiting edit mode
+  const _origToggleEdit = typeof toggleEdit==='function' ? toggleEdit : null;
+  if(_origToggleEdit) window.toggleEdit = function(){
+    _origToggleEdit();
+    // sync after exiting edit (editMode will be false after toggle)
+    if(typeof editMode!=='undefined' && !editMode) window.__syncToCloud();
+  };
 
-  // Load from Firebase on start
+  // Load from Firebase on start (one-time, non-blocking)
   function _fbInit(){
-    if(!window.__fbLoad) return;
-    window.__fbLoad(FB_KEY, function(data){
+    if(!window.__fbLoad){ setTimeout(_fbInit, 200); return; }
+
+    window.__fbLoad('cronograma', function(data){
       if(!data) return;
-      const local = localStorage.getItem(LSKEY);
-      const localParsed = local ? JSON.parse(local) : null;
-      const isEmpty = !localParsed || (Array.isArray(localParsed)&&!localParsed.length) || (typeof localParsed==='object'&&!Array.isArray(localParsed)&&!Object.keys(localParsed).length);
-      if(isEmpty){
-        _fbIgnore = true;
-        localStorage.setItem(LSKEY, JSON.stringify(data));
-        if(typeof load==='function') load();
-        if(typeof render==='function') { render(); }
-        setTimeout(()=>_fbIgnore=false, 500);
-      }
+      try{
+        const local = JSON.parse(localStorage.getItem('cronograma_v1')||'null');
+        const isEmpty = !local || (Array.isArray(local)&&!local.length) ||
+          (typeof local==='object'&&!Array.isArray(local)&&!Object.keys(local).length);
+        if(isEmpty){
+          localStorage.setItem('cronograma_v1', JSON.stringify(data));
+          if(typeof load==='function') load();
+          if(typeof render==='function') render();
+          else if(typeof renderAll==='function') renderAll();
+          else if(typeof renderSB==='function'){ renderSB(); if(typeof renderContent==='function') renderContent(); }
+        }
+      }catch(e){}
     });
 
-    // Realtime sync from other devices
-    window.__fbListen(FB_KEY, function(data){
-      if(_fbIgnore || !data) return;
-      const current = localStorage.getItem(LSKEY);
-      const incoming = JSON.stringify(data);
-      if(current !== incoming){
-        _fbIgnore = true;
-        localStorage.setItem(LSKEY, incoming);
-        if(typeof load==='function') load();
-        if(typeof render==='function') { render(); }
-        setTimeout(()=>_fbIgnore=false, 500);
-      }
+    // Listen for changes from other devices - NEVER interrupt current user
+    let _listenReady = false;
+    setTimeout(function(){ _listenReady = true; }, 3000); // wait 3s before accepting remote changes
+    window.__fbListen('cronograma', function(data){
+      if(!_listenReady || !data) return;
+      try{
+        const incoming = JSON.stringify(data);
+        const current = localStorage.getItem('cronograma_v1');
+        if(incoming !== current){
+          localStorage.setItem('cronograma_v1', JSON.stringify(data));
+          if(typeof load==='function') load();
+          if(typeof render==='function') render();
+          else if(typeof renderAll==='function') renderAll();
+          else if(typeof renderSB==='function'){ renderSB(); if(typeof renderContent==='function') renderContent(); }
+        }
+      }catch(e){}
     });
   }
 
