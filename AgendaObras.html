@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Agenda de Obras</title>
+<title>Agenda de Obras — Brasil Vidros</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -290,7 +290,7 @@ window.dispatchEvent(new Event('fbReady'));
 <script>
 const STORE='obras_agenda_v2';
 const PALS=['pal0','pal1','pal2','pal3','pal4','pal5'];
-const EQUIPES=['Luiz','Rodrigo','Jesus','Gabriel','Michael Douglas','Valdir','Outros'];
+const EQUIPES=['Michael Gonçalves','Michael Douglas','Gabriel','Valdir','Evandro'];
 let cid=null,editMode=false,saveTimer=null,confirmCb=null;
 let dragSrc=null;
 
@@ -859,7 +859,7 @@ function compartilharWhatsApp(){
 
 // ── FIREBASE SYNC (Firebase-first, no localStorage conflict) ──
 (function(){
-  const FB_KEY = 'agenda_obras';
+  const FB_KEY = 'agenda_obras_vidros';
   window.__appData = {};  // in-memory cache
   let _savePending = false;
   let _saveTimer = null;
