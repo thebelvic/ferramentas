@@ -462,7 +462,7 @@ function flashSaved(){
 }
 function newProject(client,obra){return{id:'p'+Date.now()+Math.random().toString(36).slice(2),client:client||'',obra:obra||'',glasses:[],createdAt:Date.now()};}
 function active(){return projects.find(p=>p.id===activeId)||null;}
-function area(glasses){return glasses.reduce((s,g)=>s+(g.w*g.h)/1e6,0);}
+function area(glasses){if(!Array.isArray(glasses))glasses=Object.values(glasses||{});return glasses.reduce((s,g)=>s+(g.w*g.h)/1e6,0);}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function isPortaType(t){return PORTA_TYPES.includes(t);}
 
@@ -1377,14 +1377,11 @@ renderAll();
           (Array.isArray(localParsed) && !localParsed.length) ||
           (typeof localParsed==='object' && !Array.isArray(localParsed) && !Object.keys(localParsed).length);
         if(isEmpty){
-          localStorage.setItem('vidros_proj_v5', JSON.stringify(data));
-          if(typeof load==='function') load();
-          if(typeof render==='function') render();
-          else if(typeof renderAll==='function') renderAll();
-          else if(typeof renderSB==='function'){
-            renderSB();
-            if(typeof renderContent==='function') renderContent();
-          }
+          const fixed = window.__fixArrays ? window.__fixArrays(data) : data;
+          localStorage.setItem('vidros_proj_v5', JSON.stringify(fixed));
+          if(typeof loadData==='function') loadData();
+          else if(typeof load==='function') load();
+          if(typeof renderAll==='function') renderAll();
         }
       }catch(e){ console.warn('fbLoad error:',e); }
     });
@@ -1395,17 +1392,14 @@ renderAll();
     window.__fbListen('vidros_editor', function(data){
       if(!_ready || !data) return;
       try{
-        const incoming = JSON.stringify(data);
+        const fixed = window.__fixArrays ? window.__fixArrays(data) : data;
+        const incoming = JSON.stringify(fixed);
         const current = localStorage.getItem('vidros_proj_v5');
         if(incoming !== current){
-          localStorage.setItem('vidros_proj_v5', JSON.stringify(data));
-          if(typeof load==='function') load();
-          if(typeof render==='function') render();
-          else if(typeof renderAll==='function') renderAll();
-          else if(typeof renderSB==='function'){
-            renderSB();
-            if(typeof renderContent==='function') renderContent();
-          }
+          localStorage.setItem('vidros_proj_v5', JSON.stringify(fixed));
+          if(typeof loadData==='function') loadData();
+          else if(typeof load==='function') load();
+          if(typeof renderAll==='function') renderAll();
         }
       }catch(e){}
     });
