@@ -187,6 +187,54 @@ body{font-family:'Lato',sans-serif;background:#eef3fb;height:100vh;overflow:hidd
   .prev-ftr{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
 }
 </style>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCE5G8Lk3bgocndE1hZSUePvronW1t3SAE",
+  authDomain: "brasil-vidros-c7c3a.firebaseapp.com",
+  databaseURL: "https://brasil-vidros-c7c3a-default-rtdb.firebaseio.com",
+  projectId: "brasil-vidros-c7c3a",
+  storageBucket: "brasil-vidros-c7c3a.firebasestorage.app",
+  messagingSenderId: "669693663227",
+  appId: "1:669693663227:web:22a3bc8110a88c03c35d5e"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+let __st = null;
+
+window.__fbSave = function(key, data){
+  clearTimeout(__st);
+  __showSync('☁ salvando...','#f5c842');
+  __st = setTimeout(()=>{
+    set(ref(db,key), data)
+      .then(()=>__showSync('☁ sincronizado','#00e5a0'))
+      .catch(()=>__showSync('⚠ erro sync','#ff4d6d'));
+  }, 800);
+};
+
+window.__fbLoad = function(key,cb){
+  get(ref(db,key)).then(s=>cb(s.exists()?s.val():null)).catch(()=>cb(null));
+};
+
+window.__fbListen = function(key,cb){
+  onValue(ref(db,key), s=>{ if(s.exists()) cb(s.val()); });
+};
+
+function __showSync(msg,c){
+  let el=document.getElementById('fbSync');
+  if(!el){ el=document.createElement('div'); el.id='fbSync';
+    el.style.cssText='position:fixed;bottom:14px;right:14px;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;pointer-events:none;z-index:9999;transition:all .4s;background:rgba(0,0,0,.6);';
+    document.body.appendChild(el); }
+  el.textContent=msg; el.style.color=c||'#00e5a0'; el.style.opacity='1';
+  clearTimeout(el.__t); el.__t=setTimeout(()=>el.style.opacity='0',3000);
+}
+
+window.__fbReady = true;
+window.dispatchEvent(new Event('fbReady'));
+</script>
 </head>
 <body>
 <div id="root">
@@ -1205,6 +1253,60 @@ skCanvas.addEventListener('touchend',skUp);
 // ══════════════════════════════════════════════
 loadData();
 renderAll();
+
+// ── FIREBASE SYNC ──────────────────────────────────────────────
+(function(){
+  const FB_KEY = 'vidros_editor';
+  const LSKEY = typeof STORE!=='undefined' ? STORE : 'app_data';
+  let _fbIgnore = false;
+
+  // Override persist/save to also push to Firebase
+  const _origPersist = typeof persist==='function' ? persist : null;
+  const _origSave = typeof saveAll==='function' ? saveAll : (typeof save==='function' ? save : null);
+
+  function _afterSave(){
+    const raw = localStorage.getItem(LSKEY);
+    if(raw && window.__fbSave) window.__fbSave(FB_KEY, JSON.parse(raw));
+  }
+
+  if(_origPersist) window.persist = function(){ _origPersist(); _afterSave(); };
+  if(_origSave && _origSave !== _origPersist) window.saveAll = window.save = function(){ _origSave(); _afterSave(); };
+
+  // Load from Firebase on start
+  function _fbInit(){
+    if(!window.__fbLoad) return;
+    window.__fbLoad(FB_KEY, function(data){
+      if(!data) return;
+      const local = localStorage.getItem(LSKEY);
+      const localParsed = local ? JSON.parse(local) : null;
+      const isEmpty = !localParsed || (Array.isArray(localParsed)&&!localParsed.length) || (typeof localParsed==='object'&&!Array.isArray(localParsed)&&!Object.keys(localParsed).length);
+      if(isEmpty){
+        _fbIgnore = true;
+        localStorage.setItem(LSKEY, JSON.stringify(data));
+        if(typeof load==='function') load();
+        if(typeof renderAll==='function') { renderAll(); }
+        setTimeout(()=>_fbIgnore=false, 500);
+      }
+    });
+
+    // Realtime sync from other devices
+    window.__fbListen(FB_KEY, function(data){
+      if(_fbIgnore || !data) return;
+      const current = localStorage.getItem(LSKEY);
+      const incoming = JSON.stringify(data);
+      if(current !== incoming){
+        _fbIgnore = true;
+        localStorage.setItem(LSKEY, incoming);
+        if(typeof load==='function') load();
+        if(typeof renderAll==='function') { renderAll(); }
+        setTimeout(()=>_fbIgnore=false, 500);
+      }
+    });
+  }
+
+  if(window.__fbReady) _fbInit();
+  else window.addEventListener('fbReady', _fbInit, {once:true});
+})();
 </script>
 </body>
 </html>
