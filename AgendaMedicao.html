@@ -917,62 +917,87 @@ window.addEventListener('DOMContentLoaded',()=>{
 (function(){
   const FB_KEY = 'agenda_medicao_vidros';
 
-  // Manual sync: call this to push current data to Firebase
+  // Push current localStorage data to Firebase
   window.__syncToCloud = function(){
-    const raw = localStorage.getItem('medicao_v4_vidros');
-    if(!raw || !window.__fbSave) return;
+    if(!navigator.onLine || !window.__fbSave) return;
     try{
-      const data = JSON.parse(raw);
-      if(data) window.__fbSave('agenda_medicao_vidros', data);
+      const raw = localStorage.getItem('medicao_v4_vidros');
+      if(raw) window.__fbSave(FB_KEY, JSON.parse(raw));
     }catch(e){}
   };
 
-  // Patch save functions to also sync to cloud
-  const _origPersist = typeof persist==='function' ? persist : null;
-  const _origSave = typeof saveAll==='function' ? saveAll : (typeof save==='function' ? save : null);
+  // Patch ALL save functions to sync to cloud
+  function _patchSaves(){
+    // scheduleSave (Agenda apps)
+    if(typeof scheduleSave==='function'){
+      const _orig = scheduleSave;
+      window.scheduleSave = function(){
+        _orig();
+        // sync after the save timer fires (~700ms)
+        setTimeout(window.__syncToCloud, 900);
+      };
+    }
+    // persist (VidrosEditor, BrasilPortas)
+    if(typeof persist==='function'){
+      const _orig = persist;
+      window.persist = function(){
+        _orig();
+        window.__syncToCloud();
+      };
+    }
+    // save (GestaoObras, Cronograma)
+    if(typeof save==='function' && save.toString().includes('localStorage')){
+      const _orig = save;
+      window.save = function(){
+        _orig();
+        window.__syncToCloud();
+      };
+    }
+    // saveAll
+    if(typeof saveAll==='function'){
+      const _orig = saveAll;
+      window.saveAll = function(d){
+        if(d!==undefined) _orig(d); else _orig();
+        window.__syncToCloud();
+      };
+    }
+  }
 
-  if(_origPersist) window.persist = function(){
-    _origPersist();
-    window.__syncToCloud();
-  };
-  if(_origSave && _origSave !== _origPersist) window.saveAll = window.save = function(d){
-    if(d!==undefined) _origSave(d); else _origSave();
-    window.__syncToCloud();
-  };
-
-  // Patch toggleEdit to sync when exiting edit mode
-  const _origToggleEdit = typeof toggleEdit==='function' ? toggleEdit : null;
-  if(_origToggleEdit) window.toggleEdit = function(){
-    _origToggleEdit();
-    // sync after exiting edit (editMode will be false after toggle)
-    if(typeof editMode!=='undefined' && !editMode) window.__syncToCloud();
-  };
-
-  // Load from Firebase on start (one-time, non-blocking)
+  // Load from Firebase on start
   function _fbInit(){
     if(!window.__fbLoad){ setTimeout(_fbInit, 200); return; }
+
+    // Patch saves after DOM ready
+    if(document.readyState==='loading')
+      document.addEventListener('DOMContentLoaded', _patchSaves);
+    else _patchSaves();
 
     window.__fbLoad('agenda_medicao_vidros', function(data){
       if(!data) return;
       try{
-        const local = JSON.parse(localStorage.getItem('medicao_v4_vidros')||'null');
-        const isEmpty = !local || (Array.isArray(local)&&!local.length) ||
-          (typeof local==='object'&&!Array.isArray(local)&&!Object.keys(local).length);
+        const local = localStorage.getItem('medicao_v4_vidros');
+        const localParsed = local ? JSON.parse(local) : null;
+        const isEmpty = !localParsed ||
+          (Array.isArray(localParsed) && !localParsed.length) ||
+          (typeof localParsed==='object' && !Array.isArray(localParsed) && !Object.keys(localParsed).length);
         if(isEmpty){
           localStorage.setItem('medicao_v4_vidros', JSON.stringify(data));
           if(typeof load==='function') load();
           if(typeof render==='function') render();
           else if(typeof renderAll==='function') renderAll();
-          else if(typeof renderSB==='function'){ renderSB(); if(typeof renderContent==='function') renderContent(); }
+          else if(typeof renderSB==='function'){
+            renderSB();
+            if(typeof renderContent==='function') renderContent();
+          }
         }
-      }catch(e){}
+      }catch(e){ console.warn('fbLoad error:',e); }
     });
 
-    // Listen for changes from other devices - NEVER interrupt current user
-    let _listenReady = false;
-    setTimeout(function(){ _listenReady = true; }, 3000); // wait 3s before accepting remote changes
+    // Listen for changes from other devices (3s delay to avoid conflicts on load)
+    let _ready = false;
+    setTimeout(()=>_ready=true, 3000);
     window.__fbListen('agenda_medicao_vidros', function(data){
-      if(!_listenReady || !data) return;
+      if(!_ready || !data) return;
       try{
         const incoming = JSON.stringify(data);
         const current = localStorage.getItem('medicao_v4_vidros');
@@ -981,7 +1006,10 @@ window.addEventListener('DOMContentLoaded',()=>{
           if(typeof load==='function') load();
           if(typeof render==='function') render();
           else if(typeof renderAll==='function') renderAll();
-          else if(typeof renderSB==='function'){ renderSB(); if(typeof renderContent==='function') renderContent(); }
+          else if(typeof renderSB==='function'){
+            renderSB();
+            if(typeof renderContent==='function') renderContent();
+          }
         }
       }catch(e){}
     });
