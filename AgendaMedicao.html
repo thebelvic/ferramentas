@@ -295,6 +295,54 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;overfl
 
 @media print{#loading,#modal,.modal-ov,.confirm-ov,.toolbar,.sidebar,.overlay{display:none!important}}
 </style>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCE5G8Lk3bgocndE1hZSUePvronW1t3SAE",
+  authDomain: "brasil-vidros-c7c3a.firebaseapp.com",
+  databaseURL: "https://brasil-vidros-c7c3a-default-rtdb.firebaseio.com",
+  projectId: "brasil-vidros-c7c3a",
+  storageBucket: "brasil-vidros-c7c3a.firebasestorage.app",
+  messagingSenderId: "669693663227",
+  appId: "1:669693663227:web:22a3bc8110a88c03c35d5e"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+let __st = null;
+
+window.__fbSave = function(key, data){
+  clearTimeout(__st);
+  __showSync('☁ salvando...','#f5c842');
+  __st = setTimeout(()=>{
+    set(ref(db,key), data)
+      .then(()=>__showSync('☁ sincronizado','#00e5a0'))
+      .catch(()=>__showSync('⚠ erro sync','#ff4d6d'));
+  }, 800);
+};
+
+window.__fbLoad = function(key,cb){
+  get(ref(db,key)).then(s=>cb(s.exists()?s.val():null)).catch(()=>cb(null));
+};
+
+window.__fbListen = function(key,cb){
+  onValue(ref(db,key), s=>{ if(s.exists()) cb(s.val()); });
+};
+
+function __showSync(msg,c){
+  let el=document.getElementById('fbSync');
+  if(!el){ el=document.createElement('div'); el.id='fbSync';
+    el.style.cssText='position:fixed;bottom:14px;right:14px;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;pointer-events:none;z-index:9999;transition:all .4s;background:rgba(0,0,0,.6);';
+    document.body.appendChild(el); }
+  el.textContent=msg; el.style.color=c||'#00e5a0'; el.style.opacity='1';
+  clearTimeout(el.__t); el.__t=setTimeout(()=>el.style.opacity='0',3000);
+}
+
+window.__fbReady = true;
+window.dispatchEvent(new Event('fbReady'));
+</script>
 </head>
 <body>
 
@@ -316,8 +364,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;overfl
 <!-- PREVIEW MODAL -->
 <div class="modal-ov" id="modal">
   <div class="modal-ttl">📐 PRÉVIA DA AGENDA</div>
-  <div class="modal-hint" id="modal-hint-text">👆 Toque e segure → "Salvar na Fotos"</div>
-  <button id="downloadBtn" onclick="downloadImagem()" style="display:none;background:#25d166;color:#fff;border:none;padding:10px 28px;border-radius:30px;font-size:13px;font-weight:700;cursor:pointer;font-family:Nunito,sans-serif;margin-bottom:10px;">⬇️ Baixar imagem</button>
+  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;justify-content:center;">
+    <div class="modal-hint" id="modal-hint-text" style="margin:0;">👆 Toque e segure para salvar</div>
+    <button id="downloadBtn" onclick="downloadImagem()" style="display:none;background:#25d166;color:#fff;border:none;padding:8px 20px;border-radius:30px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">⬇️ Baixar PNG</button>
+    <button onclick="imprimirPDF()" style="background:#1a5fa8;color:#fff;border:none;padding:8px 20px;border-radius:30px;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;">🖨️ Salvar PDF</button>
+  </div>
   <img class="modal-img" id="previewImg" src="" alt="Agenda">
   <button class="modal-close" onclick="closeModal()">✕ Fechar</button>
 </div>
@@ -586,41 +637,190 @@ document.getElementById('headerDate').addEventListener('input',scheduleSave);
 /* ── GENERATE IMAGE ── */
 let _lastImgDataUrl=null;
 
+function rrect(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+function rrectTop(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h);
+  ctx.lineTo(x,y+h);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+function drawCardShadow(ctx,x,y,w,h,r){
+  ctx.save();ctx.shadowColor='rgba(0,0,0,.10)';ctx.shadowBlur=20;ctx.shadowOffsetX=0;ctx.shadowOffsetY=5;
+  ctx.fillStyle='#fff';rrect(ctx,x,y,w,h,r);ctx.fill();ctx.restore();
+}
+function clipText(ctx,text,maxW){
+  if(!text)return'';
+  while(ctx.measureText(text).width>maxW&&text.length>3)text=text.slice(0,-1);
+  return text.length<(text+'').length?text+'…':text;
+}
+
 async function gerarImagem(){
   if(editMode)toggleEdit();
   const ld=document.getElementById('loading');ld.classList.add('show');
-  await new Promise(r=>setTimeout(r,200));
+  await new Promise(r=>setTimeout(r,250));
   try{
-    const cv=await html2canvas(document.getElementById('agenda'),{scale:3,useCORS:true,backgroundColor:'#f0f4f8',logging:false});
+    const data=loadAll(),day=data[cid]||{label:'',cards:[]};
+    const cards=day.cards||[];
+    const W=1080;
+    const PAD=48;
+    const CARD_W=W-PAD*2;
+    const HEADER_H=180;
+    const FOOTER_H=56;
+    const CARD_INNER_PAD=28;
+    const ROW_H=40;
+    const PALS=[
+      {ac:'#4F46E5',acl:'#EEF2FF',acm:'#6366F1'},
+      {ac:'#0891B2',acl:'#E0F7FA',acm:'#06B6D4'},
+      {ac:'#059669',acl:'#D1FAE5',acm:'#10B981'},
+      {ac:'#DC2626',acl:'#FEE2E2',acm:'#EF4444'},
+      {ac:'#D97706',acl:'#FEF3C7',acm:'#F59E0B'},
+      {ac:'#7C3AED',acl:'#EDE9FE',acm:'#8B5CF6'},
+    ];
+
+    // calc total height
+    const cardHeights=cards.map(c=>{
+      const rows=[c.resp,c.horario,c.contato,c.endereco,c.obs].filter(Boolean).length;
+      return CARD_INNER_PAD+34+8+30+16+rows*ROW_H+CARD_INNER_PAD+10;
+    });
+    const totalCards=cardHeights.reduce((s,h)=>s+h+16,0);
+    const H=HEADER_H+PAD+totalCards+PAD+FOOTER_H;
+
+    const cv=document.createElement('canvas');
+    cv.width=W;cv.height=Math.max(H,600);
+    const ctx=cv.getContext('2d');
+
+    // ── BACKGROUND ──
+    ctx.fillStyle='#F1F5F9';ctx.fillRect(0,0,W,cv.height);
+
+    // subtle dot pattern
+    ctx.fillStyle='rgba(148,163,184,.18)';
+    for(let x=0;x<W;x+=24)for(let y=0;y<cv.height;y+=24){
+      ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fill();
+    }
+
+    // ── HEADER ──
+    const hg=ctx.createLinearGradient(0,0,W,HEADER_H);
+    hg.addColorStop(0,'#0F172A');hg.addColorStop(.6,'#1E3A5F');hg.addColorStop(1,'#1E40AF');
+    ctx.fillStyle=hg;
+    rrectTop(ctx,0,0,W,HEADER_H,0);ctx.fill();
+
+    // decorative circle
+    ctx.save();ctx.globalAlpha=.07;ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.arc(W-80,HEADER_H/2,130,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(W-80,HEADER_H/2,80,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+
+    // gold accent line
+    const gl=ctx.createLinearGradient(PAD,0,PAD+300,0);
+    gl.addColorStop(0,'#E8A020');gl.addColorStop(1,'transparent');
+    ctx.fillStyle=gl;ctx.fillRect(PAD,HEADER_H-5,300,4);
+
+    // header texts
+    ctx.textBaseline='top';ctx.textAlign='left';
+    ctx.fillStyle='rgba(255,255,255,.55)';ctx.font='600 18px system-ui,Arial';
+    ctx.fillText('BRASIL VIDROS',PAD,32);
+    ctx.fillStyle='#FFFFFF';ctx.font='bold 46px system-ui,Arial';
+    ctx.fillText('AGENDA DE MEDIÇÃO',PAD,58);
+    ctx.fillStyle='#E8A020';ctx.font='600 24px system-ui,Arial';
+    ctx.fillText((day.label||'—').toUpperCase(),PAD,116);
+    // count badge
+    const badge=cards.length+' medição'+(cards.length!==1?'s':'');
+    ctx.fillStyle='rgba(232,160,32,.2)';rrect(ctx,W-PAD-160,36,160,44,22);ctx.fill();
+    ctx.fillStyle='#E8A020';ctx.font='bold 22px system-ui,Arial';ctx.textAlign='center';
+    ctx.fillText(badge,W-PAD-80,58);
+
+    // ── CARDS ──
+    let y=HEADER_H+PAD;
+    cards.forEach((c,i)=>{
+      const pal=PALS[i%PALS.length];
+      const rows=[
+        ['👤','Responsável',c.resp],
+        ['🕐','Horário',c.horario],
+        ['📞','Contato',c.contato],
+        ['📍','Endereço',c.endereco],
+        ['⚠️','Observação',c.obs],
+      ].filter(r=>r[2]);
+      const ch=CARD_INNER_PAD+34+8+30+16+rows.length*ROW_H+CARD_INNER_PAD+10;
+
+      // card shadow + bg
+      drawCardShadow(ctx,PAD,y,CARD_W,ch,16);
+      ctx.fillStyle='#fff';rrect(ctx,PAD,y,CARD_W,ch,16);ctx.fill();
+
+      // left accent stripe
+      const sg=ctx.createLinearGradient(PAD,y,PAD,y+ch);
+      sg.addColorStop(0,pal.ac);sg.addColorStop(1,pal.acm);
+      ctx.fillStyle=sg;rrectTop(ctx,PAD,y,8,ch,4);ctx.fill();
+
+      // MEDIÇÃO tag (pill)
+      const tagText='MEDIÇÃO '+(i+1);
+      ctx.font='bold 20px system-ui,Arial';
+      const tagW=ctx.measureText(tagText).width+24;
+      ctx.fillStyle=pal.ac;rrect(ctx,PAD+16,y+CARD_INNER_PAD,tagW,34,8);ctx.fill();
+      ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(tagText,PAD+16+tagW/2,y+CARD_INNER_PAD+17);
+
+      // client name
+      ctx.textAlign='left';ctx.textBaseline='top';
+      ctx.font='700 10px system-ui,Arial';ctx.fillStyle='#94A3B8';
+      ctx.fillText('CLIENTE',PAD+16,y+CARD_INNER_PAD+42);
+      ctx.font='bold 30px system-ui,Arial';ctx.fillStyle='#0F172A';
+      ctx.fillText(clipText(ctx,c.cliente||'—',CARD_W-80),PAD+16,y+CARD_INNER_PAD+56);
+
+      // divider
+      ctx.fillStyle='#F1F5F9';ctx.fillRect(PAD+16,y+CARD_INNER_PAD+96,CARD_W-32,2);
+
+      // info rows
+      const rowY0=y+CARD_INNER_PAD+96+16;
+      rows.forEach((row,ri)=>{
+        const ry=rowY0+ri*ROW_H;
+        // icon bg
+        ctx.fillStyle=pal.acl;rrect(ctx,PAD+24,ry+2,32,28,8);ctx.fill();
+        ctx.font='16px sans-serif';ctx.textBaseline='middle';ctx.textAlign='center';
+        ctx.fillText(row[0],PAD+40,ry+16);
+        // label
+        ctx.font='600 14px system-ui,Arial';ctx.fillStyle='#94A3B8';
+        ctx.textAlign='left';ctx.textBaseline='middle';
+        ctx.fillText(row[1].toUpperCase(),PAD+66,ry+8);
+        // value
+        ctx.font='600 18px system-ui,Arial';ctx.fillStyle='#1E293B';
+        ctx.fillText(clipText(ctx,row[2],CARD_W-180),PAD+66,ry+26);
+      });
+
+      y+=ch+16;
+    });
+
+    // ── FOOTER ──
+    ctx.fillStyle='#0F172A';
+    rrect(ctx,0,cv.height-FOOTER_H,W,FOOTER_H,0);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.35)';ctx.font='500 18px system-ui,Arial';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('Brasil Vidros  •  Agenda de Medição  •  '+new Date().toLocaleDateString('pt-BR'),W/2,cv.height-FOOTER_H/2);
+
     _lastImgDataUrl=cv.toDataURL('image/png');
     document.getElementById('previewImg').src=_lastImgDataUrl;
     const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const hint=document.getElementById('modal-hint-text');
-    const dlBtn=document.getElementById('downloadBtn');
-    if(isMobile){
-      hint.textContent='👆 Toque e segure → "Salvar na Fotos"';
-      hint.style.display='block';
-      dlBtn.style.display='none';
-    } else {
-      hint.style.display='none';
-      dlBtn.style.display='inline-block';
-    }
+    document.getElementById('modal-hint-text').style.display=isMobile?'block':'none';
+    document.getElementById('downloadBtn').style.display=isMobile?'none':'inline-block';
     ld.classList.remove('show');
     document.getElementById('modal').classList.add('show');
-  }catch{ld.classList.remove('show');alert('Erro ao gerar imagem.');}
+  }catch(e){ld.classList.remove('show');alert('Erro: '+e.message);}
 }
 
 function downloadImagem(){
   if(!_lastImgDataUrl)return;
   const data=loadAll(),day=data[cid]||{};
-  const label=(day.label||'agenda').replace(/[^\w\sÀ-ÿ]/g,'').replace(/\s+/g,'_');
-  const a=document.createElement('a');
-  a.href=_lastImgDataUrl;
-  a.download='Agenda_Medicao_'+label+'.png';
-  a.click();
+  const label=(day.label||'agenda').replace(/\W+/g,'_');
+  const a=document.createElement('a');a.href=_lastImgDataUrl;
+  a.download='Agenda_Medicao_'+label+'.png';a.click();
 }
-
+function imprimirPDF(){closeModal();setTimeout(()=>window.print(),300);}
 function closeModal(){document.getElementById('modal').classList.remove('show');}
+
 
 /* ── WHATSAPP ── */
 function compartilharWhatsApp(){
@@ -630,23 +830,23 @@ function compartilharWhatsApp(){
   if(!cards.length){alert('Nenhuma medição para compartilhar.');return;}
 
   const linhas=[];
-  linhas.push('📐 *AGENDA DE MEDIÇÃO*');
-  linhas.push('📅 '+(day.label||'—'));
+  linhas.push('*AGENDA DE MEDIÇÃO*');
+  linhas.push('Data: '+(day.label||'—'));
   linhas.push('');
 
   cards.forEach((c,i)=>{
-    linhas.push('━━━━━━━━━━━━━━━━━━');
+    linhas.push('------------------');
     linhas.push('*MEDIÇÃO '+(i+1)+' — '+(c.cliente||'—')+'*');
-    if(c.resp)     linhas.push('👤 Responsável: '+c.resp);
-    if(c.horario)  linhas.push('🕐 Horário: '+c.horario);
-    if(c.contato)  linhas.push('📞 Contato: '+c.contato);
-    if(c.endereco) linhas.push('📍 Endereço: '+c.endereco);
-    if(c.obs)      linhas.push('⚠️ Obs: '+c.obs);
+    if(c.resp)     linhas.push('Responsavel: '+c.resp);
+    if(c.horario)  linhas.push('Horario: '+c.horario);
+    if(c.contato)  linhas.push('Contato: '+c.contato);
+    if(c.endereco) linhas.push('Endereco: '+c.endereco);
+    if(c.obs)      linhas.push('Obs: '+c.obs);
     linhas.push('');
   });
 
-  linhas.push('━━━━━━━━━━━━━━━━━━');
-  linhas.push('_Gerado por Brasil Vidros_');
+  linhas.push('------------------');
+  linhas.push('Gerado por Brasil Vidros');
 
   var texto=linhas.join('\n');
   window.open('https://wa.me/?text='+encodeURIComponent(texto),'_blank');
@@ -657,6 +857,52 @@ window.addEventListener('DOMContentLoaded',()=>{
   const data=loadAll(),keys=Object.keys(data).sort((a,b)=>b.localeCompare(a));
   if(keys.length)loadDay(keys[0]);else newDay();
 });
+
+// ── FIREBASE SYNC ──────────────────────────────────────────────
+(function(){
+  const FB_KEY = 'agenda_medicao';
+  const LSKEY = typeof STORE!=='undefined' ? STORE : 'app_data';
+  let _fbIgnore = false;
+
+  // Override persist/save to also push to Firebase
+  // Patch saveAll to also push to Firebase
+  const _origSave = typeof saveAll==='function' ? saveAll : null;
+  function _afterSave(){
+    const raw = localStorage.getItem(LSKEY);
+    if(raw && window.__fbSave) window.__fbSave(FB_KEY, JSON.parse(raw));
+  }
+  if(_origSave) window.saveAll = function(){ _origSave(); _afterSave(); };
+
+  function _fbReload(data){
+    _fbIgnore = true;
+    localStorage.setItem(LSKEY, JSON.stringify(data));
+    // Re-init the day view
+    const keys = Object.keys(data||{}).sort((a,b)=>b.localeCompare(a));
+    if(keys.length && typeof loadDay==='function') loadDay(keys[0]);
+    if(typeof renderSB==='function') renderSB();
+    setTimeout(()=>_fbIgnore=false, 500);
+  }
+
+  function _fbInit(){
+    if(!window.__fbLoad) return;
+    window.__fbLoad(FB_KEY, function(data){
+      if(!data) return;
+      const local = localStorage.getItem(LSKEY);
+      const localParsed = local ? JSON.parse(local) : null;
+      const isEmpty = !localParsed || !Object.keys(localParsed).length;
+      if(isEmpty) _fbReload(data);
+    });
+    window.__fbListen(FB_KEY, function(data){
+      if(_fbIgnore || !data) return;
+      const current = localStorage.getItem(LSKEY);
+      const incoming = JSON.stringify(data);
+      if(current !== incoming) _fbReload(data);
+    });
+  }
+
+  if(window.__fbReady) _fbInit();
+  else window.addEventListener('fbReady', _fbInit, {once:true});
+})();
 </script>
 </body>
 </html>
