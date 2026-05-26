@@ -758,7 +758,7 @@ function renderSB(){
 function renderInfoBar(){
   const p=active(),el=document.getElementById('info-bar');
   if(!p){el.innerHTML='';return;}
-  const a=area(p.glasses);
+  if(!p.glasses)p.glasses=[];  const a=area(p.glasses);
   el.innerHTML=`
     <div style="display:flex;align-items:center;gap:8px;"><span class="lbl">CLIENTE</span>
       <input class="fi" style="width:180px;" value="${esc(p.client)}" oninput="updField('client',this.value)" placeholder="Nome do cliente">
@@ -769,7 +769,7 @@ function renderInfoBar(){
     </div>
     <div style="margin-left:auto;display:flex;gap:14px;align-items:center;">
       <span class="auto-badge" id="auto-badge">auto-save</span>
-      <div><div class="stat-lbl">VIDROS</div><div class="stat-val">${p.glasses.length}</div></div>
+      <div><div class="stat-lbl">VIDROS</div><div class="stat-val">${(p.glasses||[]).length}</div></div>
       <div class="idiv"></div>
       <div><div class="stat-lbl">ÁREA TOTAL</div><div class="stat-val">${a.toFixed(3)} m²</div></div>
     </div>`;
@@ -871,7 +871,7 @@ function buildEdit(p){
 
 
 function buildPreview(p){
-  const a=area(p.glasses);
+  if(!p.glasses)p.glasses=[];  const a=area(p.glasses);
   return`<div class="prev-wrap">
     <div class="prev-hdr">
       <div><div style="color:rgba(255,255,255,.55);font-size:11px;letter-spacing:1px;font-weight:700;">OBRA</div>
@@ -924,7 +924,7 @@ function buildPreview(p){
         <span style="font-size:11px;color:#9aacbf;">* Medidas em milímetros (mm)</span>
       </div>
       <div style="display:flex;gap:20px;">
-        <div style="text-align:right;"><div class="stat-lbl">TOTAL</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;color:#1a5fa8;">${p.glasses.length} vidros</div></div>
+        <div style="text-align:right;"><div class="stat-lbl">TOTAL</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;color:#1a5fa8;">${(p.glasses||[]).length} vidros</div></div>
         <div style="text-align:right;"><div class="stat-lbl">ÁREA</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;color:#1a5fa8;">${a.toFixed(3)} m²</div></div>
       </div>
     </div>
@@ -1312,93 +1312,73 @@ renderAll();
 // ── FIREBASE SYNC ──────────────────────────────────────────────
 (function(){
   const FB_KEY = 'vidros_editor';
+  const LS_KEY = 'vidros_proj_v5';
 
-  // Push current localStorage data to Firebase
+  // Push to Firebase
   window.__syncToCloud = function(){
     if(!navigator.onLine || !window.__fbSave) return;
     try{
-      const raw = localStorage.getItem('vidros_proj_v5');
+      const raw = localStorage.getItem(LS_KEY);
       if(raw) window.__fbSave(FB_KEY, JSON.parse(raw));
     }catch(e){}
   };
 
-  // Patch ALL save functions to sync to cloud
-  function _patchSaves(){
-    // scheduleSave (Agenda apps)
-    if(typeof scheduleSave==='function'){
-      const _orig = scheduleSave;
-      window.scheduleSave = function(){
-        _orig();
-        // sync after the save timer fires (~700ms)
-        setTimeout(window.__syncToCloud, 900);
-      };
-    }
-    // persist (VidrosEditor, BrasilPortas)
-    if(typeof persist==='function'){
-      const _orig = persist;
-      window.persist = function(){
-        _orig();
-        window.__syncToCloud();
-      };
-    }
-    // save (GestaoObras, Cronograma)
-    if(typeof save==='function' && save.toString().includes('localStorage')){
-      const _orig = save;
-      window.save = function(){
-        _orig();
-        window.__syncToCloud();
-      };
-    }
-    // saveAll
-    if(typeof saveAll==='function'){
-      const _orig = saveAll;
-      window.saveAll = function(d){
-        if(d!==undefined) _orig(d); else _orig();
-        window.__syncToCloud();
-      };
-    }
+  // Patch persist() - called every time data changes in VidrosEditor
+  function _patchPersist(){
+    if(typeof persist !== 'function') return;
+    const _orig = persist;
+    window.persist = function(){
+      _orig();
+      window.__syncToCloud();
+    };
   }
 
-  // Load from Firebase on start
+  // Load data from Firebase and populate localStorage + app
+  function _loadFromFB(data){
+    if(!data) return;
+    try{
+      const fixed = window.__fixArrays ? window.__fixArrays(data) : data;
+      // Ensure all projects have glasses as array
+      if(Array.isArray(fixed)){
+        fixed.forEach(p=>{ if(!Array.isArray(p.glasses)) p.glasses=[]; });
+      }
+      const local = localStorage.getItem(LS_KEY);
+      const localParsed = local ? JSON.parse(local) : null;
+      const isEmpty = !localParsed || (Array.isArray(localParsed) && !localParsed.length);
+      if(isEmpty){
+        localStorage.setItem(LS_KEY, JSON.stringify(fixed));
+        if(typeof loadData==='function') loadData();
+        if(typeof renderAll==='function') renderAll();
+      }
+    }catch(e){ console.warn('fbLoad error:',e); }
+  }
+
   function _fbInit(){
-    if(!window.__fbLoad){ setTimeout(_fbInit, 200); return; }
+    if(!window.__fbLoad){ setTimeout(_fbInit, 300); return; }
 
-    // Patch saves after DOM ready
+    // Patch persist after DOM is ready
     if(document.readyState==='loading')
-      document.addEventListener('DOMContentLoaded', _patchSaves);
-    else _patchSaves();
+      document.addEventListener('DOMContentLoaded', _patchPersist);
+    else _patchPersist();
 
-    window.__fbLoad('vidros_editor', function(data){
-      if(!data) return;
-      try{
-        const local = localStorage.getItem('vidros_proj_v5');
-        const localParsed = local ? JSON.parse(local) : null;
-        const isEmpty = !localParsed ||
-          (Array.isArray(localParsed) && !localParsed.length) ||
-          (typeof localParsed==='object' && !Array.isArray(localParsed) && !Object.keys(localParsed).length);
-        if(isEmpty){
-          const fixed = window.__fixArrays ? window.__fixArrays(data) : data;
-          localStorage.setItem('vidros_proj_v5', JSON.stringify(fixed));
-          if(typeof loadData==='function') loadData();
-          else if(typeof load==='function') load();
-          if(typeof renderAll==='function') renderAll();
-        }
-      }catch(e){ console.warn('fbLoad error:',e); }
-    });
+    // Load once on start
+    window.__fbLoad(FB_KEY, _loadFromFB);
 
-    // Listen for changes from other devices (3s delay to avoid conflicts on load)
+    // Listen for changes from other devices
     let _ready = false;
-    setTimeout(()=>_ready=true, 3000);
-    window.__fbListen('vidros_editor', function(data){
+    setTimeout(()=>_ready=true, 4000);
+    window.__fbListen(FB_KEY, function(data){
       if(!_ready || !data) return;
       try{
         const fixed = window.__fixArrays ? window.__fixArrays(data) : data;
+        if(Array.isArray(fixed)){
+          fixed.forEach(p=>{ if(!Array.isArray(p.glasses)) p.glasses=[]; });
+        }
         const incoming = JSON.stringify(fixed);
-        const current = localStorage.getItem('vidros_proj_v5');
+        const current = localStorage.getItem(LS_KEY);
         if(incoming !== current){
-          localStorage.setItem('vidros_proj_v5', JSON.stringify(fixed));
+          localStorage.setItem(LS_KEY, JSON.stringify(fixed));
           if(typeof loadData==='function') loadData();
-          else if(typeof load==='function') load();
           if(typeof renderAll==='function') renderAll();
         }
       }catch(e){}
