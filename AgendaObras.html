@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Agenda de Obras — Brasil Portas</title>
+<title>Agenda de Obras — Brasil Vidros</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -290,7 +290,7 @@ window.dispatchEvent(new Event('fbReady'));
 <script>
 const STORE='obras_agenda_v2';
 const PALS=['pal0','pal1','pal2','pal3','pal4','pal5'];
-const EQUIPES=['Luiz','Rodrigo','Ênio','Gabriel','Michael Douglas','Valdir','Outros'];
+const EQUIPES=['Michael Gonçalves','Michael Douglas','Gabriel','Valdir','Evandro'];
 let cid=null,editMode=false,saveTimer=null,confirmCb=null;
 let dragSrc=null;
 
@@ -862,23 +862,21 @@ window.addEventListener('DOMContentLoaded',function(){
 
 // ── FIREBASE SYNC ──────────────────────────────────────────────
 (function(){
-  const FB_KEY = 'agenda_obras_portas';
-  const LSKEY = typeof STORE!=='undefined' ? STORE : 'app_data';
+  const FB_KEY = 'agenda_obras_vidros';
+  const LSKEY = 'obras_agenda_v2';
   let _fbIgnore = false;
 
   // Override persist/save to also push to Firebase
-  // Patch saveAll to also push to Firebase
+  // Patch saveAll to also push data to Firebase
   const _origSave = typeof saveAll==='function' ? saveAll : null;
-  function _afterSave(){
-    const raw = localStorage.getItem(LSKEY);
-    if(raw && window.__fbSave) window.__fbSave(FB_KEY, JSON.parse(raw));
-  }
-  if(_origSave) window.saveAll = function(){ _origSave(); _afterSave(); };
+  if(_origSave) window.saveAll = function(d){
+    _origSave(d);
+    if(window.__fbSave && d!==undefined) window.__fbSave(FB_KEY, d);
+  };
 
   function _fbReload(data){
     _fbIgnore = true;
-    localStorage.setItem(LSKEY, JSON.stringify(data));
-    // Re-init the day view
+    localStorage.setItem('obras_agenda_v2', JSON.stringify(data));
     const keys = Object.keys(data||{}).sort((a,b)=>b.localeCompare(a));
     if(keys.length && typeof loadDay==='function') loadDay(keys[0]);
     if(typeof renderSB==='function') renderSB();
