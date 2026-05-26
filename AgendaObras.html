@@ -865,26 +865,36 @@ window.addEventListener('DOMContentLoaded',function(){
   const FB_KEY = 'agenda_obras_vidros';
   const LSKEY = 'obras_agenda_v2';
   let _fbIgnore = false;
+  let _fbIgnoreTimer = null;
 
-  // Override persist/save to also push to Firebase
-  // Patch saveAll to also push data to Firebase
+  function _setIgnore(ms){
+    _fbIgnore = true;
+    clearTimeout(_fbIgnoreTimer);
+    _fbIgnoreTimer = setTimeout(()=>{ _fbIgnore=false; }, ms||2000);
+  }
+
+  // Patch saveAll to push to Firebase (but NOT during reload)
   const _origSave = typeof saveAll==='function' ? saveAll : null;
   if(_origSave) window.saveAll = function(d){
     _origSave(d);
-    if(window.__fbSave && d!==undefined) window.__fbSave(FB_KEY, d);
+    if(!_fbIgnore && window.__fbSave && d!==undefined){
+      window.__fbSave(FB_KEY, d);
+    }
   };
 
   function _fbReload(data){
-    _fbIgnore = true;
-    localStorage.setItem('obras_agenda_v2', JSON.stringify(data));
-    const keys = Object.keys(data||{}).sort((a,b)=>b.localeCompare(a));
-    if(keys.length && typeof loadDay==='function') loadDay(keys[0]);
-    if(typeof renderSB==='function') renderSB();
-    setTimeout(()=>_fbIgnore=false, 500);
+    _setIgnore(3000); // block saves for 3s while reloading
+    try{
+      localStorage.setItem(LSKEY, JSON.stringify(data));
+      const keys = Object.keys(data||{}).sort((a,b)=>b.localeCompare(a));
+      if(keys.length && typeof loadDay==='function') loadDay(keys[0]);
+      if(typeof renderSB==='function') renderSB();
+    }catch(e){ console.warn('fbReload error:',e); }
   }
 
   function _fbInit(){
     if(!window.__fbLoad) return;
+    // Load once on start
     window.__fbLoad(FB_KEY, function(data){
       if(!data) return;
       const local = localStorage.getItem(LSKEY);
@@ -892,6 +902,7 @@ window.addEventListener('DOMContentLoaded',function(){
       const isEmpty = !localParsed || !Object.keys(localParsed).length;
       if(isEmpty) _fbReload(data);
     });
+    // Listen for changes from OTHER devices only
     window.__fbListen(FB_KEY, function(data){
       if(_fbIgnore || !data) return;
       const current = localStorage.getItem(LSKEY);
