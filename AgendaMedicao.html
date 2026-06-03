@@ -308,93 +308,56 @@ const firebaseConfig = {
   messagingSenderId: "669693663227",
   appId: "1:669693663227:web:22a3bc8110a88c03c35d5e"
 };
-
 const fbApp = initializeApp(firebaseConfig);
 const db = getDatabase(fbApp);
-let __st = null;
 
-// Firebase arrays fix
-function __fixArrays(d){
-  if(d===null||d===undefined||typeof d!=='object'||Array.isArray(d)) return d;
+function __fix(d){
+  if(d===null||d===undefined||typeof d!=='object'||Array.isArray(d))return d;
   const keys=Object.keys(d);
   const isArr=keys.length>0&&keys.every(k=>/^\d+$/.test(k))&&
     keys.map(Number).sort((a,b)=>a-b).every((v,i)=>v===i);
-  if(isArr){const a=[];keys.map(Number).sort((a,b)=>a-b).forEach(k=>a.push(__fixArrays(d[k])));return a;}
-  const o={};for(const k of keys)o[k]=__fixArrays(d[k]);return o;
+  if(isArr){const a=[];keys.map(Number).sort((a,b)=>a-b).forEach(k=>a.push(__fix(d[k])));return a;}
+  const o={};for(const k of keys)o[k]=__fix(d[k]);return o;
 }
-window.__fixArrays=__fixArrays;
+window.__fixArrays=__fix;
 
-// ── SYNC BADGE ──────────────────────────────────────────────────
-function __getOrCreateBadge(){
+function __badge(msg,c,bg,keep){
   let el=document.getElementById('fbSync');
-  if(!el){
-    el=document.createElement('div');
-    el.id='fbSync';
+  if(!el){el=document.createElement('div');el.id='fbSync';
     el.style.cssText='position:fixed;bottom:14px;right:14px;font-size:11px;font-weight:600;'+
       'padding:5px 14px;border-radius:20px;pointer-events:none;z-index:9999;'+
-      'transition:all .4s;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;gap:6px;';
-    document.body.appendChild(el);
-  }
-  return el;
-}
-
-function __showSync(msg, c, bg, persist){
-  const el=__getOrCreateBadge();
-  el.innerHTML=msg;
-  el.style.color=c||'#00e5a0';
-  el.style.background=bg||'rgba(0,0,0,.7)';
-  el.style.opacity='1';
+      'transition:opacity .4s;box-shadow:0 2px 8px rgba(0,0,0,.3);';
+    document.body.appendChild(el);}
+  el.textContent=msg;el.style.color=c||'#00e5a0';
+  el.style.background=bg||'rgba(0,0,0,.7)';el.style.opacity='1';
   clearTimeout(el.__t);
-  if(!persist) el.__t=setTimeout(()=>el.style.opacity='0', 3000);
+  if(!keep)el.__t=setTimeout(()=>el.style.opacity='0',3000);
 }
 
-// ── OFFLINE DETECTION ──────────────────────────────────────────
-function __updateOnlineStatus(){
-  if(!navigator.onLine){
-    __showSync('📵 Sem internet — salvando localmente','#f5c842','rgba(120,80,0,.85)', true);
-  } else {
-    // Back online - hide offline badge
-    const el=document.getElementById('fbSync');
-    if(el&&el.textContent.includes('Sem internet')) el.style.opacity='0';
-  }
-}
-
-window.addEventListener('online',  ()=>{
-  __showSync('✅ Internet reconectada — sincronizando...','#00e5a0','rgba(0,0,0,.7)', false);
-  // Trigger a sync if possible
-  setTimeout(()=>{ if(window.__syncToCloud) window.__syncToCloud(); }, 500);
+window.addEventListener('online',()=>{
+  __badge('✅ Online — sincronizando...','#00e5a0','rgba(0,0,0,.7)');
+  setTimeout(()=>{if(window.__syncNow)window.__syncNow();},600);
 });
-window.addEventListener('offline', __updateOnlineStatus);
-// Check on load
-document.addEventListener('DOMContentLoaded', __updateOnlineStatus);
+window.addEventListener('offline',()=>__badge('📵 Sem internet — salvando localmente','#f5c842','rgba(100,60,0,.9)',true));
+document.addEventListener('DOMContentLoaded',()=>{if(!navigator.onLine)__badge('📵 Sem internet — salvando localmente','#f5c842','rgba(100,60,0,.9)',true);});
 
-// ── FIREBASE FUNCTIONS ─────────────────────────────────────────
+let __st=null;
 window.__fbSave=function(key,data){
-  if(!navigator.onLine){
-    __showSync('📵 Sem internet — salvando localmente','#f5c842','rgba(120,80,0,.85)', true);
-    return;
-  }
-  clearTimeout(__st);
-  __showSync('☁ sincronizando...','#f5c842','rgba(0,0,0,.7)', false);
+  if(!navigator.onLine){__badge('📵 Sem internet — salvando localmente','#f5c842','rgba(100,60,0,.9)',true);return;}
+  clearTimeout(__st);__badge('☁ sincronizando...','#f5c842','rgba(0,0,0,.7)');
   __st=setTimeout(()=>{
     set(ref(db,key),data)
-      .then(()=>__showSync('☁ sincronizado','#00e5a0','rgba(0,0,0,.7)', false))
-      .catch(e=>{
-        console.warn('FB:',e);
-        __showSync('⚠ erro ao sincronizar','#ff4d6d','rgba(80,0,0,.8)', false);
-      });
+      .then(()=>__badge('☁ sincronizado','#00e5a0','rgba(0,0,0,.7)'))
+      .catch(e=>{console.warn('FB:',e);__badge('⚠ erro sync','#ff4d6d','rgba(80,0,0,.8)');});
   },600);
 };
-
 window.__fbLoad=function(key,cb){
-  if(!navigator.onLine){ cb(null); return; }
-  get(ref(db,key)).then(s=>cb(s.exists()?__fixArrays(s.val()):null)).catch(()=>cb(null));
+  if(!navigator.onLine){cb(null);return;}
+  get(ref(db,key)).then(s=>cb(s.exists()?__fix(s.val()):null)).catch(()=>cb(null));
 };
-
 window.__fbListen=function(key,cb){
-  onValue(ref(db,key),s=>{ if(s.exists()) cb(__fixArrays(s.val())); });
+  onValue(ref(db,key),s=>{if(s.exists())cb(__fix(s.val()));});
 };
-
 window.__fbReady=true;
 window.dispatchEvent(new Event('fbReady'));
 </script>
@@ -915,108 +878,85 @@ window.addEventListener('DOMContentLoaded',()=>{
 
 // ── FIREBASE SYNC ──────────────────────────────────────────────
 (function(){
-  const FB_KEY = 'agenda_medicao_vidros';
+  const FB_KEY='agenda_medicao_vidros', LS_KEY='medicao_v4_vidros';
+  let _writing=false; // true while WE are saving to Firebase (suppress listener)
 
-  // Push current localStorage data to Firebase
-  window.__syncToCloud = function(){
-    if(!navigator.onLine || !window.__fbSave) return;
+  // Call this after any local save to push to Firebase
+  window.__syncNow=function(){
+    if(!navigator.onLine||!window.__fbSave)return;
     try{
-      const raw = localStorage.getItem('medicao_v4_vidros');
-      if(raw) window.__fbSave(FB_KEY, JSON.parse(raw));
+      const raw=localStorage.getItem(LS_KEY);
+      if(raw){ _writing=true; window.__fbSave(FB_KEY,JSON.parse(raw)); setTimeout(()=>_writing=false,3000); }
     }catch(e){}
   };
 
-  // Patch ALL save functions to sync to cloud
-  function _patchSaves(){
-    // scheduleSave (Agenda apps)
-    if(typeof scheduleSave==='function'){
-      const _orig = scheduleSave;
-      window.scheduleSave = function(){
-        _orig();
-        // sync after the save timer fires (~700ms)
-        setTimeout(window.__syncToCloud, 900);
-      };
-    }
-    // persist (VidrosEditor, BrasilPortas)
-    if(typeof persist==='function'){
-      const _orig = persist;
-      window.persist = function(){
-        _orig();
-        window.__syncToCloud();
-      };
-    }
-    // save (GestaoObras, Cronograma)
-    if(typeof save==='function' && save.toString().includes('localStorage')){
-      const _orig = save;
-      window.save = function(){
-        _orig();
-        window.__syncToCloud();
-      };
-    }
-    // saveAll
-    if(typeof saveAll==='function'){
-      const _orig = saveAll;
-      window.saveAll = function(d){
-        if(d!==undefined) _orig(d); else _orig();
-        window.__syncToCloud();
-      };
-    }
+  // Patch all save functions
+  function _patch(){
+    ['scheduleSave','persist','save','saveAll'].forEach(fn=>{
+      if(typeof window[fn]==='function' && !window[fn].__fbPatched){
+        const orig=window[fn];
+        window[fn]=function(){
+          const r=orig.apply(this,arguments);
+          window.__syncNow();
+          return r;
+        };
+        window[fn].__fbPatched=true;
+      }
+    });
   }
 
-  // Load from Firebase on start
+  // Apply data from Firebase to the app
+  function _apply(data){
+    if(!data)return;
+    const fixed=window.__fixArrays?window.__fixArrays(data):data;
+    // Ensure arrays inside projects
+    if(Array.isArray(fixed)){
+      fixed.forEach(p=>{
+        if(p.glasses&&!Array.isArray(p.glasses))p.glasses=Object.values(p.glasses);
+        if(p.doors&&!Array.isArray(p.doors))p.doors=Object.values(p.doors);
+      });
+    }
+    try{
+      localStorage.setItem('medicao_v4_vidros', JSON.stringify(fixed));
+      const keys=Object.keys(fixed||{}).sort((a,b)=>b.localeCompare(a));
+      if(keys.length&&typeof loadDay==='function') loadDay(keys[0]);
+      if(typeof renderSB==='function') renderSB();
+    }catch(e){ console.warn('reload err:',e); }
+  }
+
   function _fbInit(){
-    if(!window.__fbLoad){ setTimeout(_fbInit, 200); return; }
+    if(!window.__fbLoad){ setTimeout(_fbInit,300); return; }
 
-    // Patch saves after DOM ready
-    if(document.readyState==='loading')
-      document.addEventListener('DOMContentLoaded', _patchSaves);
-    else _patchSaves();
+    // Patch saves
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',_patch);
+    else _patch();
+    // Also re-patch after load (functions may be defined late)
+    setTimeout(_patch,1000);
 
-    window.__fbLoad('agenda_medicao_vidros', function(data){
-      if(!data) return;
-      try{
-        const local = localStorage.getItem('medicao_v4_vidros');
-        const localParsed = local ? JSON.parse(local) : null;
-        const isEmpty = !localParsed ||
-          (Array.isArray(localParsed) && !localParsed.length) ||
-          (typeof localParsed==='object' && !Array.isArray(localParsed) && !Object.keys(localParsed).length);
-        if(isEmpty){
-          localStorage.setItem('medicao_v4_vidros', JSON.stringify(data));
-          if(typeof load==='function') load();
-          if(typeof render==='function') render();
-          else if(typeof renderAll==='function') renderAll();
-          else if(typeof renderSB==='function'){
-            renderSB();
-            if(typeof renderContent==='function') renderContent();
-          }
+    // ALWAYS load from Firebase on start — it's the source of truth
+    window.__fbLoad(FB_KEY,function(fbData){
+      if(fbData){
+        _apply(fbData);  // Firebase wins on load
+      } else {
+        // No Firebase data yet — use localStorage and push to Firebase
+        const local=localStorage.getItem(LS_KEY);
+        if(local){
+          try{ const d=JSON.parse(local); if(d) window.__fbSave(FB_KEY,d); }catch(e){}
         }
-      }catch(e){ console.warn('fbLoad error:',e); }
+      }
     });
 
-    // Listen for changes from other devices (3s delay to avoid conflicts on load)
-    let _ready = false;
-    setTimeout(()=>_ready=true, 3000);
-    window.__fbListen('agenda_medicao_vidros', function(data){
-      if(!_ready || !data) return;
-      try{
-        const incoming = JSON.stringify(data);
-        const current = localStorage.getItem('medicao_v4_vidros');
-        if(incoming !== current){
-          localStorage.setItem('medicao_v4_vidros', JSON.stringify(data));
-          if(typeof load==='function') load();
-          if(typeof render==='function') render();
-          else if(typeof renderAll==='function') renderAll();
-          else if(typeof renderSB==='function'){
-            renderSB();
-            if(typeof renderContent==='function') renderContent();
-          }
-        }
-      }catch(e){}
+    // Listen for real-time changes from other devices
+    let _initDone=false;
+    setTimeout(()=>_initDone=true,3000);
+    window.__fbListen(FB_KEY,function(data){
+      if(!_initDone||_writing)return; // skip during init and our own saves
+      _apply(data);
     });
   }
 
-  if(window.__fbReady) _fbInit();
-  else window.addEventListener('fbReady', _fbInit, {once:true});
+  if(window.__fbReady)_fbInit();
+  else window.addEventListener('fbReady',_fbInit,{once:true});
 })();
 </script>
 </body>
