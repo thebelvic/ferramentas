@@ -782,7 +782,7 @@ function buildForm(o){
         ${(o.lancamentos||[]).map((l,li)=>`
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;">
           <!-- linha 1: data + categoria + valor -->
-          <div style="display:grid;grid-template-columns:160px 1fr 160px;gap:8px;align-items:end;">
+          <div style="display:grid;grid-template-columns:140px 1fr 160px;gap:8px;align-items:end;flex-wrap:wrap;">
             <div class="field">
               <label class="field-lbl">Data</label>
               <input class="field-inp" type="date" value="${l.data||''}" onchange="updLanc('${o.id}',${li},'data',this.value)">
@@ -1377,11 +1377,11 @@ function renderComp(){
   const cv=document.getElementById('compCanvas');
   if(!cv)return;
 
-  const W=1400;
+  const W=1600;
   const PAD=36;
   const HEADER_H=110;
   const SUMMARY_H=80;
-  const CHART_H=300;
+  const CHART_H=340;
   const ROW_H=46;
   const TABLE_HEADER_H=38;
   const TABLE_H=TABLE_HEADER_H+(list.length+1)*ROW_H+16;
@@ -1440,7 +1440,7 @@ function renderComp(){
   gl.addColorStop(0,'#f5c842');gl.addColorStop(1,'transparent');
   ctx.fillStyle=gl;ctx.fillRect(PAD,HEADER_H-4,400,4);
   t(PAD,22,'BRASIL VIDROS','700 13px Barlow Condensed,Arial','rgba(255,255,255,.45)');
-  t(PAD,60,'RELATÓRIO COMPARATIVO DE OBRAS','bold 36px Barlow Condensed,Arial','#fff');
+  t(PAD,60,'RELATÓRIO COMPARATIVO DE OBRAS','bold 42px Barlow Condensed,Arial','#fff');
   const filterLabel=document.getElementById('filterLabel')?.textContent||'';
   t(PAD,86,filterLabel||`${list.length} obra(s)`,'500 13px Inter,Arial','rgba(255,255,255,.5)');
   t(W-PAD,40,list.length+' obra(s)','bold 24px Barlow Condensed,Arial','#f5c842','right');
@@ -1507,12 +1507,12 @@ function renderComp(){
     const gy=chartInnerY+chartInnerH-i*(chartInnerH/gridLines);
     ctx.strokeStyle='#e2e8f0';ctx.lineWidth=.8;
     ctx.beginPath();ctx.moveTo(chartX+PAD,gy);ctx.lineTo(chartX+chartW-PAD,gy);ctx.stroke();
-    t(chartX+12,gy,fmtBRL(maxVal*i/gridLines),'500 9px Inter,Arial','#94a3b8','right');
+    t(chartX+PAD-4,gy,fmtBRL(maxVal*i/gridLines),'500 9px Inter,Arial','#94a3b8','right');
   }
 
   if(barCount>0){
     const barAreaW=chartW-PAD*2;
-    const barW=Math.min(60,Math.floor(barAreaW/barCount*0.6));
+    const barW=Math.min(80,Math.floor(barAreaW/barCount*0.65));
     const barSpacing=Math.floor(barAreaW/barCount);
     const allItems=[...activeCats.map((c,i)=>({label:c,val:catTotals[c],color:CAT_COLORS[CATS.indexOf(c)]})),
                     ...(hasDias?[{label:'⏱ Dias',val:diasTotal,color:'#f59e0b'}]:[])];
@@ -1524,12 +1524,24 @@ function renderComp(){
       const bg=ctx.createLinearGradient(bx,by,bx,by+bh);
       bg.addColorStop(0,item.color);bg.addColorStop(1,item.color+'88');
       ctx.fillStyle=bg;rr(bx,by,barW,bh,4);ctx.fill();
-      // value on top
-      t(bx+barW/2,by-8,fmtBRL(item.val),'700 9px Barlow Condensed,Arial',item.color,'center');
+      // value on top - only show if bar is tall enough
+      if(bh>20){
+        t(bx+barW/2,by-9,fmtBRL(item.val),'700 10px Barlow Condensed,Arial',item.color,'center');
+      } else {
+        // value above bar with dark pill bg for visibility
+        const lblTxt=fmtBRL(item.val);
+        ctx.font='700 9px Barlow Condensed,Arial';
+        const lblW=ctx.measureText(lblTxt).width+10;
+        ctx.fillStyle='rgba(15,23,42,.85)';
+        rr(bx+barW/2-lblW/2,by-20,lblW,14,3);ctx.fill();
+        ctx.strokeStyle=item.color+'66';ctx.lineWidth=1;
+        rr(bx+barW/2-lblW/2,by-20,lblW,14,3);ctx.stroke();
+        t(bx+barW/2,by-13,lblTxt,'700 9px Barlow Condensed,Arial',item.color,'center');
+      }
       // label below
-      const shortLbl=item.label.replace(/^[^\s]+\s/,'').slice(0,10);
-      t(bx+barW/2,chartInnerY+chartInnerH+10,shortLbl,'500 9px Inter,Arial','#64748b','center');
-      t(bx+barW/2,chartInnerY+chartInnerH+22,(item.val/Math.max(totalGeral,1)*100).toFixed(1)+'%','600 9px Barlow Condensed,Arial',item.color,'center');
+      const shortLbl=item.label.replace(/^[^\s]+\s/,'').replace(/Acessórios/,'Aces.').slice(0,14);
+      t(bx+barW/2,chartInnerY+chartInnerH+11,shortLbl,'600 10px Barlow Condensed,Arial','#94a3b8','center');
+      t(bx+barW/2,chartInnerY+chartInnerH+24,(item.val/Math.max(totalGeral,1)*100).toFixed(1)+'%','600 10px Barlow Condensed,Arial',item.color,'center');
     });
   }
   y+=CHART_H+PAD;
