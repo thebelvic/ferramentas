@@ -1364,6 +1364,14 @@ function abrirRelatorioComparativo(){
   renderComp();
 }
 function fecharComp(){document.getElementById('compModal').style.display='none';}
+function setChartType(type){
+  compChartType=type;
+  document.getElementById('btn-bars').style.background=type==='bars'?'#4f8ef7':'transparent';
+  document.getElementById('btn-bars').style.color=type==='bars'?'#fff':'#6b7fa8';
+  document.getElementById('btn-pizza').style.background=type==='pizza'?'#a78bfa':'transparent';
+  document.getElementById('btn-pizza').style.color=type==='pizza'?'#fff':'#6b7fa8';
+  renderComp();
+}
 function getCompObras(){
   const days=parseInt(document.getElementById('compPeriod').value)||0;
   if(days===0)return obras;
@@ -1469,9 +1477,9 @@ function renderComp(){
   });
   y+=SUMMARY_H;
 
-  // ── Bar Chart ─────────────────────────────────────────────────
-  const chartX=PAD, chartW=W-PAD*2;
+  // ── Chart (bars or pizza) ──────────────────────────────────────
   // chart card bg
+  const chartX=PAD, chartW=W-PAD*2;
   ctx.shadowColor='rgba(0,0,0,.06)';ctx.shadowBlur=12;ctx.shadowOffsetY=4;
   ctx.fillStyle='#fff';rr(chartX,y,chartW,CHART_H+8,12);ctx.fill();
   ctx.shadowBlur=0;ctx.shadowOffsetY=0;
@@ -1483,9 +1491,9 @@ function renderComp(){
   t(chartX+18,y+18,'DISTRIBUIÇÃO DE CUSTOS POR CATEGORIA','bold 13px Barlow Condensed,Arial','#fff');
 
   // legend inline
-  let lx=chartX+360;
+  let lx=chartX+370;
   CATS.forEach((c,i)=>{
-    const shortLabel=c.replace(/^[^\s]+\s/,''); // remove emoji
+    const shortLabel=c.replace(/^[^\s]+\s/,'');
     ctx.font='600 10px Barlow Condensed,Arial';
     const tw=ctx.measureText(shortLabel).width;
     if(lx+tw+22>W-PAD)return;
@@ -1494,63 +1502,99 @@ function renderComp(){
     lx+=tw+24;
   });
 
-  // chart area
-  const chartInnerY=y+54, chartInnerH=CHART_H-44-32;
-  const activeCats=CATS.filter(c=>catTotals[c]>0);
-  const hasDias=diasTotal>0;
-  const barCount=activeCats.length+(hasDias?1:0);
-  const maxVal=Math.max(...activeCats.map(c=>catTotals[c]), hasDias?diasTotal:0, 1);
+  const chartInnerY=y+54, chartInnerH=CHART_H-54-56;
 
-  // Y grid lines
-  const gridLines=4;
-  for(let i=0;i<=gridLines;i++){
-    const gy=chartInnerY+chartInnerH-i*(chartInnerH/gridLines);
-    ctx.strokeStyle='#e2e8f0';ctx.lineWidth=.8;
-    ctx.beginPath();ctx.moveTo(chartX+PAD,gy);ctx.lineTo(chartX+chartW-PAD,gy);ctx.stroke();
-    t(chartX+PAD-4,gy,fmtBRL(maxVal*i/gridLines),'500 9px Inter,Arial','#94a3b8','right');
-  }
+  if(compChartType==='pizza'){
+    // ── PIZZA CHART ──────────────────────────────────────────────
+    const allItemsPie=[...activeCats.map((c,ii)=>({label:c,val:catTotals[c],color:CAT_COLORS[CATS.indexOf(c)]})),
+                    ...(hasDias?[{label:'⏱ Dias',val:diasTotal,color:'#f59e0b'}]:[])];
+    const totalPie=allItemsPie.reduce((s,item)=>s+item.val,0);
+    if(totalPie>0){
+      const cx2=chartX+chartW*0.35, cy2=chartInnerY+chartInnerH/2+10;
+      const radius=Math.min(chartInnerH/2-20, 120);
+      let startAngle=-Math.PI/2;
+      // draw slices
+      allItemsPie.forEach((item,ii)=>{
+        const slice=(item.val/totalPie)*Math.PI*2;
+        const endAngle=startAngle+slice;
+        const midAngle=startAngle+slice/2;
+        // slice
+        ctx.beginPath();ctx.moveTo(cx2,cy2);
+        ctx.arc(cx2,cy2,radius,startAngle,endAngle);
+        ctx.closePath();
+        ctx.fillStyle=item.color;ctx.fill();
+        ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+        // pct label inside slice if big enough
+        if(slice>0.25){
+          const lrx=cx2+Math.cos(midAngle)*(radius*0.65);
+          const lry=cy2+Math.sin(midAngle)*(radius*0.65);
+          const pctTxt=(item.val/totalPie*100).toFixed(1)+'%';
+          t(lrx,lry,pctTxt,'bold 11px Barlow Condensed,Arial','#fff','center');
+        }
+        startAngle=endAngle;
+      });
+      // center circle (donut)
+      ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx2,cy2,radius*0.42,0,Math.PI*2);ctx.fill();
+      t(cx2,cy2-8,fmtBRL(totalPie),'bold 12px Barlow Condensed,Arial','#1e293b','center');
+      t(cx2,cy2+8,'Total Custos','500 9px Inter,Arial','#64748b','center');
 
-  if(barCount>0){
+      // legend on the right
+      const legX=chartX+chartW*0.55, legY=chartInnerY+20;
+      const legItemH=26;
+      allItemsPie.forEach((item,ii)=>{
+        const ly2=legY+ii*legItemH;
+        if(ly2+legItemH>chartInnerY+chartInnerH+20)return;
+        ctx.fillStyle=item.color;rr(legX,ly2+2,14,14,3);ctx.fill();
+        const shortLbl=item.label.replace(/^[^\s]+\s/,'').replace(/Acessórios/,'Aces.').slice(0,18);
+        t(legX+20,ly2+9,shortLbl,'500 11px Inter,Arial','#475569');
+        t(legX+chartW*0.43,ly2+9,fmtBRL(item.val),'700 11px Barlow Condensed,Arial',item.color,'right');
+        const pct=(item.val/totalPie*100).toFixed(1)+'%';
+        ctx.fillStyle=item.color+'22';rr(legX+chartW*0.43+4,ly2,36,18,4);ctx.fill();
+        t(legX+chartW*0.43+22,ly2+9,pct,'700 9px Barlow Condensed,Arial',item.color,'center');
+      });
+    }
+  } else {
+    // ── BAR CHART ────────────────────────────────────────────────
     const barAreaW=chartW-PAD*2;
     const barW=Math.min(80,Math.floor(barAreaW/barCount*0.65));
     const barSpacing=Math.floor(barAreaW/barCount);
     const allItems=[...activeCats.map((c,i)=>({label:c,val:catTotals[c],color:CAT_COLORS[CATS.indexOf(c)]})),
-                    ...(hasDias?[{label:'⏱ Dias',val:diasTotal,color:'#f59e0b'}]:[])];
+                    ...(hasDias?[{label:'⏱ Dias Trabalhados',val:diasTotal,color:'#f59e0b'}]:[])];
+
+    // Y grid lines
+    const gridLines=4;
+    for(let i=0;i<=gridLines;i++){
+      const gy=chartInnerY+chartInnerH-i*(chartInnerH/gridLines);
+      ctx.strokeStyle='#e2e8f0';ctx.lineWidth=.8;
+      ctx.beginPath();ctx.moveTo(chartX+PAD,gy);ctx.lineTo(chartX+chartW-PAD,gy);ctx.stroke();
+      t(chartX+PAD-4,gy,fmtBRL(maxVal*i/gridLines),'500 9px Inter,Arial','#94a3b8','right');
+    }
+
     allItems.forEach((item,i)=>{
       const bx=chartX+PAD+i*barSpacing+(barSpacing-barW)/2;
       const bh=Math.max(4,Math.floor((item.val/maxVal)*chartInnerH));
       const by=chartInnerY+chartInnerH-bh;
-
-      // bar gradient
       const bg=ctx.createLinearGradient(bx,by,bx,by+bh);
       bg.addColorStop(0,item.color+'ee');bg.addColorStop(1,item.color+'44');
       ctx.fillStyle=bg;rr(bx,by,barW,bh,5);ctx.fill();
-      // top glow line
       ctx.strokeStyle=item.color;ctx.lineWidth=2;
       ctx.beginPath();ctx.moveTo(bx+5,by);ctx.lineTo(bx+barW-5,by);ctx.stroke();
 
-      // pill label always above bar
+      // value pill
       const lblTxt=fmtBRL(item.val);
       ctx.font='bold 11px Barlow Condensed,Arial';
       const lblW=ctx.measureText(lblTxt).width+16;
-      const lblX=Math.max(chartX+PAD, Math.min(bx+barW/2-lblW/2, chartX+chartW-PAD-lblW));
+      const lblX=Math.max(chartX+PAD,Math.min(bx+barW/2-lblW/2,chartX+chartW-PAD-lblW));
       const lblY=by-30;
-      ctx.fillStyle='rgba(8,12,24,.95)';
-      rr(lblX,lblY,lblW,20,5);ctx.fill();
-      ctx.strokeStyle=item.color;ctx.lineWidth=1.2;
-      rr(lblX,lblY,lblW,20,5);ctx.stroke();
+      ctx.fillStyle='rgba(8,12,24,.95)';rr(lblX,lblY,lblW,20,5);ctx.fill();
+      ctx.strokeStyle=item.color;ctx.lineWidth=1.2;rr(lblX,lblY,lblW,20,5);ctx.stroke();
       t(lblX+lblW/2,lblY+10,lblTxt,'bold 11px Barlow Condensed,Arial',item.color,'center');
-
-      // thin connector
-      ctx.strokeStyle=item.color+'66';ctx.lineWidth=1;
-      ctx.setLineDash([3,2]);
+      ctx.strokeStyle=item.color+'66';ctx.lineWidth=1;ctx.setLineDash([3,2]);
       ctx.beginPath();ctx.moveTo(bx+barW/2,lblY+20);ctx.lineTo(bx+barW/2,by);ctx.stroke();
       ctx.setLineDash([]);
 
-      // category name below
       const shortLbl=item.label.replace(/^[^\s]+\s/,'').replace(/Acessórios/,'Aces.').replace(/Trabalhados/,'Trab.').slice(0,12);
       t(bx+barW/2,chartInnerY+chartInnerH+14,shortLbl,'700 10px Barlow Condensed,Arial','#e2e8f0','center');
-      // pct badge
       const pct=(item.val/Math.max(totalGeral,1)*100).toFixed(1)+'%';
       ctx.fillStyle=item.color+'25';rr(bx+barW/2-18,chartInnerY+chartInnerH+21,36,14,4);ctx.fill();
       t(bx+barW/2,chartInnerY+chartInnerH+28,pct,'700 9px Barlow Condensed,Arial',item.color,'center');
@@ -1748,6 +1792,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeNewModal();clo
     <div style="background:#0a0f1a;padding:14px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;">
       <span style="color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;letter-spacing:1px;flex:1;">📊 RELATÓRIO COMPARATIVO DE OBRAS</span>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div style="display:flex;background:#1a2236;border:1px solid #2a3550;border-radius:7px;overflow:hidden;">
+          <button id="btn-bars" onclick="setChartType('bars')" style="padding:6px 12px;font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;border:none;cursor:pointer;background:#4f8ef7;color:#fff;transition:all .15s;">📊 Barras</button>
+          <button id="btn-pizza" onclick="setChartType('pizza')" style="padding:6px 12px;font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;border:none;cursor:pointer;background:transparent;color:#6b7fa8;transition:all .15s;">🥧 Pizza</button>
+        </div>
         <select id="compPeriod" onchange="renderComp()" style="background:#1a2236;border:1px solid #2a3550;color:#f0f4ff;border-radius:7px;padding:6px 10px;font-size:12px;font-family:'Barlow Condensed',sans-serif;font-weight:600;cursor:pointer;outline:none;">
           <option value="15">Últimos 15 dias</option>
           <option value="30" selected>Últimos 30 dias</option>
