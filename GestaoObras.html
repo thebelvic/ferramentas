@@ -798,12 +798,12 @@ function buildForm(o){
               <label class="field-lbl">Valor (R$)</label>
               <div style="position:relative;">
                 <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted);font-weight:600;pointer-events:none;">R$</span>
-                <input class="field-inp" type="text" inputmode="decimal" style="padding-left:26px;" value="${l.valor?fmtNum(l.valor):''}" placeholder="0,00" oninput="updLanc('${o.id}',${li},'valor',parseBRL(this.value))" onblur="formatMoneyInput(this)">
+                <input class="field-inp" type="text" inputmode="decimal" style="padding-left:26px;min-width:0;width:100%;" value="${l.valor?fmtNum(l.valor):''}" placeholder="0,00" oninput="updLanc('${o.id}',${li},'valor',parseBRL(this.value))" onblur="formatMoneyInput(this)">
               </div>
             </div>
           </div>
           <!-- linha 2: local + forma + descrição + excluir -->
-          <div style="display:grid;grid-template-columns:160px 160px 1fr 36px;gap:8px;align-items:end;">
+          <div style="display:grid;grid-template-columns:140px 140px 1fr 36px;gap:8px;align-items:end;min-width:0;">
             <div class="field">
               <label class="field-lbl">Local de Compra</label>
               <select class="field-inp" onchange="updLanc('${o.id}',${li},'local',this.value)">
@@ -1381,7 +1381,7 @@ function renderComp(){
   const PAD=36;
   const HEADER_H=110;
   const SUMMARY_H=80;
-  const CHART_H=340;
+  const CHART_H=380;
   const ROW_H=46;
   const TABLE_HEADER_H=38;
   const TABLE_H=TABLE_HEADER_H+(list.length+1)*ROW_H+16;
@@ -1495,7 +1495,7 @@ function renderComp(){
   });
 
   // chart area
-  const chartInnerY=y+44, chartInnerH=CHART_H-44-32;
+  const chartInnerY=y+54, chartInnerH=CHART_H-44-32;
   const activeCats=CATS.filter(c=>catTotals[c]>0);
   const hasDias=diasTotal>0;
   const barCount=activeCats.length+(hasDias?1:0);
@@ -1518,30 +1518,42 @@ function renderComp(){
                     ...(hasDias?[{label:'⏱ Dias',val:diasTotal,color:'#f59e0b'}]:[])];
     allItems.forEach((item,i)=>{
       const bx=chartX+PAD+i*barSpacing+(barSpacing-barW)/2;
-      const bh=Math.max(2,Math.floor((item.val/maxVal)*chartInnerH));
+      const bh=Math.max(4,Math.floor((item.val/maxVal)*chartInnerH));
       const by=chartInnerY+chartInnerH-bh;
+
       // bar gradient
       const bg=ctx.createLinearGradient(bx,by,bx,by+bh);
-      bg.addColorStop(0,item.color);bg.addColorStop(1,item.color+'88');
-      ctx.fillStyle=bg;rr(bx,by,barW,bh,4);ctx.fill();
-      // value on top - only show if bar is tall enough
-      if(bh>20){
-        t(bx+barW/2,by-9,fmtBRL(item.val),'700 10px Barlow Condensed,Arial',item.color,'center');
-      } else {
-        // value above bar with dark pill bg for visibility
-        const lblTxt=fmtBRL(item.val);
-        ctx.font='700 9px Barlow Condensed,Arial';
-        const lblW=ctx.measureText(lblTxt).width+10;
-        ctx.fillStyle='rgba(15,23,42,.85)';
-        rr(bx+barW/2-lblW/2,by-20,lblW,14,3);ctx.fill();
-        ctx.strokeStyle=item.color+'66';ctx.lineWidth=1;
-        rr(bx+barW/2-lblW/2,by-20,lblW,14,3);ctx.stroke();
-        t(bx+barW/2,by-13,lblTxt,'700 9px Barlow Condensed,Arial',item.color,'center');
-      }
-      // label below
-      const shortLbl=item.label.replace(/^[^\s]+\s/,'').replace(/Acessórios/,'Aces.').slice(0,14);
-      t(bx+barW/2,chartInnerY+chartInnerH+11,shortLbl,'600 10px Barlow Condensed,Arial','#94a3b8','center');
-      t(bx+barW/2,chartInnerY+chartInnerH+24,(item.val/Math.max(totalGeral,1)*100).toFixed(1)+'%','600 10px Barlow Condensed,Arial',item.color,'center');
+      bg.addColorStop(0,item.color+'ee');bg.addColorStop(1,item.color+'44');
+      ctx.fillStyle=bg;rr(bx,by,barW,bh,5);ctx.fill();
+      // top glow line
+      ctx.strokeStyle=item.color;ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(bx+5,by);ctx.lineTo(bx+barW-5,by);ctx.stroke();
+
+      // pill label always above bar
+      const lblTxt=fmtBRL(item.val);
+      ctx.font='bold 11px Barlow Condensed,Arial';
+      const lblW=ctx.measureText(lblTxt).width+16;
+      const lblX=Math.max(chartX+PAD, Math.min(bx+barW/2-lblW/2, chartX+chartW-PAD-lblW));
+      const lblY=by-30;
+      ctx.fillStyle='rgba(8,12,24,.95)';
+      rr(lblX,lblY,lblW,20,5);ctx.fill();
+      ctx.strokeStyle=item.color;ctx.lineWidth=1.2;
+      rr(lblX,lblY,lblW,20,5);ctx.stroke();
+      t(lblX+lblW/2,lblY+10,lblTxt,'bold 11px Barlow Condensed,Arial',item.color,'center');
+
+      // thin connector
+      ctx.strokeStyle=item.color+'66';ctx.lineWidth=1;
+      ctx.setLineDash([3,2]);
+      ctx.beginPath();ctx.moveTo(bx+barW/2,lblY+20);ctx.lineTo(bx+barW/2,by);ctx.stroke();
+      ctx.setLineDash([]);
+
+      // category name below
+      const shortLbl=item.label.replace(/^[^\s]+\s/,'').replace(/Acessórios/,'Aces.').replace(/Trabalhados/,'Trab.').slice(0,12);
+      t(bx+barW/2,chartInnerY+chartInnerH+14,shortLbl,'700 10px Barlow Condensed,Arial','#e2e8f0','center');
+      // pct badge
+      const pct=(item.val/Math.max(totalGeral,1)*100).toFixed(1)+'%';
+      ctx.fillStyle=item.color+'25';rr(bx+barW/2-18,chartInnerY+chartInnerH+21,36,14,4);ctx.fill();
+      t(bx+barW/2,chartInnerY+chartInnerH+28,pct,'700 9px Barlow Condensed,Arial',item.color,'center');
     });
   }
   y+=CHART_H+PAD;
