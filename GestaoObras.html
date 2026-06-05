@@ -780,7 +780,7 @@ function buildForm(o){
       <div class="section-body" style="padding:12px 16px;">
         ${(o.lancamentos||[]).length===0?`<div style="text-align:center;color:var(--muted);font-size:13px;padding:16px 0;">Nenhum lançamento. Clique em ＋ Lançamento para adicionar.</div>`:''}
         ${(o.lancamentos||[]).map((l,li)=>`
-        <div style="display:grid;grid-template-columns:1fr 1fr 120px 130px 36px;gap:8px;align-items:end;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 110px 130px 120px 36px;gap:8px;align-items:end;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
           <div class="field">
             <label class="field-lbl">Data</label>
             <input class="field-inp" type="date" value="${l.data||''}" onchange="updLanc('${o.id}',${li},'data',this.value)">
@@ -798,6 +798,13 @@ function buildForm(o){
               <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted);font-weight:600;pointer-events:none;">R$</span>
               <input class="field-inp" type="text" inputmode="decimal" style="padding-left:26px;" value="${l.valor?fmtNum(l.valor):''}" placeholder="0,00" oninput="updLanc('${o.id}',${li},'valor',parseBRL(this.value))" onblur="formatMoneyInput(this)">
             </div>
+          </div>
+          <div class="field">
+            <label class="field-lbl">Local de Compra</label>
+            <select class="field-inp" onchange="updLanc('${o.id}',${li},'local',this.value)">
+              <option value="">— Local —</option>
+              ${['Primos','UBVA','Vidraria','Rei Glass','JRS','Aluprime','Aluminew','Miranda','Pacre','Aliança','Cristal Cor','Outro'].map(l=>`<option value="${l}" ${l===li?'selected':''}>${l}</option>`).join('')}
+            </select>
           </div>
           <div class="field">
             <label class="field-lbl">Forma de Pag.</label>
@@ -870,24 +877,6 @@ function buildForm(o){
   const total=countDias(o);
   return total>0?`<div style='display:flex;flex-wrap:wrap;gap:6px;align-items:center;'><span style='font-size:11px;color:var(--muted);font-weight:700;'>DIAS POR MÊS:</span>${linhas.join('')}<span style='font-size:11px;color:var(--green);font-weight:700;margin-left:4px;'>= ${total} dias no total</span></div>`:'';
 })()}
-      </div>
-    </div>
-
-    <div class="section-card">
-      <div class="section-hdr">
-        <div class="section-hdr-ico" style="background:var(--gold-dim);">📍</div>
-        <div class="section-hdr-title">LOCAIS DE COMPRA</div>
-      </div>
-      <div class="section-body">
-        <div class="locais-grid">
-          ${LOCAIS.map(l=>{
-            const sel=(o.locais||[]).includes(l);
-            return`<label class="local-chip${sel?' sel':''}">
-              <input type="checkbox" ${sel?'checked':''} onchange="toggleLocal('${o.id}','${l}',this.checked)">
-              <span class="local-chip-lbl">${l}</span>
-            </label>`;
-          }).join('')}
-        </div>
       </div>
     </div>
 
@@ -1379,31 +1368,22 @@ function getCompObras(){
 function renderComp(){
   const list=getCompObras();
   const cv=document.getElementById('compCanvas');
-  const days=parseInt(document.getElementById('compPeriod').value)||0;
-  const periodLabel=days===0?'Todas as obras':`Últimos ${days} dias`;
+  if(!cv)return;
 
-  // canvas size: header + summary cards + bar chart + table + footer
-  const OBRA_COL=200;
-  const CATS_ALL=['🪟 Vidro','🔩 Perfil','🧪 Insumo','⛽ Gasolina','🔑 Ferragens/Acessórios','👷 Terceiros','🌧️ Calha e Rufo','🎞️ Película','📦 Outros'];
-  const COLS=['OBRA / CLIENTE','TOTAL CUSTOS','DIAS','TOTAL GERAL','VENDA','LUCRO','%'];
-  const KEYS=['_lanc','_dias','_total','_venda','_lucro','_pct'];
-  const COLORS=['#ef4444','#f59e0b','#dc2626','#2563eb','#059669','#059669'];
-
-  const W=1200;
-  const HEADER_H=100;
-  const SUMMARY_H=130;
-  const CHART_H=320;
-  const TABLE_ROW_H=44;
-  const TABLE_HEADER_H=40;
-  const TABLE_H=TABLE_HEADER_H+(list.length+1)*TABLE_ROW_H+16;
-  const FOOTER_H=44;
+  const W=1400;
   const PAD=36;
-  const H=HEADER_H+SUMMARY_H+CHART_H+TABLE_H+FOOTER_H+PAD*3;
+  const HEADER_H=110;
+  const SUMMARY_H=80;
+  const CHART_H=300;
+  const ROW_H=46;
+  const TABLE_HEADER_H=38;
+  const TABLE_H=TABLE_HEADER_H+(list.length+1)*ROW_H+16;
+  const FOOTER_H=40;
+  const H=HEADER_H+SUMMARY_H+CHART_H+TABLE_H+FOOTER_H+PAD*4;
 
   cv.width=W; cv.height=H;
   const ctx=cv.getContext('2d');
 
-  // helpers
   function rr(x,y,w,h,r){
     if(w<=0||h<=0)return;
     ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
@@ -1412,187 +1392,215 @@ function renderComp(){
     ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
     ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
   }
-  function t(text,x,y,font,color,align='left',base='middle'){
-    ctx.save();ctx.font=font;ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline=base;
-    ctx.fillText(String(text||'—'),x,y);ctx.restore();
+  function t(x,y,text,font,color,align,base){
+    ctx.save();ctx.font=font||'500 13px Inter,Arial';
+    ctx.fillStyle=color||'#1e293b';ctx.textAlign=align||'left';
+    ctx.textBaseline=base||'middle';ctx.fillText(String(text||''),x,y);ctx.restore();
   }
-  function shadow(fn){ctx.save();ctx.shadowColor='rgba(0,0,0,.08)';ctx.shadowBlur=14;ctx.shadowOffsetY=4;fn();ctx.restore();}
+  function fmtPct(v){return(v>=0?'+':'')+v.toFixed(1)+'%';}
 
-  // BG
-  ctx.fillStyle='#f8fafc';ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='rgba(148,163,184,.1)';
-  for(let x=0;x<W;x+=24)for(let y=0;y<H;y+=24){ctx.beginPath();ctx.arc(x,y,1.2,0,Math.PI*2);ctx.fill();}
-
-  // HEADER
-  const hg=ctx.createLinearGradient(0,0,W,0);
-  hg.addColorStop(0,'#0a0f1a');hg.addColorStop(.6,'#1e1b4b');hg.addColorStop(1,'#312e81');
-  ctx.fillStyle=hg;ctx.fillRect(0,0,W,HEADER_H);
-  const gl=ctx.createLinearGradient(PAD,HEADER_H-4,PAD+300,HEADER_H-4);
-  gl.addColorStop(0,'#7c3aed');gl.addColorStop(1,'transparent');
-  ctx.fillStyle=gl;ctx.fillRect(PAD,HEADER_H-4,300,4);
-  t('BRASIL VIDROS',PAD,26,'600 14px Barlow Condensed,Arial','rgba(255,255,255,.4)');
-  t('RELATÓRIO COMPARATIVO DE OBRAS',PAD,60,'bold 36px Barlow Condensed,Arial','#fff');
-  t(periodLabel+' • '+list.length+' obra(s)',PAD,84,'500 13px Inter,Arial','rgba(255,255,255,.45)');
-  t('Gerado em '+new Date().toLocaleDateString('pt-BR'),W-PAD,60,'500 13px Inter,Arial','rgba(255,255,255,.35)','right');
-
-  // TOTALS per category
-  const totals={};
-  const totalGeral2=list.reduce((s,o)=>s+calcObra(o).totalCusto,0);
-  const totalVenda2=list.reduce((s,o)=>s+(parseFloat(o.valorVenda)||0),0);
-  const totalLucro2=totalVenda2-totalGeral2;
-  const totalGeral=KEYS.reduce((s,k)=>s+totals[k],0);
+  // ── Totals ──────────────────────────────────────────────────
+  const totalGeral=list.reduce((s,o)=>s+calcObra(o).totalCusto,0);
   const totalVenda=list.reduce((s,o)=>s+(parseFloat(o.valorVenda)||0),0);
   const totalLucro=totalVenda-totalGeral;
 
-  // SUMMARY CARDS
+  // Group lancamentos by category across all obras for chart
+  const CATS=['🪟 Vidro','🔩 Perfil','🧪 Insumo','⛽ Gasolina','🔑 Ferragens/Acessórios','👷 Terceiros','🌧️ Calha e Rufo','🎞️ Película','📦 Outros'];
+  const CAT_COLORS=['#4f8ef7','#f5c842','#a78bfa','#f97316','#06b6d4','#10b981','#84cc16','#e879f9','#ef4444'];
+  const catTotals={};
+  CATS.forEach(c=>catTotals[c]=0);
+  list.forEach(o=>(o.lancamentos||[]).forEach(l=>{
+    const c=l.cat||'📦 Outros';
+    if(catTotals[c]!==undefined) catTotals[c]+=parseFloat(l.valor)||0;
+    else catTotals['📦 Outros']+=parseFloat(l.valor)||0;
+  }));
+  const diasTotal=list.reduce((s,o)=>s+totalDiasCusto(o),0);
+
+  // ── Background ──────────────────────────────────────────────
+  ctx.fillStyle='#f8fafc';ctx.fillRect(0,0,W,H);
+  // dot pattern
+  ctx.fillStyle='rgba(148,163,184,.08)';
+  for(let x=0;x<W;x+=20)for(let y=0;y<H;y+=20){ctx.beginPath();ctx.arc(x,y,1,0,Math.PI*2);ctx.fill();}
+
+  // ── Header ──────────────────────────────────────────────────
+  const hg=ctx.createLinearGradient(0,0,W,0);
+  hg.addColorStop(0,'#0f4c75');hg.addColorStop(.5,'#1b6ca8');hg.addColorStop(1,'#0d7377');
+  ctx.fillStyle=hg;ctx.fillRect(0,0,W,HEADER_H);
+  ctx.save();ctx.globalAlpha=.07;ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.arc(W-60,55,120,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  const gl=ctx.createLinearGradient(PAD,HEADER_H-4,PAD+400,HEADER_H-4);
+  gl.addColorStop(0,'#f5c842');gl.addColorStop(1,'transparent');
+  ctx.fillStyle=gl;ctx.fillRect(PAD,HEADER_H-4,400,4);
+  t(PAD,22,'BRASIL VIDROS','700 13px Barlow Condensed,Arial','rgba(255,255,255,.45)');
+  t(PAD,60,'RELATÓRIO COMPARATIVO DE OBRAS','bold 36px Barlow Condensed,Arial','#fff');
+  const filterLabel=document.getElementById('filterLabel')?.textContent||'';
+  t(PAD,86,filterLabel||`${list.length} obra(s)`,'500 13px Inter,Arial','rgba(255,255,255,.5)');
+  t(W-PAD,40,list.length+' obra(s)','bold 24px Barlow Condensed,Arial','#f5c842','right');
+  t(W-PAD,68,'Gerado em '+new Date().toLocaleDateString('pt-BR'),'500 12px Inter,Arial','rgba(255,255,255,.4)','right');
+
   let y=HEADER_H+PAD;
+
+  // ── Summary cards ────────────────────────────────────────────
   const summCards=[
-    {lbl:'OBRAS NO PERÍODO',val:list.length+'',color:'#6366f1',bg:'#eef2ff'},
+    {lbl:'OBRAS',val:list.length+'',color:'#6366f1',bg:'#eef2ff'},
     {lbl:'FATURAMENTO',val:fmtBRL(totalVenda),color:'#2563eb',bg:'#eff6ff'},
     {lbl:'CUSTO TOTAL',val:fmtBRL(totalGeral),color:'#dc2626',bg:'#fef2f2'},
-    {lbl:totalLucro>=0?'LUCRO TOTAL':'PREJUÍZO',val:fmtBRL(Math.abs(totalLucro)),color:totalLucro>=0?'#059669':'#dc2626',bg:totalLucro>=0?'#f0fdf4':'#fef2f2'},
+    {lbl:'LUCRO TOTAL',val:fmtBRL(totalLucro),color:totalLucro>=0?'#059669':'#dc2626',bg:totalLucro>=0?'#f0fdf4':'#fef2f2'},
     {lbl:'MARGEM GERAL',val:totalVenda>0?fmtPct(totalLucro/totalVenda*100):'+0.0%',color:totalLucro>=0?'#059669':'#dc2626',bg:totalLucro>=0?'#f0fdf4':'#fef2f2'},
   ];
   const scW=Math.floor((W-PAD*2-12*4)/5);
   summCards.forEach((sc,i)=>{
-    const sx=PAD+i*(scW+12);
-    shadow(()=>{ctx.fillStyle=sc.bg;rr(sx,y,scW,SUMMARY_H-16,12);ctx.fill();});
-    ctx.fillStyle=sc.color;ctx.fillRect(sx,y,scW,4);
-    t(sc.lbl,sx+scW/2,y+32,'700 11px Barlow Condensed,Arial',sc.color,'center');
-    t(sc.val,sx+scW/2,y+72,'bold 22px Barlow Condensed,Arial',sc.color,'center');
+    const sx=PAD+i*(scW+12),sy=y;
+    ctx.shadowColor='rgba(0,0,0,.06)';ctx.shadowBlur=10;ctx.shadowOffsetY=3;
+    ctx.fillStyle=sc.bg;rr(sx,sy,scW,60,10);ctx.fill();
+    ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+    ctx.strokeStyle=sc.color+'33';ctx.lineWidth=1;rr(sx,sy,scW,60,10);ctx.stroke();
+    ctx.fillStyle=sc.color;ctx.fillRect(sx,sy,scW,3);
+    t(sx+scW/2,sy+16,sc.lbl,'700 10px Barlow Condensed,Arial',sc.color,'center');
+    t(sx+scW/2,sy+40,sc.val,'bold 18px Barlow Condensed,Arial',sc.color,'center');
   });
-  y+=SUMMARY_H+PAD;
+  y+=SUMMARY_H;
 
-  // BAR CHART — grouped bars per category
-  if(list.length===0){
-    ctx.fillStyle='#94a3b8';ctx.font='500 16px Inter,Arial';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText('Nenhuma obra no período selecionado.',W/2,y+CHART_H/2);
-    y+=CHART_H+PAD;
-  } else {
-    // card
-    shadow(()=>{ctx.fillStyle='#fff';rr(PAD,y,W-PAD*2,CHART_H,14);ctx.fill();});
-    const chHg=ctx.createLinearGradient(PAD,y,PAD+W-PAD*2,y);
-    chHg.addColorStop(0,'#1e1b4b');chHg.addColorStop(1,'#312e81');
-    ctx.fillStyle=chHg;
-    ctx.save();ctx.beginPath();ctx.moveTo(PAD+14,y);ctx.lineTo(PAD+W-PAD*2-14,y);
-    ctx.quadraticCurveTo(PAD+W-PAD*2,y,PAD+W-PAD*2,y+14);ctx.lineTo(PAD+W-PAD*2,y+80);
-    ctx.lineTo(PAD,y+80);ctx.lineTo(PAD,y+14);ctx.quadraticCurveTo(PAD,y,PAD+14,y);
-    ctx.closePath();ctx.fill();ctx.restore();
-    t('DISTRIBUIÇÃO DE CUSTOS POR CATEGORIA',PAD+18,y+22,'bold 14px Barlow Condensed,Arial','#fff');
+  // ── Bar Chart ─────────────────────────────────────────────────
+  const chartX=PAD, chartW=W-PAD*2;
+  // chart card bg
+  ctx.shadowColor='rgba(0,0,0,.06)';ctx.shadowBlur=12;ctx.shadowOffsetY=4;
+  ctx.fillStyle='#fff';rr(chartX,y,chartW,CHART_H+8,12);ctx.fill();
+  ctx.shadowBlur=0;ctx.shadowOffsetY=0;
 
-    // legend on second row - split into two rows if needed
-    const itemW=Math.floor((W-PAD*2)/KEYS.length);
-    KEYS.forEach((k,i)=>{
-      const lx=PAD+i*itemW;
-      const ly=y+50;
-      ctx.fillStyle=COLORS[i];ctx.beginPath();ctx.arc(lx+6,ly,5,0,Math.PI*2);ctx.fill();
-      t(COLS[i],lx+15,ly,'600 10px Barlow Condensed,Arial','rgba(255,255,255,.75)');
-    });
+  // header bar
+  const chHg=ctx.createLinearGradient(chartX,y,chartX+chartW,y);
+  chHg.addColorStop(0,'#1e293b');chHg.addColorStop(1,'#2d3f55');
+  ctx.fillStyle=chHg;rr(chartX,y,chartW,36,12);ctx.fill();
+  t(chartX+18,y+18,'DISTRIBUIÇÃO DE CUSTOS POR CATEGORIA','bold 13px Barlow Condensed,Arial','#fff');
 
-    const chartPad=50;
-    const chartX=PAD+chartPad;
-    const chartW=W-PAD*2-chartPad*2;
-    const chartY=y+90;
-    const chartH=CHART_H-100;
-    const maxVal=Math.max(...Object.values(totals),1);
-    const gridLines=5;
+  // legend inline
+  let lx=chartX+360;
+  CATS.forEach((c,i)=>{
+    const shortLabel=c.replace(/^[^\s]+\s/,''); // remove emoji
+    ctx.font='600 10px Barlow Condensed,Arial';
+    const tw=ctx.measureText(shortLabel).width;
+    if(lx+tw+22>W-PAD)return;
+    ctx.fillStyle=CAT_COLORS[i];ctx.beginPath();ctx.arc(lx+5,y+18,4,0,Math.PI*2);ctx.fill();
+    t(lx+13,y+18,shortLabel,'600 10px Barlow Condensed,Arial','rgba(255,255,255,.7)');
+    lx+=tw+24;
+  });
 
-    // grid
-    for(let i=0;i<=gridLines;i++){
-      const gy=chartY+chartH-i*(chartH/gridLines);
-      ctx.strokeStyle=i===0?'#cbd5e1':'#e2e8f0';ctx.lineWidth=i===0?1.5:.5;
-      ctx.beginPath();ctx.moveTo(chartX,gy);ctx.lineTo(chartX+chartW,gy);ctx.stroke();
-      if(i>0){
-        const val=maxVal*i/gridLines;
-        t(fmtBRL(val).replace('R$\u00a0','R$ '),chartX-6,gy,'500 10px Inter,Arial','#94a3b8','right');
-      }
-    }
+  // chart area
+  const chartInnerY=y+44, chartInnerH=CHART_H-44-32;
+  const activeCats=CATS.filter(c=>catTotals[c]>0);
+  const hasDias=diasTotal>0;
+  const barCount=activeCats.length+(hasDias?1:0);
+  const maxVal=Math.max(...activeCats.map(c=>catTotals[c]), hasDias?diasTotal:0, 1);
 
-    // bars
-    const groupW=chartW/KEYS.length;
-    const barW=Math.min(groupW*0.6, list.length<=5?60:40);
-    const oBarW=list.length>1?barW/list.length:barW;
-    const oBarGap=2;
-
-    KEYS.forEach((k,ki)=>{
-      const gx=chartX+ki*groupW+groupW/2;
-      // total bar (all obras combined)
-      const tv=totals[k];
-      const bh=tv>0?Math.max(4,(tv/maxVal)*chartH):0;
-      const bx=gx-barW/2;
-      const by=chartY+chartH-bh;
-      shadow(()=>{
-        ctx.fillStyle=COLORS[ki];
-        rr(bx,by,barW,bh,4);ctx.fill();
-      });
-      // value on top
-      if(bh>20)t(fmtBRL(tv).replace('R$\u00a0',''),gx,by-10,'bold 11px Barlow Condensed,Arial',COLORS[ki],'center');
-      // category label
-      t(COLS[ki],gx,chartY+chartH+16,'700 12px Barlow Condensed,Arial','#475569','center');
-      // pct
-      const pct2=totalGeral>0?(tv/totalGeral*100).toFixed(1)+'%':'0%';
-      t(pct2,gx,chartY+chartH+30,'500 10px Inter,Arial','#94a3b8','center');
-    });
-    y+=CHART_H+PAD;
+  // Y grid lines
+  const gridLines=4;
+  for(let i=0;i<=gridLines;i++){
+    const gy=chartInnerY+chartInnerH-i*(chartInnerH/gridLines);
+    ctx.strokeStyle='#e2e8f0';ctx.lineWidth=.8;
+    ctx.beginPath();ctx.moveTo(chartX+PAD,gy);ctx.lineTo(chartX+chartW-PAD,gy);ctx.stroke();
+    t(chartX+12,gy,fmtBRL(maxVal*i/gridLines),'500 9px Inter,Arial','#94a3b8','right');
   }
 
-  // TABLE
-  shadow(()=>{ctx.fillStyle='#fff';rr(PAD,y,W-PAD*2,TABLE_H,14);ctx.fill();});
-  const tHg=ctx.createLinearGradient(PAD,y,PAD+W-PAD*2,y);
-  tHg.addColorStop(0,'#0f172a');tHg.addColorStop(1,'#1e293b');
-  ctx.fillStyle=tHg;
-  ctx.save();ctx.beginPath();ctx.moveTo(PAD+14,y);ctx.lineTo(PAD+W-PAD*2-14,y);
-  ctx.quadraticCurveTo(PAD+W-PAD*2,y,PAD+W-PAD*2,y+14);ctx.lineTo(PAD+W-PAD*2,y+TABLE_HEADER_H);
-  ctx.lineTo(PAD,y+TABLE_HEADER_H);ctx.lineTo(PAD,y+14);ctx.quadraticCurveTo(PAD,y,PAD+14,y);
-  ctx.closePath();ctx.fill();ctx.restore();
+  if(barCount>0){
+    const barAreaW=chartW-PAD*2;
+    const barW=Math.min(60,Math.floor(barAreaW/barCount*0.6));
+    const barSpacing=Math.floor(barAreaW/barCount);
+    const allItems=[...activeCats.map((c,i)=>({label:c,val:catTotals[c],color:CAT_COLORS[CATS.indexOf(c)]})),
+                    ...(hasDias?[{label:'⏱ Dias',val:diasTotal,color:'#f59e0b'}]:[])];
+    allItems.forEach((item,i)=>{
+      const bx=chartX+PAD+i*barSpacing+(barSpacing-barW)/2;
+      const bh=Math.max(2,Math.floor((item.val/maxVal)*chartInnerH));
+      const by=chartInnerY+chartInnerH-bh;
+      // bar gradient
+      const bg=ctx.createLinearGradient(bx,by,bx,by+bh);
+      bg.addColorStop(0,item.color);bg.addColorStop(1,item.color+'88');
+      ctx.fillStyle=bg;rr(bx,by,barW,bh,4);ctx.fill();
+      // value on top
+      t(bx+barW/2,by-8,fmtBRL(item.val),'700 9px Barlow Condensed,Arial',item.color,'center');
+      // label below
+      const shortLbl=item.label.replace(/^[^\s]+\s/,'').slice(0,10);
+      t(bx+barW/2,chartInnerY+chartInnerH+10,shortLbl,'500 9px Inter,Arial','#64748b','center');
+      t(bx+barW/2,chartInnerY+chartInnerH+22,(item.val/Math.max(totalGeral,1)*100).toFixed(1)+'%','600 9px Barlow Condensed,Arial',item.color,'center');
+    });
+  }
+  y+=CHART_H+PAD;
 
-  // table headers
-  const tCols=['OBRA / CLIENTE','VIDRO','PERFIL','INSUMO','GASOLINA','FERRAG.','TERCEIROS','CALHA/RUFO','PELÍCULA','OUTROS','DIAS','TOTAL','VENDA','LUCRO','%'];
-  const tWidths=[148,70,60,58,64,64,70,70,58,58,64,88,88,80,52];
-  let tx=PAD+12;
+  // ── Table ─────────────────────────────────────────────────────
+  const tCols=['OBRA / CLIENTE','INÍCIO','VENDA','CUSTO','DIAS','TOTAL','LUCRO','%'];
+  const tWRaw=[220,80,110,100,90,100,100,60];
+  const tTotalRaw=tWRaw.reduce((s,w)=>s+w,0);
+  const tScale=(W-PAD*2)/tTotalRaw;
+  const tW=tWRaw.map(w=>Math.floor(w*tScale));
+
+  // table bg
+  ctx.shadowColor='rgba(0,0,0,.06)';ctx.shadowBlur=12;ctx.shadowOffsetY=4;
+  ctx.fillStyle='#fff';rr(PAD,y,W-PAD*2,TABLE_H,10);ctx.fill();
+  ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+
+  // header
+  ctx.fillStyle='#0f172a';rr(PAD,y,W-PAD*2,TABLE_HEADER_H,10);ctx.fill();
+  let tx=PAD+8;
   tCols.forEach((col,i)=>{
-    t(col,tx+tWidths[i]/2,y+TABLE_HEADER_H/2,'700 10px Barlow Condensed,Arial','rgba(255,255,255,.6)','center');
-    tx+=tWidths[i];
+    t(tx+tW[i]/2,y+TABLE_HEADER_H/2,col,'700 11px Barlow Condensed,Arial','rgba(255,255,255,.6)','center');
+    tx+=tW[i];
   });
 
   // rows
   list.forEach((o,ri)=>{
-    const ry=y+TABLE_HEADER_H+ri*TABLE_ROW_H;
-    if(ri%2===0){ctx.fillStyle='#f8fafc';rr(PAD+6,ry+2,W-PAD*2-12,TABLE_ROW_H-4,4);ctx.fill();}
-    const{lucro,pct,totalCusto,venda}=calcObra(o);
+    const ry=y+TABLE_HEADER_H+ri*ROW_H;
+    const {totalCusto,venda,lucro,pct}=calcObra(o);
     const lancTotal=(o.lancamentos||[]).reduce((s,l)=>s+(parseFloat(l.valor)||0),0);
-    const rowVals=[
-      o.client||(o.num?'#'+o.num:'—'),
-      fmtBRL(lancTotal),fmtBRL(totalDiasCusto(o)),
-      fmtBRL(totalCusto),fmtBRL(venda),fmtBRL(lucro),fmtPct(pct),
-    ];
-    const rowColors=['#1e293b','#ef4444','#f59e0b','#dc2626','#2563eb',lucro>=0?'#059669':'#dc2626',lucro>=0?'#059669':'#dc2626'];
-    let rx2=PAD+12;
-    rowVals.forEach((v,i)=>{
-      const isName=i===0;
-      t(v,rx2+(isName?4:tWidths[i]/2),ry+TABLE_ROW_H/2,isName?'600 12px Barlow Condensed,Arial':'bold 11px Barlow Condensed,Arial',rowColors[i],isName?'left':'center');
-      rx2+=tWidths[i];
-    });
+    const diasCusto=totalDiasCusto(o);
+
+    ctx.fillStyle=ri%2===0?'#fff':'#f8fafc';
+    ctx.fillRect(PAD,ry,W-PAD*2,ROW_H);
+    // left accent
+    ctx.fillStyle=lucro>=0?'#059669':'#dc2626';
+    ctx.fillRect(PAD,ry,3,ROW_H);
+
+    tx=PAD+8;
+    // nome + cliente
+    const nome=(o.num?`#${o.num} `:'')+(o.client||'—');
+    t(tx+8,ry+ROW_H/2-7,nome.slice(0,28)+(nome.length>28?'…':''),'bold 13px Barlow Condensed,Arial','#1e293b');
+    if(o.dataFech) t(tx+8+tW[0]-12,ry+ROW_H/2-7,'',' ','#475569');
+    tx+=tW[0];
+
+    t(tx+tW[1]/2,ry+ROW_H/2,o.dataFech?fmtDate(o.dataFech):'—','500 11px Inter,Arial','#64748b','center');tx+=tW[1];
+    t(tx+tW[2]/2,ry+ROW_H/2,fmtBRL(venda),'600 12px Barlow Condensed,Arial','#2563eb','center');tx+=tW[2];
+    t(tx+tW[3]/2,ry+ROW_H/2,fmtBRL(lancTotal),'600 12px Barlow Condensed,Arial','#ef4444','center');tx+=tW[3];
+    t(tx+tW[4]/2,ry+ROW_H/2,fmtBRL(diasCusto),'600 12px Barlow Condensed,Arial','#f59e0b','center');tx+=tW[4];
+    t(tx+tW[5]/2,ry+ROW_H/2,fmtBRL(totalCusto),'700 12px Barlow Condensed,Arial','#dc2626','center');tx+=tW[5];
+    t(tx+tW[6]/2,ry+ROW_H/2,fmtBRL(lucro),'700 12px Barlow Condensed,Arial',lucro>=0?'#059669':'#dc2626','center');tx+=tW[6];
+    const pctStr=(pct>=0?'+':'')+pct.toFixed(1)+'%';
+    t(tx+tW[7]/2,ry+ROW_H/2,pctStr,'700 11px Barlow Condensed,Arial',pct>=0?'#059669':'#dc2626','center');
+
+    // divider
+    ctx.strokeStyle='#e2e8f0';ctx.lineWidth=.5;
+    ctx.beginPath();ctx.moveTo(PAD,ry+ROW_H);ctx.lineTo(W-PAD,ry+ROW_H);ctx.stroke();
   });
 
-  // total row
-  const totRy=y+TABLE_HEADER_H+list.length*TABLE_ROW_H+4;
-  ctx.fillStyle='#f1f5f9';rr(PAD+6,totRy,W-PAD*2-12,TABLE_ROW_H,6);ctx.fill();
-  ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1;rr(PAD+6,totRy,W-PAD*2-12,TABLE_ROW_H,6);ctx.stroke();
-  let rx3=PAD+12;
-  const totVals=['TOTAIS',fmtBRL(totalGeral2-list.reduce((s,o)=>s+totalDiasCusto(o),0)),fmtBRL(list.reduce((s,o)=>s+totalDiasCusto(o),0)),fmtBRL(totalGeral2),fmtBRL(totalVenda2),fmtBRL(totalLucro2),totalVenda2>0?fmtPct(totalLucro2/totalVenda2*100):'+0.0%'];
-  const totColors=['#475569','#ef4444','#f59e0b','#dc2626','#2563eb',totalLucro2>=0?'#059669':'#dc2626',totalLucro2>=0?'#059669':'#dc2626'];
-  totVals.forEach((v,i)=>{
-    const isName=i===0;
-    t(v,rx3+(isName?4:tWidths[i]/2),totRy+TABLE_ROW_H/2,isName?'800 13px Barlow Condensed,Arial':'bold 12px Barlow Condensed,Arial',totColors[i],isName?'left':'center');
-    rx3+=tWidths[i];
-  });
+  // totals row
+  const ry=y+TABLE_HEADER_H+list.length*ROW_H;
+  ctx.fillStyle='#1e293b';ctx.fillRect(PAD,ry,W-PAD*2,ROW_H);
+  tx=PAD+8;
+  t(tx+8,ry+ROW_H/2,'TOTAIS','700 13px Barlow Condensed,Arial','#fff');tx+=tW[0]+tW[1];
+  t(tx+tW[2]/2,ry+ROW_H/2,fmtBRL(totalVenda),'700 12px Barlow Condensed,Arial','#60a5fa','center');tx+=tW[2];
+  const lancTotalAll=list.reduce((s,o)=>s+(o.lancamentos||[]).reduce((ss,l)=>ss+(parseFloat(l.valor)||0),0),0);
+  t(tx+tW[3]/2,ry+ROW_H/2,fmtBRL(lancTotalAll),'700 12px Barlow Condensed,Arial','#fca5a5','center');tx+=tW[3];
+  t(tx+tW[4]/2,ry+ROW_H/2,fmtBRL(diasTotal),'700 12px Barlow Condensed,Arial','#fcd34d','center');tx+=tW[4];
+  t(tx+tW[5]/2,ry+ROW_H/2,fmtBRL(totalGeral),'700 12px Barlow Condensed,Arial','#fca5a5','center');tx+=tW[5];
+  t(tx+tW[6]/2,ry+ROW_H/2,fmtBRL(totalLucro),'700 12px Barlow Condensed,Arial',totalLucro>=0?'#86efac':'#fca5a5','center');tx+=tW[6];
+  t(tx+tW[7]/2,ry+ROW_H/2,totalVenda>0?fmtPct(totalLucro/totalVenda*100):'+0.0%','700 11px Barlow Condensed,Arial',totalLucro>=0?'#86efac':'#fca5a5','center');
+
   y+=TABLE_H+PAD;
 
-  // FOOTER
+  // ── Footer ───────────────────────────────────────────────────
   ctx.fillStyle='#0a0f1a';ctx.fillRect(0,H-FOOTER_H,W,FOOTER_H);
-  t('Brasil Vidros  •  Relatório Comparativo  •  '+new Date().toLocaleDateString('pt-BR'),W/2,H-FOOTER_H/2,'500 13px Inter,Arial','rgba(255,255,255,.3)','center');
+  t(W/2,H-FOOTER_H/2,'Brasil Vidros  •  Gestão de Obras  •  '+new Date().toLocaleDateString('pt-BR'),'500 12px Inter,Arial','rgba(255,255,255,.3)','center');
 }
+
 
 function baixarCompPNG(){
   const cv=document.getElementById('compCanvas');
