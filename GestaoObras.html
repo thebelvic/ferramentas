@@ -1504,6 +1504,12 @@ function renderComp(){
 
   const chartInnerY=y+54, chartInnerH=CHART_H-54-56;
 
+  // Compute data for both chart types
+  const activeCats=CATS.filter(c=>catTotals[c]>0);
+  const hasDias=diasTotal>0;
+  const barCount=activeCats.length+(hasDias?1:0);
+  const maxVal=Math.max(...activeCats.map(c=>catTotals[c]), hasDias?diasTotal:0, 1);
+
   if(compChartType==='pizza'){
     // ── PIZZA CHART ──────────────────────────────────────────────
     const allItemsPie=[...activeCats.map((c,ii)=>({label:c,val:catTotals[c],color:CAT_COLORS[CATS.indexOf(c)]})),
