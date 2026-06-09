@@ -176,62 +176,7 @@ body{font-family:'Lato',sans-serif;background:#eef3fb;height:100vh;overflow:hidd
 .sfbtn.ok:hover{opacity:.9;}
 
 /* ── PRINT ── */
-@media print {
-  @page{size:A4 portrait;margin:10mm;}
-  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-  body,html{height:auto!important;overflow:visible!important;background:#fff!important;width:100%!important;}
-  #hdr,#sidebar,#info-bar,.modal-overlay,#sketchModal,.no-print,
-  .edit-grid,.add-card,#editBtn,#visualBtn{display:none!important;}
-  #layout{display:block!important;width:100%!important;}
-  #main{display:block!important;overflow:visible!important;width:100%!important;margin:0!important;padding:0!important;}
-  #content{overflow:visible!important;padding:0!important;width:100%!important;}
-  .prev-wrap{
-    border:none!important;border-radius:0!important;
-    box-shadow:none!important;width:100%!important;
-    overflow:visible!important;
-  }
-  .prev-hdr{
-    border-radius:0!important;
-    break-inside:avoid;
-    page-break-inside:avoid;
-  }
-  .prev-grid{
-    display:grid!important;
-    grid-template-columns:repeat(4,1fr)!important;
-    gap:6px!important;
-    padding:10px!important;
-    width:100%!important;
-  }
-  .print-page{
-    break-after:page!important;
-    page-break-after:always!important;
-    overflow:visible!important;
-  }
-  .print-page:last-child{
-    break-after:avoid!important;
-    page-break-after:avoid!important;
-  }
-  .prev-hdr-mini{
-    -webkit-print-color-adjust:exact!important;
-    print-color-adjust:exact!important;
-  }
-  .pc{
-    box-shadow:none!important;
-    border:1px solid #dde8f5!important;
-    break-inside:avoid!important;
-    page-break-inside:avoid!important;
-    overflow:hidden!important;
-    width:100%!important;
-  }
-  .pc svg{
-    max-width:100%!important;
-    height:auto!important;
-  }
-  .prev-ftr{
-    break-inside:avoid;
-    page-break-inside:avoid;
-  }
-}
+/* print handled in separate window */
 </style>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
@@ -845,7 +790,7 @@ function renderHdr(){
   document.getElementById('hdr-right').innerHTML=`
     <button class="tab-btn ${tab==='edit'?'on':'off'}" onclick="setTab('edit')">✏️ Editar</button>
     <button class="tab-btn ${tab==='preview'?'on':'off'}" onclick="setTab('preview')">👁️ Visualizar</button>
-    ${tab==='preview'&&p?`<button class="print-btn no-print" onclick="window.print()">🖨️ Imprimir / PDF</button>`:''}
+    ${tab==='preview'&&p?`<button class="print-btn no-print" onclick="imprimirPDF()">🖨️ Imprimir / PDF</button>`:''}
   `;
 }
 function renderSB(){
@@ -1463,26 +1408,25 @@ renderAll();
   let _applyTimer=null;
 
   window.__syncNow=function(){
-    if(!navigator.onLine||!window.__fbSave)return;
+    if(!navigator.onLine||!window.__fbSave||_writing)return; // never sync during reload
     try{
       const raw=localStorage.getItem(LS_KEY);
       if(!raw)return;
       _writing=true;
       window.__fbSave(FB_KEY,JSON.parse(raw));
-      // keep _writing true until Firebase confirms + buffer
       clearTimeout(window.__syncNow._t);
-      window.__syncNow._t=setTimeout(()=>_writing=false, 5000);
+      window.__syncNow._t=setTimeout(()=>_writing=false, 6000);
     }catch(e){}
   };
 
-  // Patch save functions ONCE
+  // Patch save functions ONCE — skip __syncNow when _writing (prevents loop)
   function _patch(){
     ['scheduleSave','persist','save','saveAll'].forEach(fn=>{
       if(typeof window[fn]==='function'&&!window[fn].__fbPatched){
         const orig=window[fn];
         window[fn]=function(){
           const r=orig.apply(this,arguments);
-          window.__syncNow();
+          if(!_writing) window.__syncNow(); // skip if we just applied Firebase data
           return r;
         };
         window[fn].__fbPatched=true;
@@ -1523,7 +1467,7 @@ renderAll();
     try{fn();}catch(e){}
     // Keep blocked for 2s after reload
     clearTimeout(_applyTimer);
-    _applyTimer=setTimeout(()=>_writing=false, 2000);
+    _applyTimer=setTimeout(()=>_writing=false, 4000); // 4s to prevent rebound loop
   }
 
   function _fbInit(){
