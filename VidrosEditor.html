@@ -1398,6 +1398,47 @@ skCanvas.addEventListener('touchend',skUp);
 // ══════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════
+// ── PRINT ─────────────────────────────────────────────────────
+function imprimirPDF(){
+  const p=active();
+  if(!p){alert('Selecione um projeto para imprimir.');return;}
+
+  const previewHTML=buildPreview(p);
+
+  const win=window.open('','_blank','width=900,height=700');
+  if(!win){alert('Popup bloqueado! Permita popups para este site.');return;}
+
+  win.document.write('<!DOCTYPE html><html lang="pt-BR"><head>'+
+    '<meta charset="UTF-8">'+
+    '<title>Folha de Vidro — '+esc(p.client||'')+' · '+esc(p.obra||'')+'<\/title>'+
+    '<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">'+
+    '<style>'+
+    '*{box-sizing:border-box;margin:0;padding:0;}'+
+    'body{background:#fff;font-family:Inter,sans-serif;}'+
+    '.prev-wrap{width:100%;}'+
+    '.prev-hdr{background:linear-gradient(90deg,#1a3a6b,#2563eb);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'+
+    '.prev-hdr-mini{background:linear-gradient(90deg,#1a3a6b,#2563eb);padding:8px 16px;display:flex;justify-content:space-between;align-items:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'+
+    '.prev-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px;}'+
+    '.pc{background:#fff;border:1.5px solid #dde8f5;border-radius:8px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;break-inside:avoid;page-break-inside:avoid;}'+
+    '.pc svg{max-width:100%;height:auto;}'+
+    '.badge{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"Barlow Condensed",sans-serif;font-weight:800;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'+
+    '.stat-lbl{font-size:9px;color:#9aacbf;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}'+
+    '.prev-ftr{padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #dde8f5;break-inside:avoid;page-break-inside:avoid;}'+
+    '.prev-ftr-mini{padding:6px 16px;font-size:10px;color:#9aacbf;text-align:right;border-top:1px solid #dde8f5;}'+
+    '.print-page{page-break-after:always;break-after:page;}'+
+    '.print-page:last-child{page-break-after:avoid;break-after:avoid;}'+
+    '@page{size:A4 portrait;margin:8mm;}'+
+    '@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}'+
+    '.print-page{page-break-after:always!important;break-after:page!important;}'+
+    '.print-page:last-child{page-break-after:avoid!important;break-after:avoid!important;}'+
+    '.pc{break-inside:avoid!important;page-break-inside:avoid!important;}}'+
+    '<\/style><\/head><body>'+previewHTML+
+    '<script>window.onload=function(){setTimeout(function(){window.print();},600);};<\/scr'+'ipt>'+
+    '<\/body><\/html>');
+  win.document.close();
+}
+
+
 loadData();
 renderAll();
 
