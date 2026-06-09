@@ -874,25 +874,29 @@ window.addEventListener('DOMContentLoaded',function(){
 // ── FIREBASE SYNC ──────────────────────────────────────────────
 (function(){
   const FB_KEY='agenda_obras_vidros', LS_KEY='obras_agenda_v2';
-  let _writing=false; // true while WE are saving to Firebase (suppress listener)
+  let _writing=false;
+  let _applyTimer=null;
 
-  // Call this after any local save to push to Firebase
   window.__syncNow=function(){
-    if(!navigator.onLine||!window.__fbSave)return;
+    if(!navigator.onLine||!window.__fbSave||_writing)return; // never sync during reload
     try{
       const raw=localStorage.getItem(LS_KEY);
-      if(raw){ _writing=true; window.__fbSave(FB_KEY,JSON.parse(raw)); setTimeout(()=>_writing=false,3000); }
+      if(!raw)return;
+      _writing=true;
+      window.__fbSave(FB_KEY,JSON.parse(raw));
+      clearTimeout(window.__syncNow._t);
+      window.__syncNow._t=setTimeout(()=>_writing=false, 6000);
     }catch(e){}
   };
 
-  // Patch all save functions
+  // Patch save functions ONCE — skip __syncNow when _writing (prevents loop)
   function _patch(){
     ['scheduleSave','persist','save','saveAll'].forEach(fn=>{
-      if(typeof window[fn]==='function' && !window[fn].__fbPatched){
+      if(typeof window[fn]==='function'&&!window[fn].__fbPatched){
         const orig=window[fn];
         window[fn]=function(){
           const r=orig.apply(this,arguments);
-          window.__syncNow();
+          if(!_writing) window.__syncNow(); // skip if we just applied Firebase data
           return r;
         };
         window[fn].__fbPatched=true;
@@ -900,52 +904,65 @@ window.addEventListener('DOMContentLoaded',function(){
     });
   }
 
-  // Apply data from Firebase to the app
+  // Apply Firebase data to app — safe, no save triggered
   function _apply(data){
     if(!data)return;
-    const fixed=window.__fixArrays?window.__fixArrays(data):data;
-    // Ensure arrays inside projects
-    if(Array.isArray(fixed)){
-      fixed.forEach(p=>{
-        if(p.glasses&&!Array.isArray(p.glasses))p.glasses=Object.values(p.glasses);
-        if(p.doors&&!Array.isArray(p.doors))p.doors=Object.values(p.doors);
-      });
-    }
     try{
-      localStorage.setItem('obras_agenda_v2', JSON.stringify(fixed));
-      const keys=Object.keys(fixed||{}).sort((a,b)=>b.localeCompare(a));
-      if(keys.length&&typeof loadDay==='function') loadDay(keys[0]);
-      if(typeof renderSB==='function') renderSB();
-    }catch(e){ console.warn('reload err:',e); }
+      const fixed=window.__fixArrays?window.__fixArrays(data):data;
+      if(Array.isArray(fixed)){
+        fixed.forEach(p=>{
+          if(p.glasses&&!Array.isArray(p.glasses))p.glasses=Object.values(p.glasses);
+          if(p.doors&&!Array.isArray(p.doors))p.doors=Object.values(p.doors);
+        });
+      }
+      // Compare with current local data — only reload if actually different
+      const incoming=JSON.stringify(fixed);
+      const current=localStorage.getItem(LS_KEY);
+      if(incoming===current)return; // no change, skip
+      localStorage.setItem(LS_KEY,incoming);
+      // Load without triggering saves
+      _writingBlock(()=>{
+        if(typeof loadData==='function')loadData();
+        else if(typeof load==='function')load();
+        if(typeof renderAll==='function')renderAll();
+        else if(typeof render==='function')render();
+        else if(typeof renderSB==='function'){renderSB();if(typeof renderContent==='function')renderContent();}
+      });
+    }catch(e){console.warn('fbApply:',e);}
+  }
+
+  // Block saves during a reload to prevent feedback loop
+  function _writingBlock(fn){
+    _writing=true;
+    try{fn();}catch(e){}
+    // Keep blocked for 2s after reload
+    clearTimeout(_applyTimer);
+    _applyTimer=setTimeout(()=>_writing=false, 4000); // 4s to prevent rebound loop
   }
 
   function _fbInit(){
-    if(!window.__fbLoad){ setTimeout(_fbInit,300); return; }
-
-    // Patch saves
-    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',_patch);
+    if(!window.__fbLoad){setTimeout(_fbInit,300);return;}
+    if(document.readyState==='loading')
+      document.addEventListener('DOMContentLoaded',_patch);
     else _patch();
-    // Also re-patch after load (functions may be defined late)
-    setTimeout(_patch,1000);
+    setTimeout(_patch,1500); // re-patch late-defined functions
 
-    // ALWAYS load from Firebase on start — it's the source of truth
+    // Load from Firebase on start
     window.__fbLoad(FB_KEY,function(fbData){
-      if(fbData){
-        _apply(fbData);  // Firebase wins on load
-      } else {
-        // No Firebase data yet — use localStorage and push to Firebase
+      if(!fbData){
+        // No Firebase data yet — push local to Firebase
         const local=localStorage.getItem(LS_KEY);
-        if(local){
-          try{ const d=JSON.parse(local); if(d) window.__fbSave(FB_KEY,d); }catch(e){}
-        }
+        if(local)try{window.__fbSave(FB_KEY,JSON.parse(local));}catch(e){}
+        return;
       }
+      _apply(fbData);
     });
 
     // Listen for real-time changes from other devices
     let _initDone=false;
-    setTimeout(()=>_initDone=true,3000);
+    setTimeout(()=>_initDone=true, 4000);
     window.__fbListen(FB_KEY,function(data){
-      if(!_initDone||_writing)return; // skip during init and our own saves
+      if(!_initDone||_writing)return;
       _apply(data);
     });
   }
