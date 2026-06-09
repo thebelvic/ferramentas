@@ -428,266 +428,360 @@ function active(){return projects.find(p=>p.id===activeId)||null;}
 function area(glasses){if(!Array.isArray(glasses))glasses=Object.values(glasses||{});return glasses.reduce((s,g)=>s+(g.w*g.h)/1e6,0);}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function isPortaType(t){return PORTA_TYPES.includes(t);}
-
-// Types that need side-of-opening selector
 function needsLadoType(t){
   return['Porta de Giro','Porta de Correr','Porta Dupla','Reposição Porta de Giro','Reposição Porta de Correr',
          'Box de Giro','Box de Correr','Porta Camarão'].includes(t);
 }
 
 function doorSVG(tipo, lado){
-  const SW=90, SH=110;
-  const wallT=10, openingX1=wallT+2, openingX2=SW-wallT-2, openingW=openingX2-openingX1;
-  const wallY1=8, wallY2=wallY1+wallT, leafH=3, arcR=openingW;
+  const W=160, H=130;
   const isEsq = lado==='Esquerdo';
-  const hx = isEsq?openingX1:openingX2;
-  const arcEndX = isEsq?Math.min(openingX1+arcR,SW-2):Math.max(openingX2-arcR,2);
-  const arcEndY = wallY2+arcR;
-  const sweep = isEsq?0:1;
-  const half = openingW/2;
-  let content='', label='';
 
-  // ── JANELA 2 FOLHAS ──
-  if(tipo==='Janela 2 Folhas'){
-    label='2 FOLHAS';
-    content=`
-    <rect x="0" y="${wallY1}" width="${SW}" height="${wallT}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX1-wallT}" y="${wallY1}" width="${wallT}" height="${wallT+20}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX2}" y="${wallY1}" width="${wallT}" height="${wallT+20}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <!-- trilho -->
-    <line x1="${openingX1}" y1="${wallY2+2}" x2="${openingX2}" y2="${wallY2+2}" stroke="#9c6b3c" stroke-width="1.5"/>
-    <line x1="${openingX1}" y1="${wallY2+6}" x2="${openingX2}" y2="${wallY2+6}" stroke="#9c6b3c" stroke-width="1.5"/>
-    <!-- folha esq (frente) -->
-    <rect x="${openingX1}" y="${wallY2}" width="${half}" height="${leafH+1}" fill="#d8edf8" stroke="#4a90d9" stroke-width="1.5"/>
-    <!-- folha dir (fundo) -->
-    <rect x="${openingX1+half}" y="${wallY2+3}" width="${half}" height="${leafH}" fill="#e8f4fb" stroke="#6aaed6" stroke-width="1" stroke-dasharray="2,1"/>
-    <!-- seta abertura -->
-    <path d="M${openingX1+4} ${wallY2+12} L${openingX2-4} ${wallY2+12}" stroke="#1a5fa8" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
-    <line x1="${openingX1}" y1="${wallY2+20}" x2="${openingX2}" y2="${wallY2+20}" stroke="#5c3d1e" stroke-width="1.5"/>`;
+  // Clean palette
+  const frame   = '#5a6470';   // aluminum frame color
+  const frameLt = '#8a96a2';   // lighter frame
+  const glass   = '#d4e8f5';   // glass fill
+  const glassSt = '#8bbad4';   // glass stroke
+  const shine   = 'rgba(255,255,255,0.6)';
+  const arcSt   = '#4a90c8';
+  const arcFill = 'rgba(74,144,200,0.1)';
+  const arrow   = '#4a4a4a';
+  const handle  = '#3a3a3a';
+  const wall    = '#d8d0c8';   // wall color for janelas
+  const wallDk  = '#bdb5ad';
+
+  const typeShort = {
+    'Porta de Giro':'GIRO','Porta de Correr':'CORRER','Porta Dupla':'DUPLA',
+    'Reposição Porta de Giro':'REP. GIRO','Reposição Porta de Correr':'REP. CORRER',
+    'Box de Giro':'BOX GIRO','Box de Correr':'BOX CORRER',
+    'Porta Camarão':'CAMARÃO','Porta Vai e Vem':'VAI E VEM',
+    'Vidro Fixo':'FIXO','Janela 2 Folhas':'2 FOLHAS','Janela 4 Folhas':'4 FOLHAS',
+    'Maxim-Ar':'MAXIM-AR','Janela Basculante':'BASCULANTE',
+    'Janela Pivotante':'PIVOTANTE','Janela Guilhotina':'GUILHOTINA',
+  }[tipo]||tipo;
+
+  let inner = '';
+
+  // ── PORTA DE GIRO ────────────────────────────────────────────
+  if(tipo==='Porta de Giro'||tipo==='Reposição Porta de Giro'){
+    // portrait 100x160
+    const hx = isEsq ? 84 : 12;
+    inner = `
+    <!-- door frame portrait -->
+    <rect x="8" y="6" width="84" height="138" rx="2" fill="${frame}"/>
+    <!-- glass -->
+    <rect x="12" y="10" width="76" height="130" rx="1" fill="${glass}"/>
+    <!-- shine -->
+    <rect x="14" y="12" width="14" height="122" rx="1" fill="${shine}"/>
+    <rect x="30" y="12" width="5" height="46" rx="1" fill="${shine}" opacity="0.45"/>
+    <!-- glass border -->
+    <rect x="12" y="10" width="76" height="130" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <!-- round knob -->
+    <circle cx="${isEsq?82:18}" cy="80" r="5.5" fill="${handle}"/>
+    <circle cx="${isEsq?82:18}" cy="80" r="2.5" fill="${frameLt}"/>
+    <!-- hinges -->
+    <rect x="${isEsq?8:84}" y="24" width="4" height="10" rx="1" fill="${frameLt}"/>
+    <rect x="${isEsq?8:84}" y="110" width="4" height="10" rx="1" fill="${frameLt}"/>
+    <!-- label -->
+    <text x="50" y="152" text-anchor="middle" font-size="8" font-family="Inter,Arial,sans-serif" fill="${frame}" font-weight="600">${typeShort}${lado?' · '+(isEsq?'ESQ':'DIR'):''}</text>`;
   }
-  // ── JANELA 4 FOLHAS (2 fixas laterais + 2 móveis centrais) ──
-  else if(tipo==='Janela 4 Folhas'){
-    label='4 FOLHAS';
-    const q=openingW/4; // each leaf width
-    // Layout: [FIXA] [MÓVEL→] [←MÓVEL] [FIXA]
-    // Fixed panels: left (0) and right (3) — shown with X pattern
-    // Mobile panels: center-left (1) and center-right (2) — shown on rail with arrows
-    content=`
-    <rect x="0" y="${wallY1}" width="${SW}" height="${wallT}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX1-wallT}" y="${wallY1}" width="${wallT}" height="${wallT+22}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX2}" y="${wallY1}" width="${wallT}" height="${wallT+22}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
 
-    <!-- trilho duplo -->
-    <line x1="${openingX1}" y1="${wallY2+2}" x2="${openingX2}" y2="${wallY2+2}" stroke="#9c6b3c" stroke-width="1.2"/>
-    <line x1="${openingX1}" y1="${wallY2+5}" x2="${openingX2}" y2="${wallY2+5}" stroke="#9c6b3c" stroke-width="1.2"/>
-
-    <!-- FIXA esquerda — vidro fixo com X -->
-    <rect x="${openingX1}" y="${wallY2}" width="${q}" height="${leafH+2}" fill="#d8edf8" stroke="#4a90d9" stroke-width="1.5"/>
-    <line x1="${openingX1+1}" y1="${wallY2+1}" x2="${openingX1+q-1}" y2="${wallY2+leafH+1}" stroke="#6aaed6" stroke-width=".8" opacity=".6"/>
-    <line x1="${openingX1+q-1}" y1="${wallY2+1}" x2="${openingX1+1}" y2="${wallY2+leafH+1}" stroke="#6aaed6" stroke-width=".8" opacity=".6"/>
-    <text x="${openingX1+q/2}" y="${wallY2+leafH+12}" text-anchor="middle" font-size="6" font-family="Oswald,sans-serif" fill="#4a90d9">F</text>
-
-    <!-- MÓVEL centro-esquerdo — folha no trilho com seta -->
-    <rect x="${openingX1+q}" y="${wallY2-1}" width="${q}" height="${leafH+3}" fill="#e8f4fb" stroke="#2a7ac4" stroke-width="1.5"/>
-    <path d="M${openingX1+q+q*0.7} ${wallY2+8} L${openingX1+q+q*0.2} ${wallY2+8}" stroke="#1a5fa8" stroke-width="1.2" fill="none" marker-end="url(#arr)"/>
-    <text x="${openingX1+q+q/2}" y="${wallY2+leafH+12}" text-anchor="middle" font-size="6" font-family="Oswald,sans-serif" fill="#1a5fa8">M</text>
-
-    <!-- MÓVEL centro-direito — folha no trilho com seta -->
-    <rect x="${openingX1+q*2}" y="${wallY2-1}" width="${q}" height="${leafH+3}" fill="#e8f4fb" stroke="#2a7ac4" stroke-width="1.5"/>
-    <path d="M${openingX1+q*2+q*0.3} ${wallY2+8} L${openingX1+q*2+q*0.8} ${wallY2+8}" stroke="#1a5fa8" stroke-width="1.2" fill="none" marker-end="url(#arr)"/>
-    <text x="${openingX1+q*2+q/2}" y="${wallY2+leafH+12}" text-anchor="middle" font-size="6" font-family="Oswald,sans-serif" fill="#1a5fa8">M</text>
-
-    <!-- FIXA direita — vidro fixo com X -->
-    <rect x="${openingX1+q*3}" y="${wallY2}" width="${q}" height="${leafH+2}" fill="#d8edf8" stroke="#4a90d9" stroke-width="1.5"/>
-    <line x1="${openingX1+q*3+1}" y1="${wallY2+1}" x2="${openingX1+q*4-1}" y2="${wallY2+leafH+1}" stroke="#6aaed6" stroke-width=".8" opacity=".6"/>
-    <line x1="${openingX1+q*4-1}" y1="${wallY2+1}" x2="${openingX1+q*3+1}" y2="${wallY2+leafH+1}" stroke="#6aaed6" stroke-width=".8" opacity=".6"/>
-    <text x="${openingX1+q*3+q/2}" y="${wallY2+leafH+12}" text-anchor="middle" font-size="6" font-family="Oswald,sans-serif" fill="#4a90d9">F</text>
-
-    <!-- legenda -->
-    <text x="${openingX1}" y="${wallY2+22}" font-size="5.5" font-family="Oswald,sans-serif" fill="#94a3b8">F=Fixo  M=Móvel</text>
-
-    <line x1="0" y1="${wallY2+28}" x2="${SW}" y2="${wallY2+28}" stroke="#5c3d1e" stroke-width="1.5"/>`;
+  // ── PORTA DE CORRER ───────────────────────────────────────────
+  else if(tipo==='Porta de Correr'||tipo==='Reposição Porta de Correr'){
+    inner = `
+    <rect x="14" y="8" width="132" height="112" rx="2" fill="${frame}"/>
+    <rect x="16" y="9" width="128" height="4" rx="1" fill="${frameLt}"/>
+    <rect x="16" y="115" width="128" height="4" rx="1" fill="${frameLt}"/>
+    <!-- FIXED left (wall side, back) -->
+    <rect x="18" y="14" width="60" height="98" rx="1" fill="${glass}" opacity="0.8"/>
+    <rect x="20" y="16" width="14" height="90" rx="1" fill="${shine}" opacity="0.6"/>
+    <rect x="18" y="14" width="60" height="98" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <rect x="18" y="14" width="4" height="98" fill="${frame}" opacity="0.6"/>
+    <rect x="74" y="14" width="4" height="98" fill="${frame}" opacity="0.6"/>
+    <text x="48" y="68" text-anchor="middle" font-size="16" font-family="Inter,Arial,sans-serif" fill="${frameLt}" font-weight="700" opacity="0.55">F</text>
+    <!-- MOBILE right (front, slides left ← toward F) -->
+    <rect x="78" y="11" width="66" height="106" rx="1" fill="${glass}"/>
+    <rect x="80" y="13" width="16" height="98" rx="1" fill="${shine}"/>
+    <rect x="78" y="11" width="66" height="106" rx="1" fill="none" stroke="${glassSt}" stroke-width="1.5"/>
+    <rect x="78" y="11" width="4" height="106" fill="${frame}"/>
+    <rect x="140" y="11" width="4" height="106" fill="${frame}"/>
+    <!-- handle on RIGHT edge of mobile (where you grab to slide left) -->
+    <rect x="135" y="54" width="5" height="24" rx="2.5" fill="${handle}"/>
+    <!-- arrow ← pointing left (direction mobile slides) -->
+    <path d="M112 65 L98 65 M102 61 L98 65 L102 69" stroke="${arcSt}" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <text x="80" y="128" text-anchor="middle" font-size="8.5" font-family="Inter,Arial,sans-serif" fill="${frame}" font-weight="600">CORRER · F=Fixo M=Móvel</text>`;
   }
-  // ── MAXIM-AR ──
-  else if(tipo==='Maxim-Ar'){
-    label='MAXIM-AR';
-    const pivY=wallY2+leafH/2;
-    content=`
-    <rect x="0" y="${wallY1}" width="${SW}" height="${wallT}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX1-wallT}" y="${wallY1}" width="${wallT}" height="${wallT+30}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX2}" y="${wallY1}" width="${wallT}" height="${wallT+30}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <!-- frame -->
-    <rect x="${openingX1}" y="${wallY2}" width="${openingW}" height="${leafH*2}" fill="#d8edf8" stroke="#4a90d9" stroke-width="1.5"/>
-    <!-- pivot line -->
-    <line x1="${openingX1}" y1="${pivY}" x2="${openingX2}" y2="${pivY}" stroke="#4a90d9" stroke-width="1" stroke-dasharray="3,2"/>
-    <!-- top opens out -->
-    <path d="M${openingX1+2} ${wallY2} Q${openingX1+openingW/2} ${wallY2-14} ${openingX2-2} ${wallY2}" fill="rgba(26,95,168,.07)" stroke="#1a5fa8" stroke-width="1" stroke-dasharray="3,2"/>
-    <!-- pivot markers -->
-    <circle cx="${openingX1}" cy="${pivY}" r="2" fill="#9c6b3c"/>
-    <circle cx="${openingX2}" cy="${pivY}" r="2" fill="#9c6b3c"/>
-    <line x1="${openingX1}" y1="${wallY2+leafH*2+10}" x2="${openingX2}" y2="${wallY2+leafH*2+10}" stroke="#5c3d1e" stroke-width="1.5"/>`;
+
+    else if(tipo==='Porta Dupla'){
+    // portrait 100x160 - two leaves side by side
+    inner = `
+    <!-- outer frame -->
+    <rect x="4" y="6" width="92" height="138" rx="2" fill="${frame}"/>
+    <!-- center divider -->
+    <rect x="47" y="6" width="6" height="138" fill="${frame}"/>
+    <!-- left leaf glass -->
+    <rect x="8" y="10" width="37" height="130" rx="1" fill="${glass}"/>
+    <rect x="10" y="12" width="10" height="122" rx="1" fill="${shine}"/>
+    <rect x="8" y="10" width="37" height="130" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <!-- right leaf glass -->
+    <rect x="55" y="10" width="37" height="130" rx="1" fill="${glass}"/>
+    <rect x="57" y="12" width="10" height="122" rx="1" fill="${shine}"/>
+    <rect x="55" y="10" width="37" height="130" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <!-- knobs -->
+    <circle cx="43" cy="80" r="4.5" fill="${handle}"/>
+    <circle cx="43" cy="80" r="2" fill="${frameLt}"/>
+    <circle cx="57" cy="80" r="4.5" fill="${handle}"/>
+    <circle cx="57" cy="80" r="2" fill="${frameLt}"/>
+    <!-- hinges left -->
+    <rect x="4" y="22" width="4" height="9" rx="1" fill="${frameLt}"/>
+    <rect x="4" y="112" width="4" height="9" rx="1" fill="${frameLt}"/>
+    <!-- hinges right -->
+    <rect x="92" y="22" width="4" height="9" rx="1" fill="${frameLt}"/>
+    <rect x="92" y="112" width="4" height="9" rx="1" fill="${frameLt}"/>
+    <text x="50" y="152" text-anchor="middle" font-size="8" font-family="Inter,Arial,sans-serif" fill="${frame}" font-weight="600">DUPLA</text>`;
   }
-  // ── JANELA BASCULANTE ──
-  else if(tipo==='Janela Basculante'){
-    label='BASCULANTE';
-    content=`
-    <rect x="0" y="${wallY1}" width="${SW}" height="${wallT}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX1-wallT}" y="${wallY1}" width="${wallT}" height="${wallT+28}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX2}" y="${wallY1}" width="${wallT}" height="${wallT+28}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <!-- folha -->
-    <rect x="${openingX1}" y="${wallY2}" width="${openingW}" height="${leafH}" fill="#d8edf8" stroke="#4a90d9" stroke-width="1.5"/>
-    <!-- parte de baixo abre para dentro -->
-    <path d="M${openingX1+2} ${wallY2+leafH} Q${openingX1+openingW/2} ${wallY2+leafH+18} ${openingX2-2} ${wallY2+leafH}" fill="rgba(26,95,168,.06)" stroke="#1a5fa8" stroke-width="1" stroke-dasharray="3,2"/>
-    <!-- pivot markers topo -->
-    <circle cx="${openingX1}" cy="${wallY2+leafH/2}" r="2" fill="#9c6b3c"/>
-    <circle cx="${openingX2}" cy="${wallY2+leafH/2}" r="2" fill="#9c6b3c"/>
-    <line x1="${openingX1}" y1="${wallY2+leafH+24}" x2="${openingX2}" y2="${wallY2+leafH+24}" stroke="#5c3d1e" stroke-width="1.5"/>`;
+    else if(tipo==='Box de Giro'){
+    // portrait 100x160
+    inner = `
+    <!-- box door frame -->
+    <rect x="8" y="6" width="84" height="138" rx="2" fill="${frame}"/>
+    <rect x="12" y="10" width="76" height="130" rx="1" fill="${glass}"/>
+    <rect x="14" y="12" width="14" height="122" rx="1" fill="${shine}"/>
+    <rect x="30" y="12" width="5" height="46" rx="1" fill="${shine}" opacity="0.45"/>
+    <rect x="12" y="10" width="76" height="130" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <!-- round knob -->
+    <circle cx="${isEsq?82:18}" cy="80" r="5.5" fill="${handle}"/>
+    <circle cx="${isEsq?82:18}" cy="80" r="2.5" fill="${frameLt}"/>
+    <!-- hinges round -->
+    <circle cx="${isEsq?10:90}" cy="28" r="3.5" fill="${frameLt}" stroke="${frame}" stroke-width="0.8"/>
+    <circle cx="${isEsq?10:90}" cy="118" r="3.5" fill="${frameLt}" stroke="${frame}" stroke-width="0.8"/>
+    <text x="50" y="152" text-anchor="middle" font-size="8" font-family="Inter,Arial,sans-serif" fill="${frame}" font-weight="600">BOX GIRO${lado?' · '+(isEsq?'ESQ':'DIR'):''}</text>`;
   }
-  // ── JANELA PIVOTANTE ──
-  else if(tipo==='Janela Pivotante'){
-    label='PIVOTANTE';
-    const pivX=openingX1+openingW/2;
-    content=`
-    <rect x="0" y="${wallY1}" width="${SW}" height="${wallT}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX1-wallT}" y="${wallY1}" width="${wallT}" height="${wallT+28}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX2}" y="${wallY1}" width="${wallT}" height="${wallT+28}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX1}" y="${wallY2}" width="${half-1}" height="${leafH}" fill="#d8edf8" stroke="#4a90d9" stroke-width="1.2"/>
-    <rect x="${pivX+1}" y="${wallY2}" width="${half-1}" height="${leafH}" fill="#d8edf8" stroke="#4a90d9" stroke-width="1.2"/>
-    <circle cx="${pivX}" cy="${wallY2+leafH/2}" r="2.5" fill="#c8902a" stroke="#7a5230" stroke-width=".8"/>
-    <path d="M${openingX1} ${wallY2+leafH} A${half} ${half} 0 0 1 ${pivX} ${wallY2+leafH+half}" fill="rgba(26,95,168,.05)" stroke="#1a5fa8" stroke-width="1" stroke-dasharray="3,2"/>
-    <path d="M${openingX2} ${wallY2+leafH} A${half} ${half} 0 0 0 ${pivX} ${wallY2+leafH+half}" fill="rgba(26,95,168,.05)" stroke="#1a5fa8" stroke-width="1" stroke-dasharray="3,2"/>
-    <line x1="${openingX1}" y1="${wallY2+leafH+half+6}" x2="${openingX2}" y2="${wallY2+leafH+half+6}" stroke="#5c3d1e" stroke-width="1.5"/>`;
-  }
-  // ── JANELA GUILHOTINA ──
-  else if(tipo==='Janela Guilhotina'){
-    label='GUILHOTINA';
-    content=`
-    <rect x="0" y="${wallY1}" width="${SW}" height="${wallT}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX1-wallT}" y="${wallY1}" width="${wallT}" height="${wallT+28}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX2}" y="${wallY1}" width="${wallT}" height="${wallT+28}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <!-- guias laterais -->
-    <line x1="${openingX1}" y1="${wallY2}" x2="${openingX1}" y2="${wallY2+24}" stroke="#9c6b3c" stroke-width="1.5"/>
-    <line x1="${openingX2}" y1="${wallY2}" x2="${openingX2}" y2="${wallY2+24}" stroke="#9c6b3c" stroke-width="1.5"/>
-    <!-- folha inferior (frente) -->
-    <rect x="${openingX1+1}" y="${wallY2+10}" width="${openingW-2}" height="${leafH+1}" fill="#d8edf8" stroke="#4a90d9" stroke-width="1.5"/>
-    <!-- folha superior (fundo, tracejada) -->
-    <rect x="${openingX1+1}" y="${wallY2}" width="${openingW-2}" height="${leafH}" fill="#e8f4fb" stroke="#6aaed6" stroke-width="1" stroke-dasharray="2,1"/>
-    <!-- seta subir -->
-    <path d="M${openingX1+openingW/2} ${wallY2+16} L${openingX1+openingW/2} ${wallY2+4}" stroke="#1a5fa8" stroke-width="1.2" marker-end="url(#arr)"/>
-    <line x1="${openingX1}" y1="${wallY2+26}" x2="${openingX2}" y2="${wallY2+26}" stroke="#5c3d1e" stroke-width="1.5"/>`;
-  }
-  // ── BOX DE GIRO ──
-  else if(tipo==='Box de Giro'){
-    label='BOX GIRO';
-    content=`
-    <rect x="0" y="${wallY1}" width="${SW}" height="${wallT}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <line x1="4" y1="${wallY1}" x2="${wallT+6}" y2="${wallY2}" stroke="#9c8a7a" stroke-width=".5"/>
-    <rect x="${openingX1-wallT}" y="${wallY1}" width="${wallT}" height="${wallT+4}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX2}" y="${wallY1}" width="${wallT}" height="${wallT+4}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX1}" y="${wallY2}" width="${openingW}" height="${leafH}" fill="#d8edf8" stroke="#4a90d9" stroke-width="1.5"/>
-    <circle cx="${hx}" cy="${wallY2+leafH/2}" r="2" fill="#9c6b3c" stroke="#5c3d1e" stroke-width=".5"/>
-    <path d="M${hx} ${wallY2+leafH} A${arcR} ${arcR} 0 0 ${sweep} ${arcEndX} ${arcEndY}" fill="rgba(26,95,168,.07)" stroke="#1a5fa8" stroke-width="1.2" stroke-dasharray="4,2.5"/>
-    <line x1="${hx}" y1="${wallY2+leafH}" x2="${hx}" y2="${arcEndY}" stroke="#1a5fa8" stroke-width="1" stroke-dasharray="3,2" opacity=".5"/>
-    <line x1="0" y1="${arcEndY+6}" x2="${SW}" y2="${arcEndY+6}" stroke="#5c3d1e" stroke-width="1.5"/>
-    ${lado?`<text x="${isEsq?openingX1+4:openingX2-4}" y="${wallY2+leafH+12}" text-anchor="${isEsq?'start':'end'}" font-size="7" font-family="Oswald,sans-serif" fill="#1a5fa8" font-weight="600">${isEsq?'⬅ ESQ':'DIR ➡'}</text>`:''}`;
-  }
-  // ── BOX DE CORRER ──
+
+  // ── BOX DE CORRER ─────────────────────────────────────────────
   else if(tipo==='Box de Correr'){
-    label='BOX CORRER';
-    const pocketW=openingW*0.5;
-    content=`
-    <rect x="0" y="${wallY1}" width="${SW}" height="${wallT}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX1}" y="${wallY1}" width="${pocketW}" height="${wallT}" fill="#e8e0d5" stroke="#9c6b3c" stroke-width=".8" stroke-dasharray="2,2"/>
-    <line x1="${openingX1}" y1="${wallY2+6}" x2="${openingX2}" y2="${wallY2+6}" stroke="#4a90d9" stroke-width="1.5"/>
-    <rect x="${openingX1+pocketW-2}" y="${wallY1+1}" width="${openingW-pocketW+2}" height="${wallT-2}" fill="#d8edf8" stroke="#4a90d9" stroke-width="1.2"/>
-    <line x1="0" y1="${wallY2+14}" x2="${SW}" y2="${wallY2+14}" stroke="#5c3d1e" stroke-width="1.5"/>`;
-  }
-  // ── PORTA CAMARÃO ──
-  else if(tipo==='Porta Camarão'||tipo==='Porta Vai e Vem'){
-    label=tipo==='Porta Camarão'?'CAMARÃO':'VAI E VEM';
-    const arcR2=openingW*0.55;
-    content=`
-    <rect x="0" y="${wallY1}" width="${SW}" height="${wallT}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX1-wallT}" y="${wallY1}" width="${wallT}" height="${wallT+4}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX2}" y="${wallY1}" width="${wallT}" height="${wallT+4}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <!-- folha -->
-    <rect x="${openingX1}" y="${wallY2}" width="${openingW}" height="${leafH}" fill="#f0e6d3" stroke="#7a5230" stroke-width="1.5"/>
-    <!-- pivot center -->
-    <circle cx="${openingX1+openingW/2}" cy="${wallY2+leafH/2}" r="2.5" fill="#c8902a"/>
-    <!-- swing front -->
-    <path d="M${openingX1} ${wallY2+leafH} A${arcR2} ${arcR2} 0 0 1 ${openingX2} ${wallY2+leafH}" fill="rgba(200,144,42,.08)" stroke="#c8902a" stroke-width="1.2" stroke-dasharray="4,2.5"/>
-    <!-- swing back -->
-    <path d="M${openingX1} ${wallY2} A${arcR2} ${arcR2} 0 0 0 ${openingX2} ${wallY2}" fill="rgba(200,144,42,.05)" stroke="#c8902a" stroke-width="1" stroke-dasharray="3,2"/>
-    <line x1="0" y1="${wallY2+arcR2+8}" x2="${SW}" y2="${wallY2+arcR2+8}" stroke="#5c3d1e" stroke-width="1.5"/>`;
-  }
-  // ── VIDRO FIXO ──
-  else if(tipo==='Vidro Fixo'){
-    label='FIXO';
-    content=`
-    <rect x="0" y="${wallY1}" width="${SW}" height="${wallT}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX1-wallT}" y="${wallY1}" width="${wallT}" height="${wallT+4}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX2}" y="${wallY1}" width="${wallT}" height="${wallT+4}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX1}" y="${wallY2}" width="${openingW}" height="${leafH*2}" fill="#d8edf8" stroke="#6aacda" stroke-width="1.5"/>
-    <line x1="${openingX1}" y1="${wallY2+1}" x2="${openingX2}" y2="${wallY2+leafH*2-1}" stroke="#6aacda" stroke-width=".5" opacity=".4"/>
-    <line x1="${openingX2}" y1="${wallY2+1}" x2="${openingX1}" y2="${wallY2+leafH*2-1}" stroke="#6aacda" stroke-width=".5" opacity=".4"/>
-    <line x1="0" y1="${wallY2+leafH*2+8}" x2="${SW}" y2="${wallY2+leafH*2+8}" stroke="#5c3d1e" stroke-width="1.5"/>`;
-  }
-  // ── PORTA DUPLA ──
-  else if(tipo==='Porta Dupla'){
-    label='DUPLA';
-    const arc1end=openingX1+half, arc2end=openingX2-half;
-    content=`
-    <rect x="0" y="${wallY1}" width="${SW}" height="${wallT}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX1-wallT}" y="${wallY1}" width="${wallT}" height="${wallT+4}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX2}" y="${wallY1}" width="${wallT}" height="${wallT+4}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-    <rect x="${openingX1}" y="${wallY2}" width="${half}" height="${leafH}" fill="#f0e6d3" stroke="#7a5230" stroke-width="1.2"/>
-    <rect x="${openingX1+half}" y="${wallY2}" width="${half}" height="${leafH}" fill="#f0e6d3" stroke="#7a5230" stroke-width="1.2"/>
-    <path d="M${openingX1} ${wallY2+leafH} A${half} ${half} 0 0 1 ${arc1end} ${wallY2+leafH+half}" fill="rgba(26,95,168,.06)" stroke="#1a5fa8" stroke-width="1" stroke-dasharray="3,2"/>
-    <path d="M${openingX2} ${wallY2+leafH} A${half} ${half} 0 0 0 ${arc2end} ${wallY2+leafH+half}" fill="rgba(26,95,168,.06)" stroke="#1a5fa8" stroke-width="1" stroke-dasharray="3,2"/>
-    <circle cx="${openingX1}" cy="${wallY2+2}" r="1.5" fill="#9c6b3c"/>
-    <circle cx="${openingX2}" cy="${wallY2+2}" r="1.5" fill="#9c6b3c"/>
-    <line x1="0" y1="${wallY2+half+10}" x2="${SW}" y2="${wallY2+half+10}" stroke="#5c3d1e" stroke-width="1.5"/>`;
-  }
-  // ── PORTA CORRER (default) ──
-  else {
-    // swing door (Porta de Giro / reposições)
-    label=tipo&&tipo.toLowerCase().includes('correr')?'CORRER':'GIRO';
-    const isCorrer=tipo&&tipo.toLowerCase().includes('correr');
-    if(isCorrer){
-      const pocketW=openingW*0.5;
-      content=`
-      <rect x="0" y="${wallY1}" width="${SW}" height="${wallT}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-      <rect x="${openingX1}" y="${wallY1}" width="${pocketW}" height="${wallT}" fill="#e8e0d5" stroke="#9c6b3c" stroke-width=".8" stroke-dasharray="2,2"/>
-      <line x1="${openingX1}" y1="${wallY2+6}" x2="${openingX2}" y2="${wallY2+6}" stroke="#9c6b3c" stroke-width="1.5"/>
-      <rect x="${openingX1+pocketW-2}" y="${wallY1+1}" width="${openingW-pocketW+2}" height="${wallT-2}" fill="#f0e6d3" stroke="#7a5230" stroke-width="1.2"/>
-      <line x1="0" y1="${wallY2+14}" x2="${SW}" y2="${wallY2+14}" stroke="#5c3d1e" stroke-width="1.5"/>`;
-    } else {
-      content=`
-      <rect x="0" y="${wallY1}" width="${SW}" height="${wallT}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-      <line x1="4" y1="${wallY1}" x2="${wallT+6}" y2="${wallY2}" stroke="#9c8a7a" stroke-width=".5"/>
-      <line x1="10" y1="${wallY1}" x2="${wallT+12}" y2="${wallY2}" stroke="#9c8a7a" stroke-width=".5"/>
-      <rect x="${openingX1-wallT}" y="${wallY1}" width="${wallT}" height="${wallT+4}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-      <rect x="${openingX2}" y="${wallY1}" width="${wallT}" height="${wallT+4}" fill="#d8cfc4" stroke="#5c3d1e" stroke-width="1"/>
-      <rect x="${openingX1}" y="${wallY2}" width="${openingW}" height="${leafH}" fill="#f0e6d3" stroke="#7a5230" stroke-width="1.5"/>
-      <circle cx="${hx}" cy="${wallY2+leafH/2}" r="2" fill="#9c6b3c" stroke="#5c3d1e" stroke-width=".5"/>
-      <path d="M${hx} ${wallY2+leafH} A${arcR} ${arcR} 0 0 ${sweep} ${arcEndX} ${arcEndY}" fill="rgba(26,95,168,.07)" stroke="#1a5fa8" stroke-width="1.2" stroke-dasharray="4,2.5"/>
-      <line x1="${hx}" y1="${wallY2+leafH}" x2="${hx}" y2="${arcEndY}" stroke="#1a5fa8" stroke-width="1" stroke-dasharray="3,2" opacity=".5"/>
-      <line x1="0" y1="${arcEndY+6}" x2="${SW}" y2="${arcEndY+6}" stroke="#5c3d1e" stroke-width="1.5"/>
-      ${lado?`<text x="${isEsq?openingX1+4:openingX2-4}" y="${wallY2+leafH+12}" text-anchor="${isEsq?'start':'end'}" font-size="7" font-family="Oswald,sans-serif" fill="#1a5fa8" font-weight="600">${isEsq?'⬅ ESQ':'DIR ➡'}</text>`:''}`;
-    }
+    inner = `
+    <rect x="14" y="12" width="132" height="102" rx="2" fill="${frame}"/>
+    <rect x="14" y="12" width="132" height="5" rx="1" fill="${frameLt}"/>
+    <rect x="14" y="109" width="132" height="5" rx="1" fill="${frameLt}"/>
+    <!-- FIXED left (wall side, back) -->
+    <rect x="18" y="18" width="60" height="84" rx="1" fill="${glass}" opacity="0.8"/>
+    <rect x="20" y="20" width="14" height="78" rx="1" fill="${shine}" opacity="0.6"/>
+    <rect x="18" y="18" width="60" height="84" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <rect x="18" y="18" width="4" height="84" fill="${frame}" opacity="0.6"/>
+    <rect x="74" y="18" width="4" height="84" fill="${frame}" opacity="0.6"/>
+    <text x="48" y="65" text-anchor="middle" font-size="16" font-family="Inter,Arial,sans-serif" fill="${frameLt}" font-weight="700" opacity="0.55">F</text>
+    <!-- MOBILE right (front, slides left ←) -->
+    <rect x="78" y="15" width="64" height="90" rx="1" fill="${glass}"/>
+    <rect x="80" y="17" width="16" height="84" rx="1" fill="${shine}"/>
+    <rect x="78" y="15" width="64" height="90" rx="1" fill="none" stroke="${glassSt}" stroke-width="1.5"/>
+    <rect x="78" y="15" width="4" height="90" fill="${frame}"/>
+    <rect x="138" y="15" width="4" height="90" fill="${frame}"/>
+    <!-- handle RIGHT edge of mobile -->
+    <rect x="133" y="52" width="5" height="20" rx="2.5" fill="${handle}"/>
+    <!-- arrow ← -->
+    <path d="M110 62 L96 62 M100 58 L96 62 L100 66" stroke="${arcSt}" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <text x="80" y="122" text-anchor="middle" font-size="8.5" font-family="Inter,Arial,sans-serif" fill="${frame}" font-weight="600">BOX CORRER · F=Fixo M=Móvel</text>`;
   }
 
-  return `<svg width="${SW}" height="${SH}" viewBox="0 0 ${SW} ${SH}" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <marker id="arr" markerWidth="5" markerHeight="5" refX="3" refY="2.5" orient="auto">
-        <path d="M0,0 L5,2.5 L0,5 Z" fill="#1a5fa8"/>
-      </marker>
-    </defs>
-    <text x="${SW-2}" y="7" text-anchor="end" font-size="6" font-family="Oswald,sans-serif" fill="#9c6b3c" opacity=".6">PLANTA</text>
-    ${content}
-    ${label?`<text x="${SW/2}" y="${SH-2}" text-anchor="middle" font-size="7" font-family="Oswald,sans-serif" fill="#5c3d1e" font-weight="700">${label}</text>`:''}
+    else if(tipo==='Porta Camarão'||tipo==='Porta Vai e Vem'){
+    // portrait 100x160
+    inner = `
+    <rect x="8" y="6" width="84" height="138" rx="2" fill="${frame}"/>
+    <rect x="12" y="10" width="76" height="130" rx="1" fill="${glass}"/>
+    <rect x="14" y="12" width="14" height="122" rx="1" fill="${shine}"/>
+    <rect x="12" y="10" width="76" height="130" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <!-- pivot center -->
+    <circle cx="50" cy="80" r="4" fill="${frame}" stroke="white" stroke-width="1.5"/>
+    <circle cx="50" cy="80" r="1.5" fill="white"/>
+    <!-- knobs both sides -->
+    <circle cx="16" cy="80" r="5" fill="${handle}"/>
+    <circle cx="16" cy="80" r="2" fill="${frameLt}"/>
+    <circle cx="84" cy="80" r="5" fill="${handle}"/>
+    <circle cx="84" cy="80" r="2" fill="${frameLt}"/>
+    <text x="50" y="152" text-anchor="middle" font-size="8" font-family="Inter,Arial,sans-serif" fill="${frame}" font-weight="600">${typeShort}</text>`;
+  }
+    else if(tipo==='Vidro Fixo'){
+    inner = `
+    <rect x="30" y="8" width="100" height="108" rx="2" fill="${frame}"/>
+    <rect x="34" y="12" width="92" height="100" rx="1" fill="${glass}"/>
+    <rect x="36" y="14" width="18" height="92" rx="1" fill="${shine}"/>
+    <rect x="50" y="14" width="8" height="36" rx="1" fill="${shine}" opacity="0.6"/>
+    <rect x="34" y="12" width="92" height="100" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <text x="80" y="124" text-anchor="middle" font-size="8.5" font-family="Inter,Arial,sans-serif" fill="${frame}" font-weight="600">VIDRO FIXO</text>`;
+  }
+
+  // ── JANELA 2 FOLHAS ───────────────────────────────────────────
+  else if(tipo==='Janela 2 Folhas'){
+    inner = `
+    <rect x="0" y="0" width="${W}" height="16" fill="${wall}"/>
+    <rect x="0" y="112" width="${W}" height="18" fill="${wall}"/>
+    <rect x="14" y="16" width="132" height="96" rx="2" fill="${frame}"/>
+    <rect x="16" y="17" width="128" height="4" rx="1" fill="${frameLt}"/>
+    <rect x="16" y="108" width="128" height="4" rx="1" fill="${frameLt}"/>
+    <!-- FIXED left (wall side, back) -->
+    <rect x="18" y="22" width="60" height="82" rx="1" fill="${glass}" opacity="0.8"/>
+    <rect x="20" y="24" width="14" height="74" rx="1" fill="${shine}" opacity="0.6"/>
+    <rect x="18" y="22" width="60" height="82" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <rect x="18" y="22" width="4" height="82" fill="${frame}" opacity="0.6"/>
+    <rect x="74" y="22" width="4" height="82" fill="${frame}" opacity="0.6"/>
+    <text x="48" y="68" text-anchor="middle" font-size="16" font-family="Inter,Arial,sans-serif" fill="${frameLt}" font-weight="700" opacity="0.55">F</text>
+    <!-- MOBILE right (front, slides left ←) -->
+    <rect x="78" y="19" width="64" height="87" rx="1" fill="${glass}"/>
+    <rect x="80" y="21" width="16" height="81" rx="1" fill="${shine}"/>
+    <rect x="78" y="19" width="64" height="87" rx="1" fill="none" stroke="${glassSt}" stroke-width="1.5"/>
+    <rect x="78" y="19" width="4" height="87" fill="${frame}"/>
+    <rect x="138" y="19" width="4" height="87" fill="${frame}"/>
+    <!-- handle RIGHT edge of mobile -->
+    <rect x="133" y="52" width="5" height="20" rx="2.5" fill="${handle}"/>
+    <!-- arrow ← mobile slides left toward F -->
+    <path d="M108 63 L94 63 M98 59 L94 63 L98 67" stroke="${arcSt}" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <text x="80" y="126" text-anchor="middle" font-size="8.5" font-family="Inter,Arial,sans-serif" fill="${frame}" font-weight="600">2 FOLHAS · F=Fixo M=Móvel</text>`;
+  }
+
+    else if(tipo==='Janela 4 Folhas'){
+    const qw=30, sx=14;
+    inner = `
+    <rect x="0" y="0" width="${W}" height="18" fill="${wall}"/>
+    <rect x="0" y="108" width="${W}" height="22" fill="${wall}"/>
+    <rect x="${sx}" y="18" width="132" height="90" rx="2" fill="${frame}"/>
+    <rect x="${sx}" y="18" width="132" height="5" rx="1" fill="${frameLt}"/>
+    <rect x="${sx}" y="103" width="132" height="5" rx="1" fill="${frameLt}"/>
+    <!-- F1 -->
+    <rect x="${sx+2}" y="23" width="${qw}" height="79" rx="1" fill="${glass}"/>
+    <rect x="${sx+3}" y="25" width="8" height="71" rx="1" fill="${shine}"/>
+    <rect x="${sx+2}" y="23" width="${qw}" height="79" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <text x="${sx+2+qw/2}" y="68" text-anchor="middle" font-size="15" font-family="Inter,Arial,sans-serif" fill="${frameLt}" font-weight="700" opacity="0.7">F</text>
+    <!-- M1 -->
+    <rect x="${sx+qw+3}" y="21" width="${qw}" height="83" rx="1" fill="${glass}"/>
+    <rect x="${sx+qw+3}" y="21" width="${qw}" height="83" rx="1" fill="none" stroke="${arcSt}" stroke-width="1.5"/>
+    <path d="M${sx+qw+3+qw-6} 62 L${sx+qw+3+6} 62 M${sx+qw+3+9} 58 L${sx+qw+3+6} 62 L${sx+qw+3+9} 66" stroke="${arrow}" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <rect x="${sx+qw+3+qw-5}" y="58" width="4" height="16" rx="2" fill="${handle}"/>
+    <!-- M2 -->
+    <rect x="${sx+qw*2+5}" y="21" width="${qw}" height="83" rx="1" fill="${glass}"/>
+    <rect x="${sx+qw*2+5}" y="21" width="${qw}" height="83" rx="1" fill="none" stroke="${arcSt}" stroke-width="1.5"/>
+    <path d="M${sx+qw*2+5+4} 62 L${sx+qw*2+5+qw-4} 62 M${sx+qw*2+5+qw-8} 58 L${sx+qw*2+5+qw-4} 62 L${sx+qw*2+5+qw-8} 66" stroke="${arrow}" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <rect x="${sx+qw*2+5+1}" y="58" width="4" height="16" rx="2" fill="${handle}"/>
+    <!-- F2 -->
+    <rect x="${sx+qw*3+7}" y="23" width="${qw}" height="79" rx="1" fill="${glass}"/>
+    <rect x="${sx+qw*3+8}" y="25" width="8" height="71" rx="1" fill="${shine}"/>
+    <rect x="${sx+qw*3+7}" y="23" width="${qw}" height="79" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <text x="${sx+qw*3+7+qw/2}" y="68" text-anchor="middle" font-size="15" font-family="Inter,Arial,sans-serif" fill="${frameLt}" font-weight="700" opacity="0.7">F</text>
+    <!-- dividers -->
+    <line x1="${sx+qw+2}" y1="18" x2="${sx+qw+2}" y2="108" stroke="${frame}" stroke-width="2"/>
+    <line x1="${sx+qw*2+4}" y1="18" x2="${sx+qw*2+4}" y2="108" stroke="${frame}" stroke-width="2"/>
+    <line x1="${sx+qw*3+6}" y1="18" x2="${sx+qw*3+6}" y2="108" stroke="${frame}" stroke-width="2"/>
+    <text x="80" y="124" text-anchor="middle" font-size="8.5" font-family="Inter,Arial,sans-serif" fill="${frame}" font-weight="600">4 FOLHAS · F=Fixo M=Móvel</text>`;
+  }
+
+  // ── MAXIM-AR ──────────────────────────────────────────────────
+  else if(tipo==='Maxim-Ar'){
+    inner = `
+    <rect x="0" y="0" width="${W}" height="18" fill="${wall}"/>
+    <rect x="0" y="108" width="${W}" height="22" fill="${wall}"/>
+    <rect x="14" y="18" width="132" height="90" rx="2" fill="${frame}"/>
+    <rect x="18" y="22" width="124" height="82" rx="1" fill="${glass}"/>
+    <rect x="20" y="24" width="20" height="76" rx="1" fill="${shine}"/>
+    <rect x="18" y="22" width="124" height="82" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <!-- pivot bar center -->
+    <rect x="18" y="60" width="124" height="4" rx="1" fill="${frame}"/>
+    <circle cx="20" cy="62" r="3" fill="${frameLt}" stroke="${frame}" stroke-width="1"/>
+    <circle cx="140" cy="62" r="3" fill="${frameLt}" stroke="${frame}" stroke-width="1"/>
+    <!-- open arc top -->
+    <path d="M20 24 Q80 8 140 24" fill="${arcFill}" stroke="${arcSt}" stroke-width="1.2" stroke-dasharray="5,3"/>
+    <!-- crank handle -->
+    <rect x="76" y="64" width="8" height="12" rx="2" fill="${handle}"/>
+    <text x="80" y="124" text-anchor="middle" font-size="8.5" font-family="Inter,Arial,sans-serif" fill="${frame}" font-weight="600">MAXIM-AR</text>`;
+  }
+
+  // ── JANELA BASCULANTE ─────────────────────────────────────────
+  else if(tipo==='Janela Basculante'){
+    inner = `
+    <rect x="0" y="0" width="${W}" height="18" fill="${wall}"/>
+    <rect x="0" y="108" width="${W}" height="22" fill="${wall}"/>
+    <rect x="14" y="18" width="132" height="90" rx="2" fill="${frame}"/>
+    <rect x="18" y="22" width="124" height="82" rx="1" fill="${glass}"/>
+    <rect x="20" y="24" width="20" height="76" rx="1" fill="${shine}"/>
+    <rect x="18" y="22" width="124" height="82" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <!-- hinges top -->
+    <rect x="28" y="22" width="12" height="4" rx="1" fill="${frameLt}"/>
+    <rect x="120" y="22" width="12" height="4" rx="1" fill="${frameLt}"/>
+    <!-- bottom opens inward -->
+    <path d="M20 100 Q80 116 140 100" fill="${arcFill}" stroke="${arcSt}" stroke-width="1.2" stroke-dasharray="5,3"/>
+    <!-- handle bottom center -->
+    <rect x="74" y="94" width="12" height="5" rx="2" fill="${handle}"/>
+    <text x="80" y="124" text-anchor="middle" font-size="8.5" font-family="Inter,Arial,sans-serif" fill="${frame}" font-weight="600">BASCULANTE</text>`;
+  }
+
+  // ── JANELA PIVOTANTE ──────────────────────────────────────────
+  else if(tipo==='Janela Pivotante'){
+    inner = `
+    <rect x="0" y="0" width="${W}" height="18" fill="${wall}"/>
+    <rect x="0" y="108" width="${W}" height="22" fill="${wall}"/>
+    <rect x="14" y="18" width="132" height="90" rx="2" fill="${frame}"/>
+    <rect x="18" y="22" width="58" height="82" rx="1" fill="${glass}"/>
+    <rect x="20" y="24" width="14" height="76" rx="1" fill="${shine}"/>
+    <rect x="18" y="22" width="58" height="82" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <rect x="84" y="22" width="58" height="82" rx="1" fill="${glass}"/>
+    <rect x="86" y="24" width="14" height="76" rx="1" fill="${shine}"/>
+    <rect x="84" y="22" width="58" height="82" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <!-- center pivot bar -->
+    <rect x="76" y="18" width="8" height="90" fill="${frame}"/>
+    <circle cx="80" cy="63" r="4" fill="${frameLt}" stroke="${frame}" stroke-width="1.5"/>
+    <circle cx="80" cy="63" r="1.5" fill="white"/>
+    <path d="M20 24 Q38 63 20 100" fill="${arcFill}" stroke="${arcSt}" stroke-width="1" stroke-dasharray="4,3"/>
+    <path d="M140 24 Q122 63 140 100" fill="${arcFill}" stroke="${arcSt}" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="80" y="124" text-anchor="middle" font-size="8.5" font-family="Inter,Arial,sans-serif" fill="${frame}" font-weight="600">PIVOTANTE</text>`;
+  }
+
+  // ── JANELA GUILHOTINA ─────────────────────────────────────────
+  else if(tipo==='Janela Guilhotina'){
+    const midY=62;
+    inner = `
+    <rect x="0" y="0" width="${W}" height="18" fill="${wall}"/>
+    <rect x="0" y="108" width="${W}" height="22" fill="${wall}"/>
+    <rect x="14" y="18" width="132" height="90" rx="2" fill="${frame}"/>
+    <!-- guides -->
+    <rect x="16" y="22" width="4" height="84" rx="1" fill="${frameLt}" opacity="0.7"/>
+    <rect x="140" y="22" width="4" height="84" rx="1" fill="${frameLt}" opacity="0.7"/>
+    <!-- top pane back -->
+    <rect x="22" y="22" width="116" height="${midY-22}" rx="1" fill="${glass}" opacity="0.75"/>
+    <rect x="22" y="22" width="116" height="${midY-22}" rx="1" fill="none" stroke="${glassSt}" stroke-width="1" opacity="0.6"/>
+    <!-- bottom pane front -->
+    <rect x="22" y="${midY}" width="116" height="${106-midY}" rx="1" fill="${glass}"/>
+    <rect x="24" y="${midY+2}" width="20" height="${106-midY-8}" rx="1" fill="${shine}"/>
+    <rect x="22" y="${midY}" width="116" height="${106-midY}" rx="1" fill="none" stroke="${glassSt}" stroke-width="1.5"/>
+    <!-- mid rail -->
+    <rect x="18" y="${midY-3}" width="124" height="6" rx="1" fill="${frame}"/>
+    <!-- handle -->
+    <rect x="72" y="${midY+12}" width="16" height="5" rx="2" fill="${handle}"/>
+    <rect x="75" y="${midY+6}" width="10" height="7" rx="1" fill="${frameLt}"/>
+    <!-- up arrow -->
+    <path d="M80 ${midY-14} L80 ${midY-26} M75 ${midY-22} L80 ${midY-26} L85 ${midY-22}" stroke="${arrow}" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <text x="80" y="124" text-anchor="middle" font-size="8.5" font-family="Inter,Arial,sans-serif" fill="${frame}" font-weight="600">GUILHOTINA</text>`;
+  }
+
+  // ── DEFAULT ───────────────────────────────────────────────────
+  else {
+    inner = `
+    <rect x="30" y="8" width="100" height="108" rx="2" fill="${frame}"/>
+    <rect x="34" y="12" width="92" height="100" rx="1" fill="${glass}"/>
+    <rect x="36" y="14" width="18" height="92" rx="1" fill="${shine}"/>
+    <rect x="34" y="12" width="92" height="100" rx="1" fill="none" stroke="${glassSt}" stroke-width="1"/>
+    <text x="80" y="124" text-anchor="middle" font-size="8.5" font-family="Inter,Arial,sans-serif" fill="${frame}" font-weight="600">${typeShort}</text>`;
+  }
+
+  // portrait dims for door types
+  const isDoor=['Porta de Giro','Reposição Porta de Giro','Porta Dupla','Box de Giro','Porta Camarão','Porta Vai e Vem'].includes(tipo);
+  const svgW = isDoor ? 100 : W;
+  const svgH = isDoor ? 160 : H;
+  return `<svg width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg"
+    style="border-radius:6px;display:block;">
+    <rect width="${svgW}" height="${svgH}" fill="white"/>
+    ${inner}
   </svg>`;
 }
+
 
 
 function glassSVG(w,h,pw){
@@ -753,7 +847,7 @@ function buildEdit(p){
       const isPorta=isPortaType(g.obs);
       const needsLado=isPorta&&g.obs!=='Vidro Fixo';
       return`
-      <div class="gc${g.sketch?' has-sketch':''}${isPorta?' gc-porta':''}">
+      <div class="gc${g.sketch?' has-sketch':''}" data-gid="${g.id}"${isPorta?' gc-porta':''}">
         <div class="gc-top"><div class="badge">${i+1}</div><button class="gc-rm" onclick="rmGlass('${p.id}',${g.id})">✕</button></div>
 
         <!-- PREVIEW -->
@@ -903,14 +997,37 @@ function updField(field,val){const p=active();if(!p)return;p[field]=val;renderSB
 function updGlass(pid,id,field,val){
   const p=projects.find(x=>x.id===pid);if(!p)return;
   p.glasses=p.glasses.map(g=>g.id===id?{...g,[field]:val}:g);
-  // re-render full content when type/side/model changes so conditional fields update
   if(field==='obs'||field==='lado'||field==='modelo'){
-    renderContent();
+    // Re-render only the specific card instead of all cards
+    rerenderCard(pid,id);
     renderInfoBar();
   } else {
     renderInfoBar();
   }
   scheduleSave();
+}
+
+function rerenderCard(pid,id){
+  // Find and replace only the affected card DOM element
+  const p=projects.find(x=>x.id===pid);if(!p)return;
+  const g=p.glasses.find(x=>x.id===id);if(!g)return;
+  const container=document.querySelector('[data-gid="'+id+'"]');
+  if(!container){renderContent();return;} // fallback
+  // Build new card HTML for this glass only
+  const isPorta=isPortaType(g.obs);
+  const needsLado=needsLadoType(g.obs);
+  const idx=p.glasses.indexOf(g);
+  const tempDiv=document.createElement('div');
+  // Re-use buildEdit but extract only this card
+  const allCards=buildEdit(p);
+  const tmp=document.createElement('div');
+  tmp.innerHTML=allCards;
+  const newCard=tmp.querySelector('[data-gid="'+id+'"]');
+  if(newCard){
+    container.replaceWith(newCard);
+  } else {
+    renderContent();
+  }
 }
 function rmGlass(pid,id){const p=projects.find(x=>x.id===pid);if(!p)return;p.glasses=p.glasses.filter(g=>g.id!==id);renderAll();scheduleSave();}
 function addGlass(pid){const p=projects.find(x=>x.id===pid);if(!p)return;p.glasses=[...p.glasses,{id:gid++,w:645,h:1000,obs:"",nota:"",lado:"",modelo:"",sketch:null}];renderAll();scheduleSave();}
