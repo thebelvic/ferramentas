@@ -90,6 +90,10 @@ body{font-family:'Lato',sans-serif;background:#eef3fb;height:100vh;overflow:hidd
 .prev-hdr{background:linear-gradient(135deg,#0d3d7a 0%,#1a5fa8 100%);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;}
 .prev-grid{padding:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;}
 .pc{background:#fff;border-radius:12px;border:1.5px solid #dde8f5;box-shadow:0 2px 10px rgba(30,80,140,.07);padding:13px 9px 11px;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.print-page{break-after:page;page-break-after:always;}
+.print-page:last-child{break-after:avoid;page-break-after:avoid;}
+.prev-hdr-mini{background:linear-gradient(90deg,#1a5fa8,#2563eb);padding:8px 18px;display:flex;justify-content:space-between;align-items:center;border-radius:0;}
+.prev-ftr-mini{padding:8px 18px;font-size:11px;color:#9aacbf;text-align:right;border-top:1px solid #dde8f5;}
 .prev-ftr{background:#f7faff;border-top:1.5px solid #dde8f5;padding:13px 24px;display:flex;align-items:center;justify-content:space-between;}
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:12px;color:#9aacbf;}
 
@@ -173,18 +177,60 @@ body{font-family:'Lato',sans-serif;background:#eef3fb;height:100vh;overflow:hidd
 
 /* ── PRINT ── */
 @media print {
-  @page{size:A4 portrait;margin:12mm;}
-  body,#root{height:auto!important;overflow:visible!important;background:#fff!important;}
-  #hdr,#sidebar,#info-bar,.modal-overlay,#sketchModal,.no-print{display:none!important;}
-  #layout{display:block!important;}
-  #main{display:block!important;overflow:visible!important;}
-  #content{overflow:visible!important;padding:0!important;}
-  .edit-grid,.add-card{display:none!important;}
-  .prev-wrap{border:none!important;border-radius:0!important;box-shadow:none!important;}
-  .prev-hdr{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;border-radius:0!important;}
-  .prev-grid{grid-template-columns:repeat(5,1fr)!important;gap:8px!important;padding:14px!important;}
-  .pc{box-shadow:none!important;border:1px solid #dde8f5!important;break-inside:avoid;page-break-inside:avoid;}
-  .prev-ftr{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  @page{size:A4 portrait;margin:10mm;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body,html{height:auto!important;overflow:visible!important;background:#fff!important;width:100%!important;}
+  #hdr,#sidebar,#info-bar,.modal-overlay,#sketchModal,.no-print,
+  .edit-grid,.add-card,#editBtn,#visualBtn{display:none!important;}
+  #layout{display:block!important;width:100%!important;}
+  #main{display:block!important;overflow:visible!important;width:100%!important;margin:0!important;padding:0!important;}
+  #content{overflow:visible!important;padding:0!important;width:100%!important;}
+  .prev-wrap{
+    border:none!important;border-radius:0!important;
+    box-shadow:none!important;width:100%!important;
+    overflow:visible!important;
+  }
+  .prev-hdr{
+    border-radius:0!important;
+    break-inside:avoid;
+    page-break-inside:avoid;
+  }
+  .prev-grid{
+    display:grid!important;
+    grid-template-columns:repeat(4,1fr)!important;
+    gap:6px!important;
+    padding:10px!important;
+    width:100%!important;
+  }
+  .print-page{
+    break-after:page!important;
+    page-break-after:always!important;
+    overflow:visible!important;
+  }
+  .print-page:last-child{
+    break-after:avoid!important;
+    page-break-after:avoid!important;
+  }
+  .prev-hdr-mini{
+    -webkit-print-color-adjust:exact!important;
+    print-color-adjust:exact!important;
+  }
+  .pc{
+    box-shadow:none!important;
+    border:1px solid #dde8f5!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+    overflow:hidden!important;
+    width:100%!important;
+  }
+  .pc svg{
+    max-width:100%!important;
+    height:auto!important;
+  }
+  .prev-ftr{
+    break-inside:avoid;
+    page-break-inside:avoid;
+  }
 }
 </style>
 <script type="module">
@@ -776,7 +822,7 @@ function doorSVG(tipo, lado){
   const svgW = isDoor ? 100 : W;
   const svgH = isDoor ? 160 : H;
   return `<svg width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg"
-    style="border-radius:6px;display:block;">
+    style="border-radius:6px;display:block;max-width:100%;height:auto;">
     <rect width="${svgW}" height="${svgH}" fill="white"/>
     ${inner}
   </svg>`;
@@ -786,7 +832,7 @@ function doorSVG(tipo, lado){
 
 function glassSVG(w,h,pw){
   const r=h/Math.max(w,1),ph=Math.max(40,Math.min(110,Math.round(pw*r)));
-  return `<svg width="${pw}" height="${ph}" viewBox="0 0 ${pw} ${ph}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gg${pw}" x1="0" y1="0" x2="1" y2="1"><stop offset="60%" stop-color="#d8edf8"/><stop offset="100%" stop-color="#b8d8ef"/></linearGradient></defs><rect x="3" y="3" width="${pw-3}" height="${ph-3}" fill="#b8cfe0" rx="2"/><rect width="${pw-3}" height="${ph-3}" fill="url(#gg${pw})" stroke="#6aacda" stroke-width="2" rx="2"/><polygon points="2,2 16,2 2,24" fill="rgba(255,255,255,0.45)"/></svg>`;
+  return `<svg width="${pw}" height="${ph}" viewBox="0 0 ${pw} ${ph}" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;"><defs><linearGradient id="gg${pw}" x1="0" y1="0" x2="1" y2="1"><stop offset="60%" stop-color="#d8edf8"/><stop offset="100%" stop-color="#b8d8ef"/></linearGradient></defs><rect x="3" y="3" width="${pw-3}" height="${ph-3}" fill="#b8cfe0" rx="2"/><rect width="${pw-3}" height="${ph-3}" fill="url(#gg${pw})" stroke="#6aacda" stroke-width="2" rx="2"/><polygon points="2,2 16,2 2,24" fill="rgba(255,255,255,0.45)"/></svg>`;
 }
 
 // ══════════════════════════════════════════════
@@ -928,21 +974,20 @@ function buildEdit(p){
 
 
 function buildPreview(p){
-  if(!p.glasses)p.glasses=[];  const a=area(p.glasses);
-  return`<div class="prev-wrap">
-    <div class="prev-hdr">
-      <div><div style="color:rgba(255,255,255,.55);font-size:11px;letter-spacing:1px;font-weight:700;">OBRA</div>
-        <div style="color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:26px;letter-spacing:.5px;">${esc(p.obra)||'—'}</div>
-      </div>
-      <div style="text-align:right;"><div style="color:rgba(255,255,255,.55);font-size:11px;letter-spacing:1px;font-weight:700;">CLIENTE</div>
-        <div style="color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:26px;letter-spacing:.5px;">${esc(p.client)||'—'}</div>
-      </div>
-    </div>
-    <div class="prev-grid">
-      ${p.glasses.map((g,i)=>{
-        const r=g.h/Math.max(g.w,1),pw=75,ph=Math.max(42,Math.min(120,Math.round(pw*r)));
-        const hStr=g.h>=1000?(g.h/1000).toFixed(3):String(g.h);
-        return`<div class="pc">
+  if(!p.glasses)p.glasses=[];
+  const a=area(p.glasses);
+  const COLS=4, ROWS=3, PER_PAGE=COLS*ROWS; // 12 cards per page
+
+  // Split into pages
+  const pages=[];
+  for(let i=0;i<Math.max(1,p.glasses.length);i+=PER_PAGE)
+    pages.push(p.glasses.slice(i,i+PER_PAGE));
+  if(!pages.length) pages.push([]);
+
+  const cardHTML=(g,i)=>{
+    const r=g.h/Math.max(g.w,1),pw=75,ph=Math.max(42,Math.min(120,Math.round(pw*r)));
+    const hStr=g.h>=1000?(g.h/1000).toFixed(3):String(g.h);
+    return`<div class="pc">
           <div class="badge" style="width:28px;height:28px;font-size:14px;">${i+1}</div>
           ${g.sketch
             ? `<img src="${g.sketch}" style="width:${pw}px;max-height:${ph+20}px;object-fit:contain;border-radius:4px;border:1px solid #ede9fe;" alt="Esboço">`
@@ -972,20 +1017,42 @@ function buildPreview(p){
           ${g.nota?`<div style="background:#f0f6ff;border:1px solid #b0c8e8;border-radius:5px;padding:2px 5px;font-size:8px;color:#1a5fa8;font-weight:600;text-align:center;width:100%;line-height:1.3;">📝 ${esc(g.nota)}</div>`:''}
           ${g.sketch?`<div style="background:#f5f3ff;border:1px solid #c4b5fd;border-radius:5px;padding:2px 5px;font-size:8px;color:#6d28d9;font-weight:700;text-align:center;width:100%;">✏️ Forma especial</div>`:''}
         </div>`;
-      }).join('')}
-    </div>
-    <div class="prev-ftr">
-      <div style="display:flex;gap:14px;align-items:center;">
-        <div style="width:26px;height:18px;background:linear-gradient(135deg,#d8edf8 60%,#b8d8ef 100%);border:1.5px solid #6aacda;border-radius:2px;-webkit-print-color-adjust:exact;print-color-adjust:exact;"></div>
-        <span style="font-size:12px;color:#4a6080;font-weight:600;">Folha de Vidro</span>
-        <span style="font-size:11px;color:#9aacbf;">* Medidas em milímetros (mm)</span>
+  };
+
+  const pageHTML = pages.map((pageGlasses, pi)=>{
+    const globalStart = pi*PER_PAGE;
+    const isFirst = pi===0;
+    const isLast  = pi===pages.length-1;
+    return `<div class="print-page">
+      ${isFirst?`<div class="prev-hdr">
+        <div><div style="color:rgba(255,255,255,.55);font-size:11px;letter-spacing:1px;font-weight:700;">OBRA</div>
+          <div style="color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:26px;letter-spacing:.5px;">${esc(p.obra)||'—'}</div>
+        </div>
+        <div style="text-align:right;"><div style="color:rgba(255,255,255,.55);font-size:11px;letter-spacing:1px;font-weight:700;">CLIENTE</div>
+          <div style="color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:26px;letter-spacing:.5px;">${esc(p.client)||'—'}</div>
+        </div>
+      </div>`:`<div class="prev-hdr-mini">
+        <span style="font-size:12px;color:rgba(255,255,255,.7);font-weight:600;">${esc(p.client)||'—'} · ${esc(p.obra)||'—'}</span>
+        <span style="font-size:11px;color:rgba(255,255,255,.5);">Página ${pi+1} / ${pages.length}</span>
+      </div>`}
+      <div class="prev-grid">
+        ${pageGlasses.map((g,i)=>cardHTML(g, globalStart+i)).join('')}
       </div>
-      <div style="display:flex;gap:20px;">
-        <div style="text-align:right;"><div class="stat-lbl">TOTAL</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;color:#1a5fa8;">${(p.glasses||[]).length} vidros</div></div>
-        <div style="text-align:right;"><div class="stat-lbl">ÁREA</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;color:#1a5fa8;">${a.toFixed(3)} m²</div></div>
-      </div>
-    </div>
-  </div>`;
+      ${isLast?`<div class="prev-ftr">
+        <div style="display:flex;gap:14px;align-items:center;">
+          <div style="width:26px;height:18px;background:linear-gradient(135deg,#d8edf8 60%,#b8d8ef 100%);border:1.5px solid #6aacda;border-radius:2px;-webkit-print-color-adjust:exact;print-color-adjust:exact;"></div>
+          <span style="font-size:12px;color:#4a6080;font-weight:600;">Folha de Vidro</span>
+          <span style="font-size:11px;color:#9aacbf;">* Medidas em milímetros (mm)</span>
+        </div>
+        <div style="display:flex;gap:20px;">
+          <div style="text-align:right;"><div class="stat-lbl">TOTAL</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;color:#1a5fa8;">${(p.glasses||[]).length} vidros</div></div>
+          <div style="text-align:right;"><div class="stat-lbl">ÁREA</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;color:#1a5fa8;">${a.toFixed(3)} m²</div></div>
+        </div>
+      </div>`:`<div class="prev-ftr-mini">Página ${pi+1} de ${pages.length} · ${(p.glasses||[]).length} vidros · ${a.toFixed(3)} m²</div>`}
+    </div>`;
+  }).join('');
+
+  return`<div class="prev-wrap">${pageHTML}</div>`;
 }
 
 // ══════════════════════════════════════════════
@@ -1392,21 +1459,26 @@ renderAll();
 // ── FIREBASE SYNC ──────────────────────────────────────────────
 (function(){
   const FB_KEY='vidros_editor', LS_KEY='vidros_proj_v5';
-  let _writing=false; // true while WE are saving to Firebase (suppress listener)
+  let _writing=false;
+  let _applyTimer=null;
 
-  // Call this after any local save to push to Firebase
   window.__syncNow=function(){
     if(!navigator.onLine||!window.__fbSave)return;
     try{
       const raw=localStorage.getItem(LS_KEY);
-      if(raw){ _writing=true; window.__fbSave(FB_KEY,JSON.parse(raw)); setTimeout(()=>_writing=false,3000); }
+      if(!raw)return;
+      _writing=true;
+      window.__fbSave(FB_KEY,JSON.parse(raw));
+      // keep _writing true until Firebase confirms + buffer
+      clearTimeout(window.__syncNow._t);
+      window.__syncNow._t=setTimeout(()=>_writing=false, 5000);
     }catch(e){}
   };
 
-  // Patch all save functions
+  // Patch save functions ONCE
   function _patch(){
     ['scheduleSave','persist','save','saveAll'].forEach(fn=>{
-      if(typeof window[fn]==='function' && !window[fn].__fbPatched){
+      if(typeof window[fn]==='function'&&!window[fn].__fbPatched){
         const orig=window[fn];
         window[fn]=function(){
           const r=orig.apply(this,arguments);
@@ -1418,54 +1490,65 @@ renderAll();
     });
   }
 
-  // Apply data from Firebase to the app
+  // Apply Firebase data to app — safe, no save triggered
   function _apply(data){
     if(!data)return;
-    const fixed=window.__fixArrays?window.__fixArrays(data):data;
-    // Ensure arrays inside projects
-    if(Array.isArray(fixed)){
-      fixed.forEach(p=>{
-        if(p.glasses&&!Array.isArray(p.glasses))p.glasses=Object.values(p.glasses);
-        if(p.doors&&!Array.isArray(p.doors))p.doors=Object.values(p.doors);
-      });
-    }
     try{
-      localStorage.setItem('vidros_proj_v5', JSON.stringify(data));
-      if(typeof loadData==='function') loadData();
-      else if(typeof load==='function') load();
-      if(typeof renderAll==='function') renderAll();
-      else if(typeof render==='function') render();
-      else if(typeof renderSB==='function'){ renderSB(); if(typeof renderContent==='function') renderContent(); }
-    }catch(e){ console.warn('reload err:',e); }
+      const fixed=window.__fixArrays?window.__fixArrays(data):data;
+      if(Array.isArray(fixed)){
+        fixed.forEach(p=>{
+          if(p.glasses&&!Array.isArray(p.glasses))p.glasses=Object.values(p.glasses);
+          if(p.doors&&!Array.isArray(p.doors))p.doors=Object.values(p.doors);
+        });
+      }
+      // Compare with current local data — only reload if actually different
+      const incoming=JSON.stringify(fixed);
+      const current=localStorage.getItem(LS_KEY);
+      if(incoming===current)return; // no change, skip
+      localStorage.setItem(LS_KEY,incoming);
+      // Load without triggering saves
+      _writingBlock(()=>{
+        if(typeof loadData==='function')loadData();
+        else if(typeof load==='function')load();
+        if(typeof renderAll==='function')renderAll();
+        else if(typeof render==='function')render();
+        else if(typeof renderSB==='function'){renderSB();if(typeof renderContent==='function')renderContent();}
+      });
+    }catch(e){console.warn('fbApply:',e);}
+  }
+
+  // Block saves during a reload to prevent feedback loop
+  function _writingBlock(fn){
+    _writing=true;
+    try{fn();}catch(e){}
+    // Keep blocked for 2s after reload
+    clearTimeout(_applyTimer);
+    _applyTimer=setTimeout(()=>_writing=false, 2000);
   }
 
   function _fbInit(){
-    if(!window.__fbLoad){ setTimeout(_fbInit,300); return; }
-
-    // Patch saves
-    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',_patch);
+    if(!window.__fbLoad){setTimeout(_fbInit,300);return;}
+    if(document.readyState==='loading')
+      document.addEventListener('DOMContentLoaded',_patch);
     else _patch();
-    // Also re-patch after load (functions may be defined late)
-    setTimeout(_patch,1000);
+    setTimeout(_patch,1500); // re-patch late-defined functions
 
-    // ALWAYS load from Firebase on start — it's the source of truth
+    // Load from Firebase on start
     window.__fbLoad(FB_KEY,function(fbData){
-      if(fbData){
-        _apply(fbData);  // Firebase wins on load
-      } else {
-        // No Firebase data yet — use localStorage and push to Firebase
+      if(!fbData){
+        // No Firebase data yet — push local to Firebase
         const local=localStorage.getItem(LS_KEY);
-        if(local){
-          try{ const d=JSON.parse(local); if(d) window.__fbSave(FB_KEY,d); }catch(e){}
-        }
+        if(local)try{window.__fbSave(FB_KEY,JSON.parse(local));}catch(e){}
+        return;
       }
+      _apply(fbData);
     });
 
     // Listen for real-time changes from other devices
     let _initDone=false;
-    setTimeout(()=>_initDone=true,3000);
+    setTimeout(()=>_initDone=true, 4000);
     window.__fbListen(FB_KEY,function(data){
-      if(!_initDone||_writing)return; // skip during init and our own saves
+      if(!_initDone||_writing)return;
       _apply(data);
     });
   }
