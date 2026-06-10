@@ -1026,25 +1026,32 @@ function updGlass(pid,id,field,val){
 }
 
 function rerenderCard(pid,id){
-  // Find and replace only the affected card DOM element
   const p=projects.find(x=>x.id===pid);if(!p)return;
   const g=p.glasses.find(x=>x.id===id);if(!g)return;
   const container=document.querySelector('[data-gid="'+id+'"]');
-  if(!container){renderContent();return;} // fallback
-  // Build new card HTML for this glass only
+  if(!container){renderContent();return;}
+
+  // Build ONLY this card's HTML in isolation
   const isPorta=isPortaType(g.obs);
-  const needsLado=needsLadoType(g.obs);
-  const idx=p.glasses.indexOf(g);
-  const tempDiv=document.createElement('div');
-  // Re-use buildEdit but extract only this card
-  const allCards=buildEdit(p);
-  const tmp=document.createElement('div');
-  tmp.innerHTML=allCards;
-  const newCard=tmp.querySelector('[data-gid="'+id+'"]');
+  const needsLado=isPorta&&g.obs!=='Vidro Fixo';
+  const i=p.glasses.indexOf(g);
+
+  // Create a temporary project with only this glass to call buildEdit safely
+  const tmpProj={id:p.id,client:p.client,obra:p.obra,glasses:[g]};
+  const tmpHTML=buildEdit(tmpProj);
+
+  // Parse and extract the single card
+  const tmpDiv=document.createElement('div');
+  tmpDiv.innerHTML=tmpHTML;
+  const newCard=tmpDiv.querySelector('[data-gid="'+id+'"]');
+
   if(newCard){
+    // Fix card number badge (tmpProj has only 1 glass so badge shows "1")
+    const badge=newCard.querySelector('.gc-top .badge');
+    if(badge) badge.textContent=String(i+1);
     container.replaceWith(newCard);
   } else {
-    renderContent();
+    renderContent(); // safe fallback
   }
 }
 function rmGlass(pid,id){const p=projects.find(x=>x.id===pid);if(!p)return;p.glasses=p.glasses.filter(g=>g.id!==id);renderAll();scheduleSave();}
