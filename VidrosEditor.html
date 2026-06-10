@@ -54,6 +54,8 @@ body{font-family:'Lato',sans-serif;background:#eef3fb;height:100vh;overflow:hidd
 #content::-webkit-scrollbar-track{background:#eef3fb;}
 #content::-webkit-scrollbar-thumb{background:#b0c8e8;border-radius:3px;}
 .edit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px;}
+.gc-drag-over{border:2px dashed #4f8ef7!important;background:rgba(79,142,247,0.05)!important;}
+.gc-dragging{opacity:0.4;}
 .gc{background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(30,80,140,.09);border:1.5px solid #dde8f5;padding:16px 14px 12px;display:flex;flex-direction:column;gap:9px;}
 .gc.has-sketch{border-color:#a78bfa;box-shadow:0 2px 12px rgba(109,40,217,.15);}
 .gc.gc-porta{border-color:#b0c8e8;border-top:3px solid #1a5fa8;}
@@ -404,6 +406,10 @@ function loadData(){
     projects.push(p);activeId=p.id;persist();
   }
   if(!activeId||!projects.find(p=>p.id===activeId))activeId=projects[0]?.id||null;
+  // Ensure gid is always higher than any existing glass id
+  let maxId=gid;
+  projects.forEach(p=>(p.glasses||[]).forEach(g=>{if(g.id>=maxId)maxId=g.id+1;}));
+  gid=maxId;
 }
 function persist(){
   try{localStorage.setItem(STORE,JSON.stringify(projects));localStorage.setItem(LAST,activeId||'');}catch(e){}
@@ -838,7 +844,7 @@ function buildEdit(p){
       const isPorta=isPortaType(g.obs);
       const needsLado=isPorta&&g.obs!=='Vidro Fixo';
       return`
-      <div class="gc${g.sketch?' has-sketch':''}" data-gid="${g.id}"${isPorta?' gc-porta':''}">
+      <div class="gc${g.sketch?' has-sketch':''}" data-gid="${g.id}" draggable="true" ondragstart="dragStart(event,'${p.id}',${g.id})" ondragover="dragOver(event)" ondrop="dragDrop(event,'${p.id}',${g.id})" ondragend="dragEnd(event)"${isPorta?' gc-porta':''}">
         <div class="gc-top"><div class="badge">${i+1}</div><button class="gc-rm" onclick="rmGlass('${p.id}',${g.id})">✕</button></div>
 
         <!-- PREVIEW -->
@@ -1436,6 +1442,42 @@ function imprimirPDF(){
     '<script>window.onload=function(){setTimeout(function(){window.print();},600);};<\/scr'+'ipt>'+
     '<\/body><\/html>');
   win.document.close();
+}
+
+
+// ── DRAG TO REORDER ───────────────────────────────────────────
+let _dragPid=null, _dragId=null;
+
+function dragStart(e, pid, id){
+  _dragPid=pid; _dragId=id;
+  e.dataTransfer.effectAllowed='move';
+  e.currentTarget.classList.add('gc-dragging');
+}
+function dragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  e.currentTarget.classList.add('gc-drag-over');
+}
+function dragDrop(e, pid, targetId){
+  e.preventDefault();
+  e.currentTarget.classList.remove('gc-drag-over');
+  if(!_dragPid||_dragId===targetId)return;
+  const p=projects.find(x=>x.id===pid);
+  if(!p||!p.glasses)return;
+  const fromIdx=p.glasses.findIndex(g=>g.id===_dragId);
+  const toIdx=p.glasses.findIndex(g=>g.id===targetId);
+  if(fromIdx<0||toIdx<0)return;
+  // Reorder
+  const moved=p.glasses.splice(fromIdx,1)[0];
+  p.glasses.splice(toIdx,0,moved);
+  renderContent();
+  renderInfoBar();
+  scheduleSave();
+}
+function dragEnd(e){
+  e.currentTarget.classList.remove('gc-dragging');
+  document.querySelectorAll('.gc-drag-over').forEach(el=>el.classList.remove('gc-drag-over'));
+  _dragPid=null; _dragId=null;
 }
 
 
