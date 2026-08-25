@@ -164,6 +164,32 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;overfl
 .empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
 .empty-state .eico{font-size:40px;margin-bottom:10px;opacity:.4}
 .empty-state p{font-size:13px;font-weight:600}
+
+/* ── WPP TEXT MODAL ── */
+.wpp-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:3000;align-items:center;justify-content:center;padding:16px;}
+.wpp-overlay.open{display:flex;}
+.wpp-box{background:#111827;border:1px solid #2a3550;border-radius:14px;width:min(520px,100%);max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.5);}
+.wpp-hdr{padding:16px 18px 0;display:flex;align-items:center;justify-content:space-between;}
+.wpp-hdr-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;letter-spacing:.5px;color:#fff;}
+.wpp-close{background:#1a2236;border:1px solid #2a3550;border-radius:6px;width:28px;height:28px;cursor:pointer;color:#6b7fa8;font-size:14px;display:flex;align-items:center;justify-content:center;}
+.wpp-close:hover{border-color:#ff4d6d;color:#ff4d6d;}
+.wpp-body{padding:14px 18px 18px;display:flex;flex-direction:column;gap:10px;overflow:hidden;}
+.wpp-textarea{
+  background:#0a0e1a;border:1px solid #2a3550;border-radius:8px;
+  color:#e2f0e8;font-size:13px;font-family:inherit;line-height:1.6;
+  padding:12px 14px;resize:none;flex:1;min-height:260px;max-height:380px;
+  overflow-y:auto;outline:none;white-space:pre-wrap;
+}
+.wpp-textarea:focus{border-color:#25d366;}
+.wpp-copy-btn{
+  background:#25d366;color:#fff;border:none;border-radius:8px;
+  padding:10px 0;font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  font-size:15px;letter-spacing:.5px;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;gap:8px;transition:all .15s;
+}
+.wpp-copy-btn:hover{background:#1ab855;}
+.wpp-copy-btn.copied{background:#059669;}
+.wpp-hint{font-size:11px;color:#4b5e7a;text-align:center;}
 </style>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
@@ -277,7 +303,8 @@ window.dispatchEvent(new Event('fbReady'));
     <div class="save-chip" id="saveChip"><div class="dot"></div><span id="saveLabel">salvo</span></div>
     <button class="tb-btn" id="editBtn" onclick="toggleEdit()">✏️ Editar</button>
     <button class="tb-btn gold" onclick="gerarImagem()">📸 Imagem</button>
-    <button class="tb-btn" style="background:rgba(37,211,102,.2);color:#25d166;border:1px solid rgba(37,211,102,.3);" onclick="compartilharWhatsApp()" title="Enviar texto para WhatsApp">💬 WhatsApp</button>
+    <button class="tb-btn" style="background:rgba(37,211,102,.2);color:#25d166;border:1px solid rgba(37,211,102,.3);" onclick="compartilharWhatsApp()" title="Abrir WhatsApp">💬 WhatsApp</button>
+    <button class="tb-btn" style="background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.4);color:#25d366;" onclick="abrirWppModal()" title="Copiar texto para WhatsApp">📋 Copiar texto</button>
   </div>
 
   <div class="reorder-hint" id="reorderHint">☰ Segure e arraste o card para reordenar as obras</div>
@@ -836,6 +863,69 @@ function closeModal(){document.getElementById('modal').classList.remove('show');
 
 
 /* ── WHATSAPP ── */
+function gerarTextoWpp(){
+  var data=loadAll(),day=data[cid]||{label:'',cards:[]};
+  var cards=day.cards||[];
+  if(!cards.length)return null;
+
+  var linhas=[];
+  linhas.push('🏗️ *AGENDA DE OBRAS*');
+  linhas.push('📅 Data: '+(day.label||'—'));
+  linhas.push('');
+
+  cards.forEach(function(c,i){
+    linhas.push('━━━━━━━━━━━━━━━━━━');
+    linhas.push('*🔨 OBRA '+(i+1)+' — '+(c.cliente||'—')+'*');
+    if(c.equipe)   linhas.push('👷 Equipe: '+c.equipe);
+    if(c.horario)  linhas.push('🕐 Horário: '+c.horario);
+    if(c.contato)  linhas.push('📞 Contato: '+c.contato);
+    if(c.endereco) linhas.push('📍 Endereço: '+c.endereco);
+    if(c.obs1)     linhas.push('📝 Obs: '+c.obs1);
+    linhas.push('');
+  });
+
+  linhas.push('━━━━━━━━━━━━━━━━━━');
+  linhas.push('_Gerado por Brasil Vidros_');
+  return linhas.join('\n');
+}
+
+function abrirWppModal(){
+  if(editMode)toggleEdit();
+  var texto=gerarTextoWpp();
+  if(!texto){alert('Nenhum item para compartilhar.');return;}
+  document.getElementById('wppText').value=texto;
+  document.getElementById('wppCopyBtn').textContent='📋 Copiar texto';
+  document.getElementById('wppCopyBtn').className='wpp-copy-btn';
+  document.getElementById('wppOverlay').classList.add('open');
+}
+function fecharWppModal(){
+  document.getElementById('wppOverlay').classList.remove('open');
+}
+function copiarWppText(){
+  var ta=document.getElementById('wppText');
+  ta.select();
+  try{
+    navigator.clipboard.writeText(ta.value).then(function(){
+      var btn=document.getElementById('wppCopyBtn');
+      btn.textContent='✅ Copiado!';
+      btn.className='wpp-copy-btn copied';
+      setTimeout(function(){
+        btn.textContent='📋 Copiar texto';
+        btn.className='wpp-copy-btn';
+      },2500);
+    });
+  }catch(e){
+    document.execCommand('copy');
+    var btn=document.getElementById('wppCopyBtn');
+    btn.textContent='✅ Copiado!';
+    btn.className='wpp-copy-btn copied';
+    setTimeout(function(){
+      btn.textContent='📋 Copiar texto';
+      btn.className='wpp-copy-btn';
+    },2500);
+  }
+}
+
 function compartilharWhatsApp(){
   if(editMode)toggleEdit();
   var data=loadAll(),day=data[cid]||{label:'',cards:[]};
@@ -868,6 +958,10 @@ function compartilharWhatsApp(){
 
 /* ── INIT ── */
 window.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('wppOverlay').addEventListener('click',function(e){
+    if(e.target===this)fecharWppModal();
+  });
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')fecharWppModal();});
   // Data loaded by Firebase sync on fbReady
 });
 
@@ -885,7 +979,7 @@ window.addEventListener('DOMContentLoaded',function(){
       _writing=true;
       window.__fbSave(FB_KEY,JSON.parse(raw));
       clearTimeout(window.__syncNow._t);
-      window.__syncNow._t=setTimeout(()=>_writing=false, 6000);
+      window.__syncNow._t=setTimeout(()=>_writing=false, 10000);
     }catch(e){}
   };
 
@@ -919,6 +1013,17 @@ window.addEventListener('DOMContentLoaded',function(){
       const incoming=JSON.stringify(fixed);
       const current=localStorage.getItem(LS_KEY);
       if(incoming===current)return; // no change, skip
+
+      // Don't interrupt user while typing
+      const focused=document.activeElement;
+      const isTyping=focused&&(focused.tagName==='INPUT'||focused.tagName==='TEXTAREA'||
+        focused.contentEditable==='true'||focused.tagName==='SELECT');
+      if(isTyping){
+        clearTimeout(_apply._retryT);
+        _apply._retryT=setTimeout(()=>_apply(data), 3000);
+        return;
+      }
+
       localStorage.setItem(LS_KEY,incoming);
       // Load without triggering saves
       _writingBlock(()=>{
@@ -971,5 +1076,22 @@ window.addEventListener('DOMContentLoaded',function(){
   else window.addEventListener('fbReady',_fbInit,{once:true});
 })();
 </script>
+
+<!-- WPP TEXT MODAL -->
+<div class="wpp-overlay" id="wppOverlay">
+  <div class="wpp-box">
+    <div class="wpp-hdr">
+      <div class="wpp-hdr-title">💬 Texto para WhatsApp</div>
+      <button class="wpp-close" onclick="fecharWppModal()">✕</button>
+    </div>
+    <div class="wpp-body">
+      <textarea class="wpp-textarea" id="wppText" readonly></textarea>
+      <button class="wpp-copy-btn" id="wppCopyBtn" onclick="copiarWppText()">
+        📋 Copiar texto
+      </button>
+      <div class="wpp-hint">Após copiar, cole no WhatsApp</div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
