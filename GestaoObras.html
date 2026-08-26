@@ -1707,28 +1707,49 @@ document.addEventListener('click',e=>{
 document.getElementById('newModal')?.addEventListener('click',e=>{if(e.target===document.getElementById('newModal'))closeNewModal();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeNewModal();closeConfirm();if(typeof fecharComp==='function')fecharComp();if(typeof closeReport==='function')closeReport();}});
 
-// ── FIREBASE SYNC ──────────────────────────────────────────────
+// ── FIREBASE SYNC (robust) ─────────────────────────────────────
 (function(){
-  const FB_KEY='gestao_obras', LS_KEY='gestao_obras_v1';
-  let _writing=false; // true while WE are saving to Firebase (suppress listener)
+  const FB_KEY='gestao_obras', LS_KEY='gestao_obras_v1', TS_KEY='gestao_obras_v1_ts';
+  let _pushTimer=null;
+  let _lastPushed='';   // JSON of last data we pushed to Firebase
+  let _applying=false;  // true while applying Firebase data to DOM
 
-  // Call this after any local save to push to Firebase
-  window.__syncNow=function(){
-    if(!navigator.onLine||!window.__fbSave)return;
-    try{
-      const raw=localStorage.getItem(LS_KEY);
-      if(raw){ _writing=true; window.__fbSave(FB_KEY,JSON.parse(raw)); setTimeout(()=>_writing=false,3000); }
-    }catch(e){}
+  // ── Push local data to Firebase (debounced 1.2s) ──────────────
+  window.__syncNow=function(force){
+    if(!navigator.onLine||!window.__fbSave){
+      // Queue for when we come back online
+      window.__syncPending=true;
+      return;
+    }
+    clearTimeout(_pushTimer);
+    _pushTimer=setTimeout(()=>{
+      try{
+        const raw=localStorage.getItem(LS_KEY);
+        if(!raw)return;
+        if(raw===_lastPushed&&!force)return; // no change
+        _lastPushed=raw;
+        window.__syncPending=false;
+        localStorage.setItem(TS_KEY, Date.now().toString());
+        window.__fbSave(FB_KEY, {data:JSON.parse(raw), ts:Date.now()});
+      }catch(e){console.warn('sync push:',e);}
+    }, force?100:1200);
   };
 
-  // Patch all save functions
+  // Reconnect: push pending data
+  window.addEventListener('online',()=>{
+    setTimeout(()=>{
+      if(window.__syncPending)window.__syncNow(true);
+    },1000);
+  });
+
+  // ── Patch save functions ──────────────────────────────────────
   function _patch(){
     ['scheduleSave','persist','save','saveAll'].forEach(fn=>{
-      if(typeof window[fn]==='function' && !window[fn].__fbPatched){
+      if(typeof window[fn]==='function'&&!window[fn].__fbPatched){
         const orig=window[fn];
         window[fn]=function(){
           const r=orig.apply(this,arguments);
-          window.__syncNow();
+          if(!_applying) window.__syncNow();
           return r;
         };
         window[fn].__fbPatched=true;
@@ -1736,55 +1757,96 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeNewModal();clo
     });
   }
 
-  // Apply data from Firebase to the app
-  function _apply(data){
-    if(!data)return;
-    const fixed=window.__fixArrays?window.__fixArrays(data):data;
-    // Ensure arrays inside projects
-    if(Array.isArray(fixed)){
-      fixed.forEach(p=>{
-        if(p.glasses&&!Array.isArray(p.glasses))p.glasses=Object.values(p.glasses);
-        if(p.doors&&!Array.isArray(p.doors))p.doors=Object.values(p.doors);
-      });
-    }
+  // ── Apply Firebase data safely ────────────────────────────────
+  function _applyData(fbPayload){
+    if(!fbPayload)return;
     try{
-      localStorage.setItem('gestao_obras_v1', JSON.stringify(data));
-      if(typeof loadData==='function') loadData();
-      else if(typeof load==='function') load();
-      if(typeof renderAll==='function') renderAll();
-      else if(typeof render==='function') render();
-      else if(typeof renderSB==='function'){ renderSB(); if(typeof renderContent==='function') renderContent(); }
-    }catch(e){ console.warn('reload err:',e); }
+      // Support both old format (raw array) and new format ({data,ts})
+      const fbData = fbPayload.data !== undefined ? fbPayload.data : fbPayload;
+      const fixed=window.__fixArrays?window.__fixArrays(fbData):fbData;
+
+      // Ensure arrays are arrays
+      if(Array.isArray(fixed)){
+        fixed.forEach(p=>{
+          if(p&&p.glasses&&!Array.isArray(p.glasses))p.glasses=Object.values(p.glasses);
+          if(p&&p.doors&&!Array.isArray(p.doors))p.doors=Object.values(p.doors);
+        });
+      }
+
+      const incoming=JSON.stringify(fixed);
+      const current=localStorage.getItem(LS_KEY);
+      if(incoming===current)return; // identical, skip
+
+      // Don't interrupt typing
+      const el=document.activeElement;
+      if(el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.contentEditable==='true'||el.tagName==='SELECT')){
+        clearTimeout(_applyData._t);
+        _applyData._t=setTimeout(()=>_applyData(fbPayload),2500);
+        return;
+      }
+
+      // Apply to localStorage and reload UI
+      localStorage.setItem(LS_KEY,incoming);
+      _lastPushed=incoming; // don't re-push what we just received
+      _applying=true;
+      try{
+        if(typeof loadData==='function'){loadData();}
+        if(typeof renderAll==='function'){renderAll();}
+        else if(typeof render==='function'){render();}
+      }catch(e){console.warn('apply reload:',e);}
+      setTimeout(()=>_applying=false, 2000);
+    }catch(e){console.warn('applyData:',e);}
   }
 
+  // ── Init ──────────────────────────────────────────────────────
   function _fbInit(){
-    if(!window.__fbLoad){ setTimeout(_fbInit,300); return; }
+    if(!window.__fbLoad){setTimeout(_fbInit,300);return;}
 
-    // Patch saves
-    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',_patch);
+    // Patch saves after DOM ready
+    if(document.readyState==='loading')
+      document.addEventListener('DOMContentLoaded',_patch);
     else _patch();
-    // Also re-patch after load (functions may be defined late)
-    setTimeout(_patch,1000);
+    setTimeout(_patch,1500);
 
-    // ALWAYS load from Firebase on start — it's the source of truth
-    window.__fbLoad(FB_KEY,function(fbData){
-      if(fbData){
-        _apply(fbData);  // Firebase wins on load
-      } else {
-        // No Firebase data yet — use localStorage and push to Firebase
+    // Load: compare Firebase vs local by timestamp
+    window.__fbLoad(FB_KEY,function(fbPayload){
+      if(!fbPayload){
+        // No Firebase data — push local if exists
         const local=localStorage.getItem(LS_KEY);
         if(local){
-          try{ const d=JSON.parse(local); if(d) window.__fbSave(FB_KEY,d); }catch(e){}
+          try{window.__fbSave(FB_KEY,{data:JSON.parse(local),ts:Date.now()});}catch(e){}
         }
+        return;
+      }
+
+      // Compare timestamps to decide which is newer
+      const fbTs = fbPayload.ts || 0;
+      const localTs = parseInt(localStorage.getItem(TS_KEY)||'0');
+      const localRaw = localStorage.getItem(LS_KEY);
+      const localEmpty = !localRaw || localRaw==='[]' || localRaw==='{}' || localRaw==='null';
+
+      if(localEmpty || fbTs >= localTs){
+        // Firebase is newer or local is empty — use Firebase
+        _applyData(fbPayload);
+      } else {
+        // Local is newer — push to Firebase
+        _lastPushed=localRaw;
+        try{window.__fbSave(FB_KEY,{data:JSON.parse(localRaw),ts:localTs});}catch(e){}
       }
     });
 
-    // Listen for real-time changes from other devices
-    let _initDone=false;
-    setTimeout(()=>_initDone=true,3000);
-    window.__fbListen(FB_KEY,function(data){
-      if(!_initDone||_writing)return; // skip during init and our own saves
-      _apply(data);
+    // Real-time listener for changes from other devices
+    let _ready=false;
+    setTimeout(()=>_ready=true, 4000);
+    window.__fbListen(FB_KEY,function(fbPayload){
+      if(!_ready||_applying)return;
+      // Check if this is our own push
+      try{
+        const fbData=fbPayload&&fbPayload.data!==undefined?fbPayload.data:fbPayload;
+        const incoming=JSON.stringify(window.__fixArrays?window.__fixArrays(fbData):fbData);
+        if(incoming===_lastPushed)return; // echo of our own save
+      }catch(e){}
+      _applyData(fbPayload);
     });
   }
 
