@@ -156,6 +156,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;overfl
 .ag-body{background:var(--bg);padding:18px 16px 22px;display:flex;flex-direction:column;gap:14px}
 
 /* ── CARD ── */
+/* ── DRAG REORDER ── */
+.drag-handle{
+  display:none;position:absolute;top:50%;left:-14px;transform:translateY(-50%);
+  width:22px;height:44px;background:var(--ac,#4f8ef7);border-radius:8px 0 0 8px;
+  align-items:center;justify-content:center;cursor:grab;color:#fff;font-size:14px;
+  box-shadow:-2px 0 8px rgba(0,0,0,.2);user-select:none;touch-action:none;
+}
+.edit-on .mcard .drag-handle{display:flex;}
+.mcard.dragging{opacity:.4;transform:scale(.98);}
+.mcard.drag-over{border-color:#4f8ef7!important;border-style:dashed!important;background:rgba(79,142,247,.05)!important;}
 .mcard{
   background:var(--card);border-radius:16px;
   box-shadow:0 2px 16px rgba(0,0,0,.07);
@@ -294,6 +304,32 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;overfl
 .empty-state p{font-size:13px;font-weight:600}
 
 @media print{#loading,#modal,.modal-ov,.confirm-ov,.toolbar,.sidebar,.overlay{display:none!important}}
+
+/* ── WPP TEXT MODAL ── */
+.wpp-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:3000;align-items:center;justify-content:center;padding:16px;}
+.wpp-overlay.open{display:flex;}
+.wpp-box{background:#111827;border:1px solid #2a3550;border-radius:14px;width:min(520px,100%);max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.5);}
+.wpp-hdr{padding:16px 18px 0;display:flex;align-items:center;justify-content:space-between;}
+.wpp-hdr-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;letter-spacing:.5px;color:#fff;}
+.wpp-close{background:#1a2236;border:1px solid #2a3550;border-radius:6px;width:28px;height:28px;cursor:pointer;color:#6b7fa8;font-size:14px;display:flex;align-items:center;justify-content:center;}
+.wpp-close:hover{border-color:#ff4d6d;color:#ff4d6d;}
+.wpp-body{padding:14px 18px 18px;display:flex;flex-direction:column;gap:10px;overflow:hidden;}
+.wpp-textarea{
+  background:#0a0e1a;border:1px solid #2a3550;border-radius:8px;
+  color:#e2f0e8;font-size:13px;font-family:inherit;line-height:1.6;
+  padding:12px 14px;resize:none;flex:1;min-height:260px;max-height:380px;
+  overflow-y:auto;outline:none;white-space:pre-wrap;
+}
+.wpp-textarea:focus{border-color:#25d366;}
+.wpp-copy-btn{
+  background:#25d366;color:#fff;border:none;border-radius:8px;
+  padding:10px 0;font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  font-size:15px;letter-spacing:.5px;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;gap:8px;transition:all .15s;
+}
+.wpp-copy-btn:hover{background:#1ab855;}
+.wpp-copy-btn.copied{background:#059669;}
+.wpp-hint{font-size:11px;color:#4b5e7a;text-align:center;}
 </style>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
@@ -414,6 +450,7 @@ window.dispatchEvent(new Event('fbReady'));
     <button class="tb-btn" id="editBtn" onclick="toggleEdit()">✏️ Editar</button>
     <button class="tb-btn gold" onclick="gerarImagem()">📸 Imagem</button>
     <button class="tb-btn" style="background:rgba(37,211,102,.2);color:#25d166;border:1px solid rgba(37,211,102,.3);" onclick="compartilharWhatsApp()" title="Enviar para WhatsApp">💬 WhatsApp</button>
+    <button class="tb-btn" style="background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.4);color:#25d366;" onclick="abrirWppModal()" title="Copiar texto para WhatsApp">📋 Copiar texto</button>
   </div>
 
   <!-- AGENDA -->
@@ -437,7 +474,9 @@ window.dispatchEvent(new Event('fbReady'));
 <script>
 const STORE='medicao_v4_vidros';
 const PALS=['pal0','pal1','pal2','pal3','pal4','pal5'];
-let cid=null,editMode=false,saveTimer=null,confirmCb=null;
+let cid=null;
+var dragSrc=null;
+var editMode=false,saveTimer=null,confirmCb=null;
 
 /* ── STORAGE ── */
 function loadAll(){try{return JSON.parse(localStorage.getItem(STORE))||{};}catch{return {};}}
@@ -536,6 +575,53 @@ function deleteDay(id){
 }
 
 /* ── AUTOSAVE ── */
+function bindTouchDrag(card){
+  var startY,startX,clone,origIdx,body,addWrap;
+  var handle=card.querySelector('.drag-handle');
+  if(!handle)return;
+  handle.addEventListener('touchstart',function(e){
+    if(!editMode)return;
+    e.preventDefault();
+    var t=e.touches[0];
+    startY=t.clientY;startX=t.clientX;
+    body=document.getElementById('agBody');
+    addWrap=document.getElementById('addWrap');
+    var cards=Array.from(body.querySelectorAll('.mcard'));
+    origIdx=cards.indexOf(card);
+    card.classList.add('dragging');
+    clone=card.cloneNode(true);
+    clone.style.cssText='position:fixed;opacity:.85;pointer-events:none;z-index:9999;width:'+card.offsetWidth+'px;left:'+card.getBoundingClientRect().left+'px;top:'+card.getBoundingClientRect().top+'px;';
+    document.body.appendChild(clone);
+  },{passive:false});
+  handle.addEventListener('touchmove',function(e){
+    if(!clone)return;
+    e.preventDefault();
+    var t=e.touches[0];
+    clone.style.top=(t.clientY-60)+'px';
+    clone.style.left=(t.clientX-80)+'px';
+    // Find target card
+    document.querySelectorAll('.mcard.drag-over').forEach(c=>c.classList.remove('drag-over'));
+    var el=document.elementFromPoint(t.clientX,t.clientY);
+    var tgt=el&&el.closest('.mcard');
+    if(tgt&&tgt!==card)tgt.classList.add('drag-over');
+  },{passive:false});
+  handle.addEventListener('touchend',function(e){
+    if(!clone){return;}
+    card.classList.remove('dragging');
+    clone.remove();clone=null;
+    var over=body.querySelector('.mcard.drag-over');
+    if(over&&over!==card){
+      over.classList.remove('drag-over');
+      var cards=Array.from(body.querySelectorAll('.mcard'));
+      var tgtIdx=cards.indexOf(over);
+      if(origIdx<tgtIdx)body.insertBefore(card,over.nextSibling||addWrap);
+      else body.insertBefore(card,over);
+      renumber();scheduleSave();
+    }
+    document.querySelectorAll('.mcard.drag-over').forEach(c=>c.classList.remove('drag-over'));
+  });
+}
+
 function scheduleSave(){
   const chip=document.getElementById('saveChip'),lbl=document.getElementById('saveLabel');
   chip.classList.add('saving');lbl.textContent='salvando…';
@@ -592,6 +678,7 @@ function createCard({cliente='',resp='',horario='',contato='',endereco='',obs=''
   const card=document.createElement('div');
   card.className='mcard pal0';
   card.innerHTML=`
+    <div class="drag-handle" title="Arrastar para reordenar">⠿</div>
     <button class="mcard-del" onclick="askRemoveCard(this)">✕</button>
     <div class="mcard-accent"></div>
     <div class="mcard-head">
@@ -614,6 +701,44 @@ function createCard({cliente='',resp='',horario='',contato='',endereco='',obs=''
     if(e.target&&e.target.classList.contains('addr-val'))updateMapBtn(e.target);
   });
   if(editMode)card.querySelectorAll('[contenteditable]').forEach(el=>el.contentEditable='true');
+  // Drag to reorder
+  card.draggable=true;
+  card.addEventListener('dragstart', function(e){
+    if(!editMode)return;
+    dragSrc=this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed='move';
+  });
+  card.addEventListener('dragover', function(e){
+    if(!editMode||!dragSrc)return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect='move';
+    document.querySelectorAll('.mcard.drag-over').forEach(c=>c.classList.remove('drag-over'));
+    this.classList.add('drag-over');
+  });
+  card.addEventListener('dragleave', function(){
+    this.classList.remove('drag-over');
+  });
+  card.addEventListener('drop', function(e){
+    if(!editMode||!dragSrc||dragSrc===this)return;
+    e.preventDefault();
+    this.classList.remove('drag-over');
+    const body=document.getElementById('agBody');
+    const cards=Array.from(body.querySelectorAll('.mcard'));
+    const srcIdx=cards.indexOf(dragSrc);
+    const tgtIdx=cards.indexOf(this);
+    const addWrap=document.getElementById('addWrap');
+    if(srcIdx<tgtIdx) body.insertBefore(dragSrc,this.nextSibling||addWrap);
+    else body.insertBefore(dragSrc,this);
+    renumber();scheduleSave();
+  });
+  card.addEventListener('dragend', function(){
+    this.classList.remove('dragging');
+    document.querySelectorAll('.mcard.drag-over').forEach(c=>c.classList.remove('drag-over'));
+    dragSrc=null;
+  });
+  // Touch drag support
+  bindTouchDrag(card);
   return card;
 }
 
@@ -649,6 +774,8 @@ function toggleEdit(){
   btn.textContent=editMode?'✅ Editando':'✏️ Editar';
   btn.classList.toggle('on',editMode);
   if(!editMode)scheduleSave();
+  const hint=document.getElementById('reorderHint');
+  if(hint)hint.style.display=editMode?'block':'none';
 }
 document.getElementById('headerDate').addEventListener('input',scheduleSave);
 
@@ -841,6 +968,68 @@ function closeModal(){document.getElementById('modal').classList.remove('show');
 
 
 /* ── WHATSAPP ── */
+function gerarTextoWpp(){
+  var data=loadAll(),day=data[cid]||{label:'',cards:[]};
+  var cards=day.cards||[];
+  if(!cards.length)return null;
+
+  var linhas=[];
+  linhas.push('📐 *AGENDA DE MEDIÇÃO*');
+  linhas.push('📅 Data: '+(day.label||'—'));
+  linhas.push('');
+
+  cards.forEach(function(c,i){
+    linhas.push('━━━━━━━━━━━━━━━━━━');
+    linhas.push('*📍 MEDIÇÃO '+(i+1)+' — '+(c.cliente||'—')+'*');
+    if(c.horario)  linhas.push('🕐 Horário: '+c.horario);
+    if(c.contato)  linhas.push('📞 Contato: '+c.contato);
+    if(c.endereco) linhas.push('📍 Endereço: '+c.endereco);
+    if(c.obs1)     linhas.push('📝 Obs: '+c.obs1);
+    linhas.push('');
+  });
+
+  linhas.push('━━━━━━━━━━━━━━━━━━');
+  linhas.push('_Gerado por Brasil Vidros_');
+  return linhas.join('\n');
+}
+
+function abrirWppModal(){
+  if(editMode)toggleEdit();
+  var texto=gerarTextoWpp();
+  if(!texto){alert('Nenhum item para compartilhar.');return;}
+  document.getElementById('wppText').value=texto;
+  document.getElementById('wppCopyBtn').textContent='📋 Copiar texto';
+  document.getElementById('wppCopyBtn').className='wpp-copy-btn';
+  document.getElementById('wppOverlay').classList.add('open');
+}
+function fecharWppModal(){
+  document.getElementById('wppOverlay').classList.remove('open');
+}
+function copiarWppText(){
+  var ta=document.getElementById('wppText');
+  ta.select();
+  try{
+    navigator.clipboard.writeText(ta.value).then(function(){
+      var btn=document.getElementById('wppCopyBtn');
+      btn.textContent='✅ Copiado!';
+      btn.className='wpp-copy-btn copied';
+      setTimeout(function(){
+        btn.textContent='📋 Copiar texto';
+        btn.className='wpp-copy-btn';
+      },2500);
+    });
+  }catch(e){
+    document.execCommand('copy');
+    var btn=document.getElementById('wppCopyBtn');
+    btn.textContent='✅ Copiado!';
+    btn.className='wpp-copy-btn copied';
+    setTimeout(function(){
+      btn.textContent='📋 Copiar texto';
+      btn.className='wpp-copy-btn';
+    },2500);
+  }
+}
+
 function compartilharWhatsApp(){
   if(editMode)toggleEdit();
   const data=loadAll(),day=data[cid]||{label:'',cards:[]};
@@ -876,32 +1065,49 @@ window.addEventListener('DOMContentLoaded',()=>{
   if(keys.length)loadDay(keys[0]);else newDay();
 });
 
-// ── FIREBASE SYNC ──────────────────────────────────────────────
+// ── FIREBASE SYNC (robust) ─────────────────────────────────────
 (function(){
-  const FB_KEY='agenda_medicao_vidros', LS_KEY='medicao_v4_vidros';
-  let _writing=false;
-  let _applyTimer=null;
+  const FB_KEY='agenda_medicao_vidros', LS_KEY='medicao_v4_vidros', TS_KEY='medicao_v4_vidros_ts';
+  let _pushTimer=null;
+  let _lastPushed='';   // JSON of last data we pushed to Firebase
+  let _applying=false;  // true while applying Firebase data to DOM
 
-  window.__syncNow=function(){
-    if(!navigator.onLine||!window.__fbSave||_writing)return; // never sync during reload
-    try{
-      const raw=localStorage.getItem(LS_KEY);
-      if(!raw)return;
-      _writing=true;
-      window.__fbSave(FB_KEY,JSON.parse(raw));
-      clearTimeout(window.__syncNow._t);
-      window.__syncNow._t=setTimeout(()=>_writing=false, 6000);
-    }catch(e){}
+  // ── Push local data to Firebase (debounced 1.2s) ──────────────
+  window.__syncNow=function(force){
+    if(!navigator.onLine||!window.__fbSave){
+      // Queue for when we come back online
+      window.__syncPending=true;
+      return;
+    }
+    clearTimeout(_pushTimer);
+    _pushTimer=setTimeout(()=>{
+      try{
+        const raw=localStorage.getItem(LS_KEY);
+        if(!raw)return;
+        if(raw===_lastPushed&&!force)return; // no change
+        _lastPushed=raw;
+        window.__syncPending=false;
+        localStorage.setItem(TS_KEY, Date.now().toString());
+        window.__fbSave(FB_KEY, {data:JSON.parse(raw), ts:Date.now()});
+      }catch(e){console.warn('sync push:',e);}
+    }, force?100:1200);
   };
 
-  // Patch save functions ONCE — skip __syncNow when _writing (prevents loop)
+  // Reconnect: push pending data
+  window.addEventListener('online',()=>{
+    setTimeout(()=>{
+      if(window.__syncPending)window.__syncNow(true);
+    },1000);
+  });
+
+  // ── Patch save functions ──────────────────────────────────────
   function _patch(){
     ['scheduleSave','persist','save','saveAll'].forEach(fn=>{
       if(typeof window[fn]==='function'&&!window[fn].__fbPatched){
         const orig=window[fn];
         window[fn]=function(){
           const r=orig.apply(this,arguments);
-          if(!_writing) window.__syncNow(); // skip if we just applied Firebase data
+          if(!_applying) window.__syncNow();
           return r;
         };
         window[fn].__fbPatched=true;
@@ -909,66 +1115,96 @@ window.addEventListener('DOMContentLoaded',()=>{
     });
   }
 
-  // Apply Firebase data to app — safe, no save triggered
-  function _apply(data){
-    if(!data)return;
+  // ── Apply Firebase data safely ────────────────────────────────
+  function _applyData(fbPayload){
+    if(!fbPayload)return;
     try{
-      const fixed=window.__fixArrays?window.__fixArrays(data):data;
+      // Support both old format (raw array) and new format ({data,ts})
+      const fbData = fbPayload.data !== undefined ? fbPayload.data : fbPayload;
+      const fixed=window.__fixArrays?window.__fixArrays(fbData):fbData;
+
+      // Ensure arrays are arrays
       if(Array.isArray(fixed)){
         fixed.forEach(p=>{
-          if(p.glasses&&!Array.isArray(p.glasses))p.glasses=Object.values(p.glasses);
-          if(p.doors&&!Array.isArray(p.doors))p.doors=Object.values(p.doors);
+          if(p&&p.glasses&&!Array.isArray(p.glasses))p.glasses=Object.values(p.glasses);
+          if(p&&p.doors&&!Array.isArray(p.doors))p.doors=Object.values(p.doors);
         });
       }
-      // Compare with current local data — only reload if actually different
+
       const incoming=JSON.stringify(fixed);
       const current=localStorage.getItem(LS_KEY);
-      if(incoming===current)return; // no change, skip
+      if(incoming===current)return; // identical, skip
+
+      // Don't interrupt typing
+      const el=document.activeElement;
+      if(el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.contentEditable==='true'||el.tagName==='SELECT')){
+        clearTimeout(_applyData._t);
+        _applyData._t=setTimeout(()=>_applyData(fbPayload),2500);
+        return;
+      }
+
+      // Apply to localStorage and reload UI
       localStorage.setItem(LS_KEY,incoming);
-      // Load without triggering saves
-      _writingBlock(()=>{
-        if(typeof loadData==='function')loadData();
-        else if(typeof load==='function')load();
-        if(typeof renderAll==='function')renderAll();
-        else if(typeof render==='function')render();
-        else if(typeof renderSB==='function'){renderSB();if(typeof renderContent==='function')renderContent();}
-      });
-    }catch(e){console.warn('fbApply:',e);}
+      _lastPushed=incoming; // don't re-push what we just received
+      _applying=true;
+      try{
+        if(typeof load==='function'){load();}
+        if(typeof renderSB==='function'){renderSB();}
+        else if(typeof render==='function'){render();}
+      }catch(e){console.warn('apply reload:',e);}
+      setTimeout(()=>_applying=false, 2000);
+    }catch(e){console.warn('applyData:',e);}
   }
 
-  // Block saves during a reload to prevent feedback loop
-  function _writingBlock(fn){
-    _writing=true;
-    try{fn();}catch(e){}
-    // Keep blocked for 2s after reload
-    clearTimeout(_applyTimer);
-    _applyTimer=setTimeout(()=>_writing=false, 4000); // 4s to prevent rebound loop
-  }
-
+  // ── Init ──────────────────────────────────────────────────────
   function _fbInit(){
     if(!window.__fbLoad){setTimeout(_fbInit,300);return;}
+
+    // Patch saves after DOM ready
     if(document.readyState==='loading')
       document.addEventListener('DOMContentLoaded',_patch);
     else _patch();
-    setTimeout(_patch,1500); // re-patch late-defined functions
+    setTimeout(_patch,1500);
 
-    // Load from Firebase on start
-    window.__fbLoad(FB_KEY,function(fbData){
-      if(!fbData){
-        // No Firebase data yet — push local to Firebase
+    // Load: compare Firebase vs local by timestamp
+    window.__fbLoad(FB_KEY,function(fbPayload){
+      if(!fbPayload){
+        // No Firebase data — push local if exists
         const local=localStorage.getItem(LS_KEY);
-        if(local)try{window.__fbSave(FB_KEY,JSON.parse(local));}catch(e){}
+        if(local){
+          try{window.__fbSave(FB_KEY,{data:JSON.parse(local),ts:Date.now()});}catch(e){}
+        }
         return;
       }
-      _apply(fbData);
+
+      // Compare timestamps to decide which is newer
+      const fbTs = fbPayload.ts || 0;
+      const localTs = parseInt(localStorage.getItem(TS_KEY)||'0');
+      const localRaw = localStorage.getItem(LS_KEY);
+      const localEmpty = !localRaw || localRaw==='[]' || localRaw==='{}' || localRaw==='null';
+
+      if(localEmpty || fbTs >= localTs){
+        // Firebase is newer or local is empty — use Firebase
+        _applyData(fbPayload);
+      } else {
+        // Local is newer — push to Firebase
+        _lastPushed=localRaw;
+        try{window.__fbSave(FB_KEY,{data:JSON.parse(localRaw),ts:localTs});}catch(e){}
+      }
     });
 
-    // Listen for real-time changes from other devices
-    let _initDone=false;
-    setTimeout(()=>_initDone=true, 4000);
-    window.__fbListen(FB_KEY,function(data){
-      if(!_initDone||_writing)return;
-      _apply(data);
+    // Real-time listener for changes from other devices
+    let _ready=false;
+    setTimeout(()=>_ready=true, 4000);
+    window.__fbListen(FB_KEY,function(fbPayload){
+      if(!_ready||_applying)return;
+      // Check if this is our own push
+      try{
+        const fbData=fbPayload&&fbPayload.data!==undefined?fbPayload.data:fbPayload;
+        const incoming=JSON.stringify(window.__fixArrays?window.__fixArrays(fbData):fbData);
+        if(incoming===_lastPushed)return; // echo of our own save
+      }catch(e){}
+      _applyData(fbPayload);
     });
   }
 
@@ -976,5 +1212,22 @@ window.addEventListener('DOMContentLoaded',()=>{
   else window.addEventListener('fbReady',_fbInit,{once:true});
 })();
 </script>
+
+<!-- WPP TEXT MODAL -->
+<div class="wpp-overlay" id="wppOverlay">
+  <div class="wpp-box">
+    <div class="wpp-hdr">
+      <div class="wpp-hdr-title">💬 Texto para WhatsApp</div>
+      <button class="wpp-close" onclick="fecharWppModal()">✕</button>
+    </div>
+    <div class="wpp-body">
+      <textarea class="wpp-textarea" id="wppText" readonly></textarea>
+      <button class="wpp-copy-btn" id="wppCopyBtn" onclick="copiarWppText()">
+        📋 Copiar texto
+      </button>
+      <div class="wpp-hint">Após copiar, cole no WhatsApp</div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
