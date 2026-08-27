@@ -981,10 +981,13 @@ function gerarTextoWpp(){
   cards.forEach(function(c,i){
     linhas.push('━━━━━━━━━━━━━━━━━━');
     linhas.push('*📍 MEDIÇÃO '+(i+1)+' — '+(c.cliente||'—')+'*');
+    if(c.resp)     linhas.push('👤 Responsável: '+c.resp);
     if(c.horario)  linhas.push('🕐 Horário: '+c.horario);
     if(c.contato)  linhas.push('📞 Contato: '+c.contato);
     if(c.endereco) linhas.push('📍 Endereço: '+c.endereco);
-    if(c.obs1)     linhas.push('📝 Obs: '+c.obs1);
+    // obs can be stored as 'obs' or 'obs1'
+    var obsText = c.obs||c.obs1||'';
+    if(obsText)    linhas.push('📝 Obs: '+obsText);
     linhas.push('');
   });
 
