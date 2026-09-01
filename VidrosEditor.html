@@ -406,6 +406,10 @@ function loadData(){
     projects.push(p);activeId=p.id;persist();
   }
   if(!activeId||!projects.find(p=>p.id===activeId))activeId=projects[0]?.id||null;
+  // Set timestamp if not set (first run) so local data wins over empty Firebase
+  if(!localStorage.getItem('vidros_proj_v5_ts') && projects.length){
+    localStorage.setItem('vidros_proj_v5_ts', Date.now().toString());
+  }
   // Ensure gid is always higher than any existing glass id
   let maxId=gid;
   projects.forEach(p=>(p.glasses||[]).forEach(g=>{if(g.id>=maxId)maxId=g.id+1;}));
@@ -1513,8 +1517,9 @@ renderAll();
         if(raw===_lastPushed&&!force)return; // no change
         _lastPushed=raw;
         window.__syncPending=false;
-        localStorage.setItem(TS_KEY, Date.now().toString());
-        window.__fbSave(FB_KEY, {data:JSON.parse(raw), ts:Date.now()});
+        const nowTs=Date.now();
+        localStorage.setItem(TS_KEY, nowTs.toString());
+        window.__fbSave(FB_KEY, {data:JSON.parse(raw), ts:nowTs});
       }catch(e){console.warn('sync push:',e);}
     }, force?100:1200);
   };
@@ -1621,7 +1626,7 @@ renderAll();
 
     // Real-time listener for changes from other devices
     let _ready=false;
-    setTimeout(()=>_ready=true, 4000);
+    setTimeout(()=>_ready=true, 6000); // wait 6s before accepting remote changes
     window.__fbListen(FB_KEY,function(fbPayload){
       if(!_ready||_applying)return;
       // Check if this is our own push
@@ -1639,5 +1644,14 @@ renderAll();
 })();
 </script>
 
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registrado:', reg.scope))
+      .catch(err => console.warn('SW erro:', err));
+  });
+}
+</script>
 </body>
 </html>
