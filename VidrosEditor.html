@@ -391,7 +391,17 @@ const STORE='vidros_proj_v5',LAST='vidros_last_v5';
 let projects=[],activeId=null,tab='edit',gid=200,saveTimer=null,modal=null;
 
 function loadData(){
-  try{const d=localStorage.getItem(STORE);if(d)projects=JSON.parse(d);}catch(e){}
+  try{
+    const d=localStorage.getItem(STORE);
+    if(d){
+      let parsed=JSON.parse(d);
+      // Always ensure projects is an array
+      if(!Array.isArray(parsed)){
+        parsed=Object.values(parsed||{});
+      }
+      projects=parsed;
+    }
+  }catch(e){}
   try{const l=localStorage.getItem(LAST);if(l)activeId=l;}catch(e){}
   if(!projects.length){
     const p=newProject("Renata Amaral","Obra Renata Amaral");
@@ -1098,6 +1108,7 @@ function createProj(){
   const o=document.getElementById('mo')?.value.trim()||'';
   if(!c&&!o){alert('Preencha pelo menos o nome do cliente ou da obra.');return;}
   const p=newProject(c||'Sem nome',o||'Sem obra');
+  if(!Array.isArray(projects)) projects=[];
   projects.unshift(p);activeId=p.id;tab='edit';
   persist();closeModal();renderAll();
 }
@@ -1495,152 +1506,208 @@ function dragEnd(e){
 loadData();
 renderAll();
 
-// ── FIREBASE SYNC (robust) ─────────────────────────────────────
+// ── FIREBASE SYNC ULTRA ────────────────────────────────────────
 (function(){
   const FB_KEY='vidros_editor', LS_KEY='vidros_proj_v5', TS_KEY='vidros_proj_v5_ts';
   let _pushTimer=null;
-  let _lastPushed='';   // JSON of last data we pushed to Firebase
-  let _applying=false;  // true while applying Firebase data to DOM
+  let _lastPushedStr='';
+  let _applying=false;
+  let _initialized=false;
 
-  // ── Push local data to Firebase (debounced 1.2s) ──────────────
-  window.__syncNow=function(force){
-    if(!navigator.onLine||!window.__fbSave){
-      // Queue for when we come back online
-      window.__syncPending=true;
+  // ── Helpers ───────────────────────────────────────────────────
+  function _ensureArray(v){
+    if(Array.isArray(v)) return v;
+    if(v&&typeof v==='object') return Object.values(v);
+    return [];
+  }
+
+  function _fixData(data){
+    if(!data) return [];
+    const fixed = window.__fixArrays ? window.__fixArrays(data) : data;
+    const arr = _ensureArray(fixed);
+    arr.forEach(p=>{
+      if(!p) return;
+      if(p.glasses) p.glasses = _ensureArray(p.glasses);
+      if(p.doors)   p.doors   = _ensureArray(p.doors);
+    });
+    return arr;
+  }
+
+  function _getLocal(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw || raw==='null') return [];
+      const parsed = JSON.parse(raw);
+      return _ensureArray(parsed);
+    }catch(e){ return []; }
+  }
+
+  function _setLocal(arr){
+    try{
+      localStorage.setItem(LS_KEY, JSON.stringify(arr));
+    }catch(e){ console.warn('setLocal:',e); }
+  }
+
+  function _getTs(){ return parseInt(localStorage.getItem(TS_KEY)||'0'); }
+  function _setTs(ts){ localStorage.setItem(TS_KEY, String(ts||Date.now())); }
+
+  function _isTyping(){
+    const el = document.activeElement;
+    return el && (
+      el.tagName==='INPUT' || el.tagName==='TEXTAREA' ||
+      el.tagName==='SELECT' || el.contentEditable==='true'
+    );
+  }
+
+  // ── Push to Firebase ──────────────────────────────────────────
+  window.__syncNow = function(force){
+    if(!navigator.onLine || !window.__fbSave){
+      window.__syncPending = true;
       return;
     }
     clearTimeout(_pushTimer);
-    _pushTimer=setTimeout(()=>{
+    _pushTimer = setTimeout(()=>{
       try{
-        const raw=localStorage.getItem(LS_KEY);
-        if(!raw)return;
-        if(raw===_lastPushed&&!force)return; // no change
-        _lastPushed=raw;
-        window.__syncPending=false;
-        const nowTs=Date.now();
-        localStorage.setItem(TS_KEY, nowTs.toString());
-        window.__fbSave(FB_KEY, {data:JSON.parse(raw), ts:nowTs});
-      }catch(e){console.warn('sync push:',e);}
-    }, force?100:1200);
+        const arr = _getLocal();
+        const str = JSON.stringify(arr);
+        if(str === _lastPushedStr && !force) return;
+        _lastPushedStr = str;
+        window.__syncPending = false;
+        const ts = Date.now();
+        _setTs(ts);
+        window.__fbSave(FB_KEY, {data: arr, ts: ts, v: 2});
+      }catch(e){ console.warn('syncNow:',e); }
+    }, force ? 200 : 1500);
   };
 
-  // Reconnect: push pending data
-  window.addEventListener('online',()=>{
+  // Reconnect → push pending
+  window.addEventListener('online', ()=>{
     setTimeout(()=>{
-      if(window.__syncPending)window.__syncNow(true);
-    },1000);
+      if(window.__syncPending) window.__syncNow(true);
+    }, 1500);
   });
 
   // ── Patch save functions ──────────────────────────────────────
   function _patch(){
     ['scheduleSave','persist','save','saveAll'].forEach(fn=>{
-      if(typeof window[fn]==='function'&&!window[fn].__fbPatched){
-        const orig=window[fn];
-        window[fn]=function(){
-          const r=orig.apply(this,arguments);
+      if(typeof window[fn]==='function' && !window[fn].__fbP){
+        const orig = window[fn];
+        window[fn] = function(){
+          const r = orig.apply(this, arguments);
           if(!_applying) window.__syncNow();
           return r;
         };
-        window[fn].__fbPatched=true;
+        window[fn].__fbP = true;
       }
     });
   }
 
-  // ── Apply Firebase data safely ────────────────────────────────
-  function _applyData(fbPayload){
-    if(!fbPayload)return;
+  // ── Apply data from Firebase to app ──────────────────────────
+  function _apply(fbPayload, force){
+    if(!fbPayload) return;
     try{
-      // Support both old format (raw array) and new format ({data,ts})
-      const fbData = fbPayload.data !== undefined ? fbPayload.data : fbPayload;
-      const fixed=window.__fixArrays?window.__fixArrays(fbData):fbData;
+      const raw = fbPayload.data !== undefined ? fbPayload.data : fbPayload;
+      const arr = _fixData(raw);
+      const str = JSON.stringify(arr);
 
-      // Ensure arrays are arrays
-      if(Array.isArray(fixed)){
-        fixed.forEach(p=>{
-          if(p&&p.glasses&&!Array.isArray(p.glasses))p.glasses=Object.values(p.glasses);
-          if(p&&p.doors&&!Array.isArray(p.doors))p.doors=Object.values(p.doors);
-        });
-      }
+      // Skip if same as what we just pushed
+      if(str === _lastPushedStr && !force) return;
 
-      const incoming=JSON.stringify(fixed);
-      const current=localStorage.getItem(LS_KEY);
-      if(incoming===current)return; // identical, skip
-
-      // Don't interrupt typing
-      const el=document.activeElement;
-      if(el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.contentEditable==='true'||el.tagName==='SELECT')){
-        clearTimeout(_applyData._t);
-        _applyData._t=setTimeout(()=>_applyData(fbPayload),2500);
+      // Skip if user is typing (unless forced)
+      if(!force && _isTyping()){
+        clearTimeout(_apply._t);
+        _apply._t = setTimeout(()=>_apply(fbPayload, false), 2000);
         return;
       }
 
-      // Apply to localStorage and reload UI
-      localStorage.setItem(LS_KEY,incoming);
-      _lastPushed=incoming; // don't re-push what we just received
-      _applying=true;
+      const current = JSON.stringify(_getLocal());
+      if(str === current && !force) return; // no change
+
+      _applying = true;
+      _setLocal(arr);
+      _lastPushedStr = str;
+
       try{
-        if(typeof loadData==='function'){loadData();}
-        if(typeof renderAll==='function'){renderAll();}
-        else if(typeof render==='function'){render();}
-      }catch(e){console.warn('apply reload:',e);}
-      setTimeout(()=>_applying=false, 2000);
-    }catch(e){console.warn('applyData:',e);}
+        if(typeof loadData==='function') loadData();
+        if(typeof renderAll==='function') renderAll();
+        else if(typeof render==='function') render();
+        else if(typeof renderSB==='function'){ renderSB(); if(typeof renderContent==='function') renderContent(); }
+      }catch(e){ console.warn('apply render:',e); }
+
+      setTimeout(()=>{ _applying=false; }, 2500);
+    }catch(e){ console.warn('apply:',e); _applying=false; }
   }
 
   // ── Init ──────────────────────────────────────────────────────
   function _fbInit(){
-    if(!window.__fbLoad){setTimeout(_fbInit,300);return;}
+    if(!window.__fbLoad){ setTimeout(_fbInit,300); return; }
 
-    // Patch saves after DOM ready
+    // Patch saves
     if(document.readyState==='loading')
-      document.addEventListener('DOMContentLoaded',_patch);
+      document.addEventListener('DOMContentLoaded', _patch);
     else _patch();
-    setTimeout(_patch,1500);
+    setTimeout(_patch, 2000);
 
-    // Load: compare Firebase vs local by timestamp
-    window.__fbLoad(FB_KEY,function(fbPayload){
+    // Initial load: Firebase vs local comparison
+    window.__fbLoad(FB_KEY, function(fbPayload){
+      _initialized = true;
+
       if(!fbPayload){
-        // No Firebase data — push local if exists
-        const local=localStorage.getItem(LS_KEY);
-        if(local){
-          try{window.__fbSave(FB_KEY,{data:JSON.parse(local),ts:Date.now()});}catch(e){}
+        // Nothing on Firebase → push local
+        const local = _getLocal();
+        if(local.length){
+          _lastPushedStr = JSON.stringify(local);
+          if(!_getTs()) _setTs(Date.now());
+          window.__syncNow(true);
         }
         return;
       }
 
-      // Compare timestamps to decide which is newer
-      const fbTs = fbPayload.ts || 0;
-      const localTs = parseInt(localStorage.getItem(TS_KEY)||'0');
-      const localRaw = localStorage.getItem(LS_KEY);
-      const localEmpty = !localRaw || localRaw==='[]' || localRaw==='{}' || localRaw==='null';
+      const fbTs = fbPayload.ts || fbPayload.v ? (fbPayload.ts||0) : 0;
+      const localTs = _getTs();
+      const local = _getLocal();
+      const localEmpty = local.length === 0;
 
-      if(localEmpty || fbTs >= localTs){
-        // Firebase is newer or local is empty — use Firebase
-        _applyData(fbPayload);
-      } else {
-        // Local is newer — push to Firebase
-        _lastPushed=localRaw;
-        try{window.__fbSave(FB_KEY,{data:JSON.parse(localRaw),ts:localTs});}catch(e){}
+      if(localEmpty){
+        // Local empty → always use Firebase
+        _apply(fbPayload, true);
+      } else if(fbTs > localTs + 5000){
+        // Firebase is significantly newer → use Firebase
+        _apply(fbPayload, true);
+      } else if(localTs >= fbTs){
+        // Local is newer or same → push local to Firebase
+        _lastPushedStr = JSON.stringify(local);
+        window.__syncNow(true);
+      } else{
+        // Close timestamps → use Firebase (safe default)
+        _apply(fbPayload, true);
       }
     });
 
-    // Real-time listener for changes from other devices
-    let _ready=false;
-    setTimeout(()=>_ready=true, 6000); // wait 6s before accepting remote changes
-    window.__fbListen(FB_KEY,function(fbPayload){
-      if(!_ready||_applying)return;
-      // Check if this is our own push
+    // Real-time listener
+    let _readyTimer = setTimeout(()=>{
+      // Listener active after 7s
+    }, 7000);
+    let _listenerReady = false;
+    setTimeout(()=>{ _listenerReady=true; }, 7000);
+
+    window.__fbListen(FB_KEY, function(fbPayload){
+      if(!_listenerReady || _applying) return;
+      if(!fbPayload) return;
+
       try{
-        const fbData=fbPayload&&fbPayload.data!==undefined?fbPayload.data:fbPayload;
-        const incoming=JSON.stringify(window.__fixArrays?window.__fixArrays(fbData):fbData);
-        if(incoming===_lastPushed)return; // echo of our own save
+        const raw = fbPayload.data !== undefined ? fbPayload.data : fbPayload;
+        const arr = _fixData(raw);
+        const str = JSON.stringify(arr);
+        if(str === _lastPushedStr) return; // our own echo
       }catch(e){}
-      _applyData(fbPayload);
+
+      _apply(fbPayload, false);
     });
   }
 
-  if(window.__fbReady)_fbInit();
-  else window.addEventListener('fbReady',_fbInit,{once:true});
+  if(window.__fbReady) _fbInit();
+  else window.addEventListener('fbReady', _fbInit, {once:true});
 })();
 </script>
 
