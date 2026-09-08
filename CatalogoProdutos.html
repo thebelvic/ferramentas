@@ -4,152 +4,302 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Catálogo de Produtos — Brasil Vidros</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0a0e1a;--s1:#111827;--s2:#1a2236;--s3:#222d42;
-  --bd:#2a3550;--bd2:#354060;
-  --tx:#f0f4ff;--mu:#6b7fa8;--fa:#2a3550;
-  --acc:#4f8ef7;--grn:#00e5a0;--grn2:#00b87d;
-  --gold:#f5c842;--red:#ff4d6d;--red2:#cc2244;
-  --orange:#f97316;--purple:#a78bfa;--cyan:#06b6d4;
-  --r:14px;--rs:8px;
+  --bg:#f4f6fb;
+  --white:#ffffff;
+  --s1:#ffffff;
+  --s2:#f8f9fc;
+  --s3:#f0f2f7;
+  --bd:#e2e8f0;
+  --bd2:#c8d4e8;
+  --tx:#1a202c;
+  --tx2:#4a5568;
+  --mu:#94a3b8;
+  --acc:#2563eb;
+  --acc2:#1d4ed8;
+  --grn:#059669;
+  --grn2:#047857;
+  --gold:#d97706;
+  --red:#dc2626;
+  --orange:#ea580c;
+  --purple:#7c3aed;
+  --cyan:#0891b2;
+  --r:12px;--rs:8px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;}
-input,select,textarea,button{font-family:'DM Sans',sans-serif;}
-::-webkit-scrollbar{width:4px;height:4px;}
-::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;}
+input,select,textarea,button{font-family:'Inter',sans-serif;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--s3);}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px;}
 
 /* ── HEADER ── */
 #hdr{
-  background:linear-gradient(135deg,#0f1a2e,#1a2d4a);
+  background:#fff;
   border-bottom:1px solid var(--bd);
-  padding:0 20px;height:58px;
+  padding:0 24px;height:60px;
   display:flex;align-items:center;gap:14px;
   position:sticky;top:0;z-index:100;
+  box-shadow:0 1px 4px rgba(0,0,0,.06);
 }
-.hdr-logo{display:flex;align-items:center;gap:10px;}
-.hdr-ico{width:36px;height:36px;background:linear-gradient(135deg,#4f8ef7,#06b6d4);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
-.hdr-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;letter-spacing:.5px;}
-.hdr-sub{font-size:10px;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;}
+.hdr-logo{display:flex;align-items:center;gap:12px;}
+.hdr-ico{
+  width:38px;height:38px;
+  background:linear-gradient(135deg,#2563eb,#0891b2);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:18px;box-shadow:0 2px 8px rgba(37,99,235,.3);
+}
+.hdr-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;letter-spacing:.5px;color:var(--tx);}
+.hdr-sub{font-size:10px;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;margin-top:1px;}
 .hdr-sep{flex:1;}
-.hdr-btn{border:none;border-radius:var(--rs);padding:7px 14px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.3px;transition:all .15s;display:flex;align-items:center;gap:6px;}
-.btn-add{background:var(--grn);color:#0a0e1a;}
-.btn-add:hover{background:var(--grn2);}
-.btn-ghost{background:var(--s2);border:1px solid var(--bd);color:var(--mu);}
-.btn-ghost:hover{border-color:var(--acc);color:var(--acc);}
+.hdr-btn{
+  border:1px solid var(--bd);border-radius:var(--rs);
+  padding:7px 14px;cursor:pointer;
+  font-family:'Inter',sans-serif;font-weight:600;font-size:12px;
+  transition:all .15s;display:flex;align-items:center;gap:6px;
+  background:#fff;color:var(--tx2);
+}
+.hdr-btn:hover{border-color:var(--acc);color:var(--acc);background:#eff6ff;}
+.btn-add{background:var(--acc)!important;color:#fff!important;border-color:var(--acc)!important;font-weight:700;box-shadow:0 2px 8px rgba(37,99,235,.25);}
+.btn-add:hover{background:var(--acc2)!important;border-color:var(--acc2)!important;}
 
 /* ── LAYOUT ── */
-#layout{display:flex;height:calc(100vh - 58px);}
-#sidebar{width:240px;min-width:240px;background:var(--s1);border-right:1px solid var(--bd);overflow-y:auto;display:flex;flex-direction:column;}
-#main{flex:1;overflow-y:auto;padding:20px;}
+#layout{display:flex;height:calc(100vh - 60px);}
+#sidebar{
+  width:220px;min-width:220px;
+  background:#fff;border-right:1px solid var(--bd);
+  overflow-y:auto;padding:12px 0;
+}
+#main{flex:1;overflow-y:auto;padding:24px;}
 
 /* ── SIDEBAR ── */
-.sb-hdr{padding:14px 16px 8px;font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.8px;text-transform:uppercase;}
-.sb-cat-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;transition:background .12s;border-left:3px solid transparent;}
-.sb-cat-item:hover{background:var(--s2);}
-.sb-cat-item.active{background:var(--s2);border-left-color:var(--acc);}
-.sb-cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.sb-cat-name{font-size:13px;font-weight:500;flex:1;}
-.sb-cat-count{font-size:11px;color:var(--mu);font-weight:700;background:var(--s3);padding:2px 7px;border-radius:10px;}
-.sb-sep{border:none;border-top:1px solid var(--bd);margin:8px 0;}
+.sb-hdr{
+  padding:6px 16px 4px;
+  font-size:10px;font-weight:700;color:var(--mu);
+  letter-spacing:.8px;text-transform:uppercase;
+}
+.sb-cat-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 16px;cursor:pointer;
+  transition:all .12s;border-radius:0;
+  margin:1px 8px;border-radius:8px;
+}
+.sb-cat-item:hover{background:var(--s3);}
+.sb-cat-item.active{background:#eff6ff;color:var(--acc);}
+.sb-cat-item.active .sb-cat-name{color:var(--acc);font-weight:600;}
+.sb-cat-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.sb-cat-name{font-size:13px;font-weight:500;color:var(--tx2);flex:1;}
+.sb-cat-count{
+  font-size:11px;font-weight:700;color:var(--mu);
+  background:var(--s3);padding:2px 8px;border-radius:20px;
+}
+.sb-cat-item.active .sb-cat-count{background:#dbeafe;color:var(--acc);}
+.sb-divider{height:1px;background:var(--bd);margin:10px 16px;}
+.sb-action{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 16px;cursor:pointer;
+  margin:1px 8px;border-radius:8px;
+  font-size:13px;color:var(--tx2);transition:all .12s;
+}
+.sb-action:hover{background:var(--s3);color:var(--acc);}
 
 /* ── STATS ── */
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
-.stat-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;position:relative;overflow:hidden;}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
-.stat-card.blue::before{background:var(--acc);}
-.stat-card.green::before{background:var(--grn);}
-.stat-card.gold::before{background:var(--gold);}
-.stat-card.cyan::before{background:var(--cyan);}
-.stat-lbl{font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.7px;text-transform:uppercase;margin-bottom:6px;}
-.stat-val{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:24px;letter-spacing:.3px;}
+.stats-row{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:14px;margin-bottom:24px;
+}
+.stat-card{
+  background:#fff;border:1px solid var(--bd);
+  border-radius:var(--r);padding:16px 18px;
+  position:relative;overflow:hidden;
+  box-shadow:0 1px 4px rgba(0,0,0,.05);
+  transition:box-shadow .15s;
+}
+.stat-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);}
+.stat-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0;
+}
+.stat-card.blue::after{background:var(--acc);}
+.stat-card.green::after{background:var(--grn);}
+.stat-card.gold::after{background:var(--gold);}
+.stat-card.cyan::after{background:var(--cyan);}
+.stat-ico{font-size:20px;margin-bottom:8px;}
+.stat-lbl{font-size:11px;font-weight:600;color:var(--mu);letter-spacing:.3px;margin-bottom:4px;}
+.stat-val{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:26px;letter-spacing:.3px;}
 .stat-card.blue .stat-val{color:var(--acc);}
 .stat-card.green .stat-val{color:var(--grn);}
 .stat-card.gold .stat-val{color:var(--gold);}
 .stat-card.cyan .stat-val{color:var(--cyan);}
 
 /* ── SEARCH BAR ── */
-.search-bar{display:flex;gap:10px;margin-bottom:16px;align-items:center;}
+.search-bar{display:flex;gap:10px;margin-bottom:18px;align-items:center;}
 .search-wrap{position:relative;flex:1;}
-.search-wrap input{width:100%;background:var(--s1);border:1px solid var(--bd);border-radius:var(--rs);padding:9px 12px 9px 36px;font-size:13px;color:var(--tx);outline:none;transition:border-color .15s;}
-.search-wrap input:focus{border-color:var(--acc);}
+.search-wrap input{
+  width:100%;background:#fff;border:1px solid var(--bd);
+  border-radius:var(--rs);padding:9px 12px 9px 38px;
+  font-size:13px;color:var(--tx);outline:none;
+  transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.05);
+}
+.search-wrap input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
 .search-wrap input::placeholder{color:var(--mu);}
-.search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:15px;pointer-events:none;}
-.sort-sel{background:var(--s1);border:1px solid var(--bd);border-radius:var(--rs);padding:9px 12px;font-size:12px;color:var(--mu);outline:none;cursor:pointer;}
+.search-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:14px;pointer-events:none;}
+.sort-sel{
+  background:#fff;border:1px solid var(--bd);border-radius:var(--rs);
+  padding:9px 12px;font-size:12px;color:var(--tx2);outline:none;cursor:pointer;
+  box-shadow:0 1px 3px rgba(0,0,0,.05);
+}
 .sort-sel:focus{border-color:var(--acc);}
 
-/* ── PRODUCT GRID ── */
-.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
-.prod-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:16px;transition:all .15s;position:relative;overflow:hidden;}
-.prod-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;}
-.prod-card:hover{border-color:var(--bd2);box-shadow:0 4px 20px rgba(0,0,0,.3);}
-.prod-num{position:absolute;top:12px;right:12px;font-size:10px;font-weight:700;color:var(--mu);background:var(--s2);padding:2px 7px;border-radius:10px;}
-.prod-name{font-weight:700;font-size:14px;margin-bottom:4px;padding-right:40px;line-height:1.3;}
-.prod-cat{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;}
-.prod-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
-.prod-tag{font-size:11px;font-weight:600;padding:3px 8px;border-radius:5px;background:var(--s2);color:var(--mu);border:1px solid var(--bd);}
-.prod-price-row{display:flex;align-items:baseline;gap:6px;margin-bottom:4px;}
-.prod-price{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;color:var(--grn);}
-.prod-price-unit{font-size:11px;color:var(--mu);}
-.prod-cost{font-size:11px;color:var(--mu);margin-bottom:12px;}
-.prod-markup{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;background:rgba(0,229,160,.1);color:var(--grn);border:1px solid rgba(0,229,160,.2);}
-.prod-actions{display:flex;gap:8px;margin-top:12px;border-top:1px solid var(--bd);padding-top:12px;}
-.act-btn{flex:1;border:1px solid var(--bd);border-radius:var(--rs);padding:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:.3px;background:transparent;transition:all .15s;}
-.act-btn.edit{color:var(--acc);border-color:var(--acc);}
-.act-btn.edit:hover{background:rgba(79,142,247,.1);}
-.act-btn.del{color:var(--red);border-color:var(--red);}
-.act-btn.del:hover{background:rgba(255,77,109,.1);}
+/* ── GRID ── */
+.count-lbl{font-size:12px;color:var(--mu);margin-bottom:14px;font-weight:500;}
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;}
+
+/* ── PRODUCT CARD ── */
+.prod-card{
+  background:#fff;border:1px solid var(--bd);border-radius:var(--r);
+  padding:0;transition:all .2s;position:relative;overflow:hidden;
+  box-shadow:0 1px 4px rgba(0,0,0,.05);
+}
+.prod-card:hover{box-shadow:0 6px 24px rgba(0,0,0,.1);transform:translateY(-2px);border-color:var(--bd2);}
+.prod-card-bar{height:4px;width:100%;}
+.prod-card-body{padding:16px;}
+.prod-num{
+  position:absolute;top:12px;right:12px;
+  font-size:10px;font-weight:700;color:var(--mu);
+  background:var(--s3);padding:2px 8px;border-radius:20px;
+}
+.prod-name{font-weight:700;font-size:14px;margin-bottom:3px;padding-right:44px;line-height:1.4;color:var(--tx);}
+.prod-cat{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;margin-bottom:10px;}
+.prod-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.prod-tag{
+  font-size:11px;font-weight:500;padding:3px 8px;border-radius:20px;
+  background:var(--s3);color:var(--tx2);border:1px solid var(--bd);
+}
+.prod-price-row{display:flex;align-items:baseline;gap:5px;margin-bottom:4px;}
+.prod-price{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:var(--grn);}
+.prod-price-unit{font-size:11px;color:var(--mu);font-weight:500;}
+.prod-markup{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;
+  background:#f0fdf4;color:var(--grn);border:1px solid #bbf7d0;
+}
+.prod-obs{font-size:11px;color:var(--mu);margin-top:6px;line-height:1.5;}
+.prod-actions{
+  display:flex;gap:0;
+  border-top:1px solid var(--bd);
+}
+.act-btn{
+  flex:1;border:none;border-radius:0;padding:10px;
+  font-size:12px;font-weight:600;cursor:pointer;
+  font-family:'Inter',sans-serif;background:transparent;
+  transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.act-btn.edit{color:var(--acc);}
+.act-btn.edit:hover{background:#eff6ff;}
+.act-btn.del{color:var(--red);border-left:1px solid var(--bd);}
+.act-btn.del:hover{background:#fef2f2;}
+
+/* ── EMPTY ── */
 .empty-state{text-align:center;padding:60px 20px;color:var(--mu);}
 .empty-ico{font-size:48px;opacity:.3;margin-bottom:12px;}
-.empty-ttl{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:6px;}
-.count-lbl{font-size:12px;color:var(--mu);margin-bottom:14px;font-weight:500;}
+.empty-ttl{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;margin-bottom:6px;color:var(--tx2);}
 
 /* ── MODAL ── */
-.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;padding:16px;}
+.ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
 .ov.open{display:flex;}
-.modal{background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r);width:min(560px,100%);max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.5);}
-.modal-hdr{padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--s1);z-index:1;border-bottom:1px solid var(--bd);padding-bottom:14px;}
-.modal-ttl{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:.5px;}
-.modal-close{background:var(--s2);border:1px solid var(--bd);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--mu);font-size:14px;display:flex;align-items:center;justify-content:center;}
-.modal-close:hover{border-color:var(--red);color:var(--red);}
-.modal-body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:12px;}
+.modal{
+  background:#fff;border:1px solid var(--bd);border-radius:var(--r);
+  width:min(560px,100%);max-height:92vh;overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.2);
+}
+.modal-hdr{
+  padding:18px 20px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--bd);
+  position:sticky;top:0;background:#fff;z-index:1;
+}
+.modal-ttl{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:.5px;color:var(--tx);}
+.modal-close{
+  background:var(--s3);border:1px solid var(--bd);border-radius:6px;
+  width:30px;height:30px;cursor:pointer;color:var(--tx2);font-size:14px;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.modal-close:hover{background:#fef2f2;border-color:var(--red);color:var(--red);}
+.modal-body{padding:20px;display:flex;flex-direction:column;gap:14px;}
 .field{display:flex;flex-direction:column;gap:5px;}
-.field-row{display:grid;gap:10px;}
+.field-row{display:grid;gap:12px;}
 .fr2{grid-template-columns:1fr 1fr;}
 .fr3{grid-template-columns:1fr 1fr 1fr;}
-.flbl{font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.7px;text-transform:uppercase;}
-.finp{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rs);padding:9px 12px;font-size:13px;color:var(--tx);outline:none;transition:border-color .15s;width:100%;}
-.finp:focus{border-color:var(--acc);background:var(--s3);}
-.finp::placeholder{color:var(--fa);}
-.finp option{background:var(--s2);}
-.markup-preview{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rs);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;}
-.markup-preview .mp-lbl{font-size:11px;color:var(--mu);font-weight:600;}
-.markup-preview .mp-val{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--grn);}
+.flbl{font-size:11px;font-weight:600;color:var(--tx2);letter-spacing:.3px;}
+.finp{
+  background:#fff;border:1px solid var(--bd);border-radius:var(--rs);
+  padding:9px 12px;font-size:13px;color:var(--tx);outline:none;
+  transition:all .15s;width:100%;
+}
+.finp:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+.finp::placeholder{color:var(--mu);}
+.finp option{background:#fff;}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;padding-top:4px;}
-.mbtn{border:1px solid var(--bd);border-radius:var(--rs);padding:9px 18px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;background:transparent;color:var(--mu);transition:all .15s;letter-spacing:.3px;}
-.mbtn:hover{border-color:var(--bd2);color:var(--tx);}
-.mbtn.ok{background:var(--grn);color:#0a0e1a;border-color:var(--grn);}
-.mbtn.ok:hover{background:var(--grn2);}
+.mbtn{
+  border:1px solid var(--bd);border-radius:var(--rs);padding:9px 18px;
+  cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
+  background:#fff;color:var(--tx2);transition:all .15s;
+}
+.mbtn:hover{background:var(--s3);}
+.mbtn.ok{background:var(--acc);color:#fff;border-color:var(--acc);box-shadow:0 2px 8px rgba(37,99,235,.25);}
+.mbtn.ok:hover{background:var(--acc2);}
 
-/* ── MARKUP MODAL ── */
-.markup-card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rs);padding:14px;}
+/* ── MARKUP CONFIG ── */
+.markup-card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rs);padding:16px;}
 .markup-formula{font-size:11px;color:var(--mu);margin-top:8px;text-align:center;}
-.markup-idx{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;color:var(--gold);text-align:center;margin:6px 0;}
+.markup-idx{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:32px;color:var(--gold);text-align:center;margin:8px 0;}
 
-/* ── REAJUSTE MODAL ── */
-.reaj-info{background:rgba(245,200,66,.08);border:1px solid rgba(245,200,66,.2);border-radius:var(--rs);padding:10px 12px;font-size:12px;color:var(--gold);}
+/* ── REAJUSTE ── */
+.reaj-info{background:#fffbeb;border:1px solid #fde68a;border-radius:var(--rs);padding:10px 12px;font-size:12px;color:var(--gold);}
+
+/* ── CALCULADORA ── */
+.calc-resultado{
+  background:linear-gradient(135deg,#f0fdf4,#f8faff);
+  border:1.5px solid #bbf7d0;border-radius:var(--r);
+  padding:18px 20px;
+}
+.calc-preco{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:40px;color:var(--grn);letter-spacing:.5px;}
+.calc-badge{
+  display:inline-flex;padding:4px 12px;border-radius:20px;
+  background:#fef3c7;color:var(--gold);font-weight:700;font-size:13px;
+  border:1px solid #fde68a;
+}
+.tipo-toggle{
+  background:var(--s3);border:1px solid var(--bd);border-radius:var(--rs);
+  padding:4px;display:flex;gap:4px;
+}
+.tipo-btn{
+  flex:1;border:none;border-radius:6px;padding:8px;
+  font-family:'Inter',sans-serif;font-weight:600;font-size:12px;
+  cursor:pointer;transition:all .15s;background:transparent;color:var(--mu);
+}
+.tipo-btn.active{background:#fff;color:var(--acc);box-shadow:0 1px 4px rgba(0,0,0,.1);}
 
 /* ── TOAST ── */
-#toast{position:fixed;bottom:16px;right:16px;background:var(--s1);border:1px solid var(--bd2);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:500;color:var(--tx);box-shadow:0 4px 20px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:all .25s;z-index:9999;transform:translateY(10px);}
+#toast{
+  position:fixed;bottom:20px;right:20px;
+  background:var(--tx);color:#fff;
+  border-radius:10px;padding:10px 16px;font-size:13px;font-weight:500;
+  box-shadow:0 4px 20px rgba(0,0,0,.2);
+  opacity:0;pointer-events:none;transition:all .25s;z-index:9999;transform:translateY(10px);
+}
 #toast.show{opacity:1;transform:translateY(0);}
+#toast.err{background:var(--red);}
 
 /* ── RESPONSIVE ── */
 @media(max-width:640px){
   #sidebar{display:none;}
   .prod-grid{grid-template-columns:1fr;}
   .stats-row{grid-template-columns:1fr 1fr;}
+  #hdr{padding:0 14px;}
+  .hdr-btn span.lbl{display:none;}
 }
 </style>
 </head>
@@ -164,41 +314,52 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif;}
     </div>
   </div>
   <div class="hdr-sep"></div>
-  <button class="hdr-btn btn-ghost" onclick="restaurarBackup()" title="Restaurar backup local">🔄 Backup</button>
-  <button class="hdr-btn btn-ghost" onclick="abrirCalc()">🧮 Calculadora</button>
-  <button class="hdr-btn btn-ghost" onclick="abrirMarkupModal()">⚙️ Markup</button>
-  <button class="hdr-btn btn-ghost" onclick="abrirReajusteModal()">📊 Reajuste</button>
+  <button class="hdr-btn" onclick="restaurarBackup()" title="Restaurar backup local">🔄 <span class="lbl">Backup</span></button>
+  <button class="hdr-btn" onclick="abrirCalc()">🧮 <span class="lbl">Calculadora</span></button>
+  <button class="hdr-btn" onclick="abrirReajusteModal()">📊 <span class="lbl">Reajuste</span></button>
+  <button class="hdr-btn" onclick="abrirMarkupModal()">⚙️ <span class="lbl">Markup</span></button>
   <button class="hdr-btn btn-add" onclick="abrirModal()">＋ Produto</button>
 </div>
 
 <div id="layout">
-  <!-- SIDEBAR -->
   <div id="sidebar">
     <div class="sb-hdr">Categorias</div>
     <div id="sb-cats"></div>
-    <hr class="sb-sep">
+    <div class="sb-divider"></div>
     <div class="sb-hdr">Ações</div>
-    <div class="sb-cat-item" onclick="abrirMarkupModal()">
-      <span>⚙️</span><span class="sb-cat-name" style="font-size:13px;">Config. Markup</span>
-    </div>
-    <div class="sb-cat-item" onclick="abrirReajusteModal()">
-      <span>📊</span><span class="sb-cat-name" style="font-size:13px;">Reajuste em massa</span>
-    </div>
+    <div class="sb-action" onclick="abrirCalc()">🧮 Calculadora</div>
+    <div class="sb-action" onclick="abrirMarkupModal()">⚙️ Config. Markup</div>
+    <div class="sb-action" onclick="abrirReajusteModal()">📊 Reajuste em massa</div>
   </div>
 
-  <!-- MAIN -->
   <div id="main">
     <div class="stats-row">
-      <div class="stat-card blue"><div class="stat-lbl">Total de produtos</div><div class="stat-val" id="st-total">0</div></div>
-      <div class="stat-card cyan"><div class="stat-lbl">Categorias</div><div class="stat-val" id="st-cats">0</div></div>
-      <div class="stat-card green"><div class="stat-lbl">Menor preço/m²</div><div class="stat-val" id="st-min">—</div></div>
-      <div class="stat-card gold"><div class="stat-lbl">Maior preço/m²</div><div class="stat-val" id="st-max">—</div></div>
+      <div class="stat-card blue">
+        <div class="stat-ico">📦</div>
+        <div class="stat-lbl">Total de produtos</div>
+        <div class="stat-val" id="st-total">0</div>
+      </div>
+      <div class="stat-card cyan">
+        <div class="stat-ico">🏷️</div>
+        <div class="stat-lbl">Categorias</div>
+        <div class="stat-val" id="st-cats">0</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-ico">📉</div>
+        <div class="stat-lbl">Menor preço/m²</div>
+        <div class="stat-val" id="st-min">—</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="stat-ico">📈</div>
+        <div class="stat-lbl">Maior preço/m²</div>
+        <div class="stat-val" id="st-max">—</div>
+      </div>
     </div>
 
     <div class="search-bar">
       <div class="search-wrap">
         <span class="search-ico">🔍</span>
-        <input id="srch" type="text" placeholder="Buscar por nome, cor, espessura..." oninput="render()">
+        <input id="srch" type="text" placeholder="Buscar por nome, cor, espessura, fornecedor..." oninput="render()">
       </div>
       <select class="sort-sel" id="sortSel" onchange="render()">
         <option value="nome">Nome A-Z</option>
@@ -217,7 +378,7 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif;}
 <div class="ov" id="prodOv">
 <div class="modal">
   <div class="modal-hdr">
-    <div class="modal-ttl" id="modal-ttl">＋ Novo Produto</div>
+    <div class="modal-ttl" id="modal-ttl">Novo Produto</div>
     <button class="modal-close" onclick="fecharModal()">✕</button>
   </div>
   <div class="modal-body">
@@ -258,25 +419,25 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif;}
     <div class="field">
       <label class="flbl">Preço de venda por m² (R$) *</label>
       <div style="position:relative;">
-        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--mu);pointer-events:none;">R$</span>
-        <input class="finp" id="fn-preco" type="number" step="0.01" min="0" placeholder="0,00" style="padding-left:30px;font-size:15px;font-weight:600;">
+        <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--mu);pointer-events:none;font-weight:600;">R$</span>
+        <input class="finp" id="fn-preco" type="number" step="0.01" min="0" placeholder="0,00" style="padding-left:32px;font-size:15px;font-weight:600;">
       </div>
     </div>
-        <div class="field">
+    <div class="field">
       <label class="flbl">Observação</label>
       <input class="finp" id="fn-obs" placeholder="Notas adicionais...">
     </div>
     <div class="modal-btns">
       <button class="mbtn" onclick="fecharModal()">Cancelar</button>
-      <button class="mbtn ok" onclick="salvar()">✓ Salvar</button>
+      <button class="mbtn ok" onclick="salvar()">✓ Salvar produto</button>
     </div>
   </div>
 </div>
 </div>
 
-<!-- MARKUP CONFIG MODAL -->
+<!-- MARKUP MODAL -->
 <div class="ov" id="markupOv">
-<div class="modal" style="max-width:420px;">
+<div class="modal" style="max-width:400px;">
   <div class="modal-hdr">
     <div class="modal-ttl">⚙️ Configuração de Markup</div>
     <button class="modal-close" onclick="fecharMarkup()">✕</button>
@@ -297,9 +458,9 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif;}
           <input class="finp" id="mk-lucro" type="number" step="0.1" value="21" oninput="calcMarkup()">
         </div>
       </div>
-      <div class="markup-formula" id="mk-formula">Índice de markup</div>
+      <div class="markup-formula" id="mk-formula"></div>
       <div class="markup-idx" id="mk-idx">—</div>
-      <div class="markup-formula">Preço de venda = Custo × índice</div>
+      <div class="markup-formula" style="color:var(--acc);font-weight:600;">Preço de venda = Custo × índice</div>
     </div>
     <div class="modal-btns">
       <button class="mbtn" onclick="fecharMarkup()">Cancelar</button>
@@ -311,13 +472,13 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif;}
 
 <!-- REAJUSTE MODAL -->
 <div class="ov" id="reajOv">
-<div class="modal" style="max-width:420px;">
+<div class="modal" style="max-width:400px;">
   <div class="modal-hdr">
     <div class="modal-ttl">📊 Reajuste em Massa</div>
     <button class="modal-close" onclick="fecharReajuste()">✕</button>
   </div>
   <div class="modal-body">
-    <div class="reaj-info">⚠️ Esta ação altera os preços de venda de vários produtos de uma vez. Pode ser desfeita com Ctrl+Z.</div>
+    <div class="reaj-info">⚠️ Altera os preços de venda de vários produtos de uma vez. Pode ser desfeito com Ctrl+Z.</div>
     <div class="field">
       <label class="flbl">Aplicar em</label>
       <select class="finp" id="rj-cat">
@@ -335,11 +496,73 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif;}
     </div>
     <div class="field">
       <label class="flbl">Percentual de reajuste (%)</label>
-      <input class="finp" id="rj-pct" type="number" step="0.1" placeholder="Ex: 10 para +10%, -5 para -5%">
+      <input class="finp" id="rj-pct" type="number" step="0.1" placeholder="+10 para aumentar, -5 para reduzir">
     </div>
     <div class="modal-btns">
       <button class="mbtn" onclick="fecharReajuste()">Cancelar</button>
       <button class="mbtn ok" onclick="aplicarReajuste()">✓ Aplicar</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CALCULADORA MODAL -->
+<div class="ov" id="calcOv">
+<div class="modal" style="max-width:460px;">
+  <div class="modal-hdr">
+    <div class="modal-ttl">🧮 Calculadora de Preço</div>
+    <button class="modal-close" onclick="fecharCalc()">✕</button>
+  </div>
+  <div class="modal-body">
+    <p style="font-size:12px;color:var(--mu);line-height:1.6;">Informe o custo e o sistema calcula o preço de venda com base no markup configurado.</p>
+    <div class="tipo-toggle">
+      <button type="button" class="tipo-btn active" id="calc-m2-btn" onclick="setCalcTipo('m2')">📐 Por m²</button>
+      <button type="button" class="tipo-btn" id="calc-total-btn" onclick="setCalcTipo('total')">💰 Valor total</button>
+    </div>
+    <div class="field-row fr2" id="calc-m2-row">
+      <div class="field">
+        <label class="flbl">Largura (mm)</label>
+        <input class="finp" id="calc-larg" type="number" min="0" placeholder="Ex: 1200" oninput="calcResult()">
+      </div>
+      <div class="field">
+        <label class="flbl">Altura (mm)</label>
+        <input class="finp" id="calc-alt" type="number" min="0" placeholder="Ex: 2100" oninput="calcResult()">
+      </div>
+    </div>
+    <div class="field">
+      <label class="flbl">Custo (R$) <span id="calc-custo-unit" style="color:var(--mu);font-weight:400;">por m²</span></label>
+      <div style="position:relative;">
+        <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--mu);pointer-events:none;font-weight:600;">R$</span>
+        <input class="finp" id="calc-custo" type="number" step="0.01" min="0" placeholder="0,00" style="padding-left:32px;font-size:15px;" oninput="calcResult()">
+      </div>
+    </div>
+    <div id="calc-resultado" style="display:none;" class="calc-resultado">
+      <div id="calc-m2-info" style="font-size:12px;color:var(--mu);margin-bottom:12px;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Preço de venda sugerido</div>
+          <div class="calc-preco" id="calc-preco-final"></div>
+          <div id="calc-formula" style="font-size:11px;color:var(--mu);margin-top:3px;"></div>
+        </div>
+        <div style="text-align:right;">
+          <div class="calc-badge" id="calc-markup-badge"></div>
+          <div style="font-size:11px;color:var(--mu);margin-top:6px;">Índice: <strong id="calc-idx" style="color:var(--tx);"></strong></div>
+        </div>
+      </div>
+      <div style="border-top:1px solid #bbf7d0;margin-top:14px;padding-top:12px;display:flex;gap:20px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:10px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Custo</div>
+          <div id="calc-custo-total" style="font-size:15px;font-weight:700;color:var(--tx);margin-top:2px;"></div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Lucro estimado</div>
+          <div id="calc-lucro" style="font-size:15px;font-weight:700;color:var(--grn);margin-top:2px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn" onclick="limparCalc()">🗑 Limpar</button>
+      <button class="mbtn" onclick="fecharCalc()">Fechar</button>
     </div>
   </div>
 </div>
@@ -413,16 +636,12 @@ function setCalcTipo(tipo){
   const unitLbl  = document.getElementById('calc-custo-unit');
 
   if(tipo==='m2'){
-    btnM2.style.background='var(--acc)';    btnM2.style.color='#fff';
-    btnTotal.style.background='transparent'; btnTotal.style.color='var(--mu)';
-    rowM2.style.display='grid';
-    unitLbl.textContent='por m²';
+    btnM2.className='tipo-btn active'; btnTotal.className='tipo-btn';
+    rowM2.style.display='grid'; unitLbl.textContent='por m²';
     document.getElementById('calc-custo').placeholder='0,00';
   } else {
-    btnTotal.style.background='var(--acc)'; btnTotal.style.color='#fff';
-    btnM2.style.background='transparent';   btnM2.style.color='var(--mu)';
-    rowM2.style.display='none';
-    unitLbl.textContent='total do serviço';
+    btnTotal.className='tipo-btn active'; btnM2.className='tipo-btn';
+    rowM2.style.display='none'; unitLbl.textContent='total do serviço';
     document.getElementById('calc-custo').placeholder='Custo total R$';
   }
   calcResult();
@@ -475,24 +694,40 @@ function calcResult(){
 
 // ── BACKUP & RECOVERY ─────────────────────────────────────────
 function restaurarBackup(){
-  try{
-    const backup = localStorage.getItem('catalogo_v1_backup');
-    const ts = localStorage.getItem('catalogo_v1_backup_ts');
-    if(!backup || backup==='[]'){
-      toast('Nenhum backup local disponível',true);
-      return;
-    }
-    const arr = JSON.parse(backup);
-    const dtStr = ts ? new Date(parseInt(ts)).toLocaleString('pt-BR') : 'desconhecido';
-    if(!confirm(`Restaurar backup de ${dtStr}?\n${arr.length} produto(s) encontrado(s).\n\nOs dados atuais serão substituídos.`)) return;
-    localStorage.setItem('catalogo_v1', backup);
-    localStorage.setItem('catalogo_v1_ts', ts||Date.now().toString());
-    load(); render();
-    window.__syncNow&&window.__syncNow(true);
-    toast(`✅ Backup restaurado — ${arr.length} produto(s)`);
-  }catch(e){
-    toast('Erro ao restaurar backup',true);
+  // Try all backup slots
+  const slots = [
+    {key:'catalogo_bkp_1', label:'Backup 1'},
+    {key:'catalogo_bkp_2', label:'Backup 2'},
+    {key:'catalogo_v1_backup', label:'Backup legado'},
+  ];
+  const ts = localStorage.getItem('catalogo_bkp_ts');
+  const dtStr = ts ? new Date(parseInt(ts)).toLocaleString('pt-BR') : '—';
+
+  let options = '';
+  let bestArr = null;
+  for(const s of slots){
+    try{
+      const raw=localStorage.getItem(s.key);
+      if(!raw||raw==='[]') continue;
+      const arr=JSON.parse(raw);
+      if(!Array.isArray(arr)||!arr.length) continue;
+      options += `\n• ${s.label}: ${arr.length} produto(s)`;
+      if(!bestArr||arr.length>bestArr.length) bestArr=arr;
+    }catch(e){}
   }
+
+  if(!bestArr){
+    toast('Nenhum backup local disponível',true);
+    return;
+  }
+
+  if(!confirm(`Backups disponíveis (${dtStr}):${options}\n\nRestaurar o maior backup (${bestArr.length} produto(s))?\nOs dados atuais serão substituídos.`)) return;
+
+  localStorage.setItem('catalogo_v1', JSON.stringify(bestArr));
+  localStorage.setItem('catalogo_v1_ts', Date.now().toString());
+  load(); render();
+  window.__syncNow&&window.__syncNow(true);
+  toast('✅ Backup restaurado — '+bestArr.length+' produto(s)');
 }
 
 // ── UNDO/REDO ──────────────────────────────────────────────────
@@ -520,10 +755,9 @@ function redo(){
 function toast(msg,err){
   const el=document.getElementById('toast');
   el.textContent=msg;
-  el.style.borderColor=err?'var(--red)':'var(--bd2)';
-  el.classList.add('show');
+  el.className=err?'show err':'show';
   clearTimeout(toast._t);
-  toast._t=setTimeout(()=>el.classList.remove('show'),2200);
+  toast._t=setTimeout(()=>el.className='',2200);
 }
 
 // ── MARKUP MODAL ───────────────────────────────────────────────
@@ -685,24 +919,25 @@ function render(){
   }
 
   el.innerHTML=list.map((p,i)=>{
-    const cor=CAT_COLORS[p.cat]||'#6b7fa8';
-    const markup_pct=p.custo&&p.preco?((p.preco/p.custo-1)*100).toFixed(0):null;
-    return `<div class="prod-card" style="border-left-color:${cor};">
-      <div class="prod-num">#${produtos.indexOf(p)+1}</div>
-      <div class="prod-name">${esc(p.nome)}</div>
-      <div class="prod-cat" style="color:${cor};">${esc(p.cat)}</div>
-      <div class="prod-tags">
-        ${p.cor?`<span class="prod-tag">🎨 ${esc(p.cor)}</span>`:''}
-        ${p.esp?`<span class="prod-tag">📏 ${esc(p.esp)}mm</span>`:''}
-        ${p.forn?`<span class="prod-tag">🏭 ${esc(p.forn)}</span>`:''}
+    const cor=CAT_COLORS[p.cat]||'#94a3b8';
+    const num=produtos.indexOf(p)+1;
+    return `<div class="prod-card">
+      <div class="prod-card-bar" style="background:${cor};"></div>
+      <div class="prod-card-body">
+        <div class="prod-num">#${num}</div>
+        <div class="prod-name">${esc(p.nome)}</div>
+        <div class="prod-cat" style="color:${cor};">${esc(p.cat)}</div>
+        <div class="prod-tags">
+          ${p.cor?`<span class="prod-tag">🎨 ${esc(p.cor)}</span>`:''}
+          ${p.esp?`<span class="prod-tag">📏 ${esc(p.esp)}mm</span>`:''}
+          ${p.forn?`<span class="prod-tag">🏭 ${esc(p.forn)}</span>`:''}
+        </div>
+        <div class="prod-price-row">
+          <div class="prod-price">${fmtBRL(p.preco)}</div>
+          <div class="prod-price-unit">/m²</div>
+        </div>
+        ${p.obs?`<div class="prod-obs">📝 ${esc(p.obs)}</div>`:''}
       </div>
-      <div class="prod-price-row">
-        <div class="prod-price">${fmtBRL(p.preco)}</div>
-        <div class="prod-price-unit">/m²</div>
-      </div>
-      ${p.custo?`<div class="prod-cost">Custo: ${fmtBRL(p.custo)}/m²</div>`:''}
-      ${markup_pct?`<span class="prod-markup">📈 +${markup_pct}% markup</span>`:''}
-      ${p.obs?`<div style="font-size:11px;color:var(--mu);margin-top:6px;">📝 ${esc(p.obs)}</div>`:''}
       <div class="prod-actions">
         <button class="act-btn edit" onclick="abrirModal('${p.id}')">✏️ Editar</button>
         <button class="act-btn del" onclick="excluir('${p.id}')">🗑 Excluir</button>
@@ -726,77 +961,6 @@ load(); render();
 });
 </script>
 
-<!-- FIREBASE SYNC ULTRA ────────────────────────────────────────────
-(function(){
-  const FB_KEY='catalogo_produtos', LS_KEY='catalogo_v1', TS_KEY='catalogo_v1_ts';
-  let _pushTimer=null, _lastPushedStr='', _applying=false;
-
-  function _ensureArray(v){ if(Array.isArray(v))return v; if(v&&typeof v==='object')return Object.values(v); return []; }
-  function _fixData(data){ if(!data)return []; const fixed=window.__fixArrays?window.__fixArrays(data):data; return _ensureArray(fixed); }
-  function _getLocal(){ try{ const r=localStorage.getItem(LS_KEY); return r?_ensureArray(JSON.parse(r)):[];}catch{return [];} }
-  function _setLocal(arr){ try{ localStorage.setItem(LS_KEY,JSON.stringify(arr));}catch(e){} }
-  function _getTs(){ return parseInt(localStorage.getItem(TS_KEY)||'0'); }
-  function _setTs(ts){ localStorage.setItem(TS_KEY,String(ts||Date.now())); }
-  function _isTyping(){ const el=document.activeElement; return el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT'||el.contentEditable==='true'); }
-
-  window.__syncNow=function(force){
-    if(!navigator.onLine||!window.__fbSave){ window.__syncPending=true; return; }
-    clearTimeout(_pushTimer);
-    _pushTimer=setTimeout(()=>{
-      try{
-        const arr=_getLocal(), str=JSON.stringify(arr);
-        if(str===_lastPushedStr&&!force)return;
-        _lastPushedStr=str;
-        window.__syncPending=false;
-        const ts=Date.now(); _setTs(ts);
-        window.__fbSave(FB_KEY,{data:arr,ts:ts,v:2});
-      }catch(e){}
-    },force?200:1500);
-  };
-
-  window.addEventListener('online',()=>{ setTimeout(()=>{ if(window.__syncPending)window.__syncNow(true); },1500); });
-
-  function _patch(){
-    ['save'].forEach(fn=>{ if(typeof window[fn]==='function'&&!window[fn].__fbP){ const orig=window[fn]; window[fn]=function(){ const r=orig.apply(this,arguments); if(!_applying)window.__syncNow(); return r; }; window[fn].__fbP=true; } });
-  }
-
-  function _apply(fbPayload,force){
-    if(!fbPayload)return;
-    try{
-      const raw=fbPayload.data!==undefined?fbPayload.data:fbPayload;
-      const arr=_fixData(raw), str=JSON.stringify(arr);
-      if(str===_lastPushedStr&&!force)return;
-      if(!force&&_isTyping()){ clearTimeout(_apply._t); _apply._t=setTimeout(()=>_apply(fbPayload,false),2000); return; }
-      const current=JSON.stringify(_getLocal());
-      if(str===current&&!force)return;
-      _applying=true; _setLocal(arr); _lastPushedStr=str;
-      try{ if(typeof load==='function'){load(); render();} }catch(e){}
-      setTimeout(()=>_applying=false,2500);
-    }catch(e){ _applying=false; }
-  }
-
-  function _fbInit(){
-    if(!window.__fbLoad){ setTimeout(_fbInit,300); return; }
-    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',_patch); else _patch();
-    setTimeout(_patch,2000);
-    window.__fbLoad(FB_KEY,function(fbPayload){
-      if(!fbPayload){ const local=_getLocal(); if(local.length){ _lastPushedStr=JSON.stringify(local); if(!_getTs())_setTs(Date.now()); window.__syncNow(true); } return; }
-      const fbTs=fbPayload.ts||0, localTs=_getTs(), local=_getLocal();
-      if(!local.length){ _apply(fbPayload,true); }
-      else if(fbTs>localTs+5000){ _apply(fbPayload,true); }
-      else if(localTs>=fbTs){ _lastPushedStr=JSON.stringify(local); window.__syncNow(true); }
-      else{ _apply(fbPayload,true); }
-    });
-    let _listenerReady=false; setTimeout(()=>_listenerReady=true,7000);
-    window.__fbListen(FB_KEY,function(fbPayload){
-      if(!_listenerReady||_applying)return;
-      try{ const raw=fbPayload&&fbPayload.data!==undefined?fbPayload.data:fbPayload; const str=JSON.stringify(_fixData(raw)); if(str===_lastPushedStr)return; }catch(e){}
-      _apply(fbPayload,false);
-    });
-  }
-  if(window.__fbReady)_fbInit(); else window.addEventListener('fbReady',_fbInit,{once:true});
-})(); -->
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
@@ -816,24 +980,27 @@ window.__fbReady=true;window.dispatchEvent(new Event('fbReady'));
 </script>
 
 <script>
-// ── FIREBASE SYNC ULTRA (Catálogo) ─────────────────────────────
+// ── FIREBASE SYNC FORTRESS (Catálogo) ─────────────────────────
 (function(){
-  const FB_KEY     = 'catalogo_produtos';
-  const LS_KEY     = 'catalogo_v1';
-  const TS_KEY     = 'catalogo_v1_ts';
-  const BACKUP_KEY = 'catalogo_v1_backup'; // local backup antes de qualquer sobrescrita
-  const MAX_RETRIES = 5;
+  const FB_KEY      = 'catalogo_produtos';
+  const FB_KEY_BKP  = 'catalogo_produtos_backup'; // segundo caminho no Firebase
+  const LS_KEY      = 'catalogo_v1';
+  const TS_KEY      = 'catalogo_v1_ts';
+  const LS_BKP_1    = 'catalogo_bkp_1';  // backup local 1
+  const LS_BKP_2    = 'catalogo_bkp_2';  // backup local 2 (rotativo)
+  const LS_BKP_TS   = 'catalogo_bkp_ts';
+  const MAX_RETRY   = 5;
 
-  let _pushTimer   = null;
-  let _lastStr     = '';
-  let _applying    = false;
-  let _retryCount  = 0;
-  let _retryTimer  = null;
+  let _pushTimer  = null;
+  let _lastStr    = '';
+  let _applying   = false;
+  let _retries    = 0;
+  let _initialized = false;
 
   // ── Helpers ──────────────────────────────────────────────────
   function _arr(v){
     if(Array.isArray(v)) return v;
-    if(v && typeof v==='object') return Object.values(v);
+    if(v&&typeof v==='object') return Object.values(v);
     return [];
   }
   function _fix(data){
@@ -843,292 +1010,280 @@ window.__fbReady=true;window.dispatchEvent(new Event('fbReady'));
   }
   function _getLocal(){
     try{
-      const r = localStorage.getItem(LS_KEY);
+      const r=localStorage.getItem(LS_KEY);
       if(!r||r==='null'||r==='[]') return [];
-      return _arr(JSON.parse(r));
+      const p=JSON.parse(r);
+      return _arr(p);
     }catch{ return []; }
   }
-  function _setLocal(arr){
-    try{
-      // Always save backup before overwriting
-      const current = localStorage.getItem(LS_KEY);
-      if(current && current!=='[]' && current!=='null'){
-        localStorage.setItem(BACKUP_KEY, current);
-        localStorage.setItem(BACKUP_KEY+'_ts', Date.now().toString());
-      }
-      localStorage.setItem(LS_KEY, JSON.stringify(arr));
-    }catch(e){ console.warn('setLocal:', e); }
-  }
+  function _hasData(arr){ return Array.isArray(arr)&&arr.length>0; }
   function _getTs(){ return parseInt(localStorage.getItem(TS_KEY)||'0'); }
-  function _setTs(ts){ localStorage.setItem(TS_KEY, String(ts||Date.now())); }
+  function _setTs(ts){ localStorage.setItem(TS_KEY,String(ts||Date.now())); }
   function _typing(){
-    const el = document.activeElement;
-    return el && (el.tagName==='INPUT'||el.tagName==='TEXTAREA'||
-                  el.tagName==='SELECT'||el.contentEditable==='true');
+    const el=document.activeElement;
+    return el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||
+                el.tagName==='SELECT'||el.contentEditable==='true');
   }
-  function _hasData(arr){ return Array.isArray(arr) && arr.length > 0; }
 
-  // ── Restore backup if main data is lost ──────────────────────
-  function _checkBackup(){
-    const main = _getLocal();
-    if(_hasData(main)) return; // all good
+  // ── MULTI-LAYER LOCAL BACKUP ──────────────────────────────────
+  // Saves to 2 rotating backup slots before any overwrite
+  function _saveBackup(data){
     try{
-      const backup = localStorage.getItem(BACKUP_KEY);
-      if(backup && backup!=='[]'){
-        console.warn('[SYNC] Main data empty, restoring backup...');
-        localStorage.setItem(LS_KEY, backup);
-        if(typeof load==='function'){ load(); render(); }
-        toast('⚠️ Dados restaurados do backup local');
-      }
+      const str = typeof data==='string' ? data : JSON.stringify(data);
+      if(!str||str==='[]'||str==='null') return;
+      // Rotate: bkp2 = bkp1, bkp1 = current
+      const old1 = localStorage.getItem(LS_BKP_1);
+      if(old1) localStorage.setItem(LS_BKP_2, old1);
+      localStorage.setItem(LS_BKP_1, str);
+      localStorage.setItem(LS_BKP_TS, Date.now().toString());
     }catch(e){}
   }
 
-  // ── Push to Firebase with retry ──────────────────────────────
-  window.__syncNow = function(force){
-    if(!navigator.onLine || !window.__fbSave){
-      window.__syncPending = true;
-      return;
+  function _setLocal(arr){
+    try{
+      const current = localStorage.getItem(LS_KEY);
+      if(current&&current!=='[]'&&current!=='null') _saveBackup(current);
+      localStorage.setItem(LS_KEY, JSON.stringify(arr));
+    }catch(e){ console.warn('setLocal:',e); }
+  }
+
+  // ── RESTORE BEST BACKUP ───────────────────────────────────────
+  // Called if main data is empty/lost
+  function _restoreBestBackup(){
+    const sources = [
+      localStorage.getItem(LS_BKP_1),
+      localStorage.getItem(LS_BKP_2),
+      localStorage.getItem('catalogo_v1_backup'), // legacy
+    ];
+    for(const src of sources){
+      try{
+        if(!src||src==='[]'||src==='null') continue;
+        const arr = _arr(JSON.parse(src));
+        if(_hasData(arr)){
+          console.warn('[FORTRESS] Restoring backup with',arr.length,'items');
+          localStorage.setItem(LS_KEY, JSON.stringify(arr));
+          _setTs(Date.now());
+          return arr;
+        }
+      }catch(e){}
+    }
+    return null;
+  }
+
+  // ── PUSH TO FIREBASE (main + mirror) ─────────────────────────
+  function _pushToFirebase(arr, force){
+    if(!navigator.onLine||!window.__fbSave){
+      window.__syncPending=true; return;
+    }
+    try{
+      const str=JSON.stringify(arr);
+      if(str===_lastStr&&!force) return;
+      _lastStr=str;
+      window.__syncPending=false;
+      const ts=Date.now();
+      _setTs(ts);
+      const payload={data:arr,ts:ts,v:3,count:arr.length};
+      // Push to MAIN path
+      window.__fbSave(FB_KEY, payload);
+      // Push to BACKUP path (mirror) after 3s
+      setTimeout(()=>{
+        if(navigator.onLine&&window.__fbSave){
+          window.__fbSave(FB_KEY_BKP, payload);
+        }
+      }, 3000);
+      _retries=0;
+    }catch(e){
+      console.warn('[FORTRESS] push error:',e);
+      if(_retries<MAX_RETRY){
+        _retries++;
+        setTimeout(()=>_pushToFirebase(arr,force), 3000*_retries);
+      }
+    }
+  }
+
+  window.__syncNow=function(force){
+    if(!navigator.onLine||!window.__fbSave){
+      window.__syncPending=true; return;
     }
     clearTimeout(_pushTimer);
-    _pushTimer = setTimeout(()=>{
-      try{
-        const arr = _getLocal();
-        if(!_hasData(arr) && !force) return; // never push empty (protect data)
-        const str = JSON.stringify(arr);
-        if(str===_lastStr && !force) return;
-        _lastStr = str;
-        window.__syncPending = false;
-        const ts = Date.now();
-        _setTs(ts);
-        // Push with version and checksum
-        window.__fbSave(FB_KEY, {
-          data: arr,
-          ts: ts,
-          v: 3,
-          count: arr.length,
-        });
-        _retryCount = 0;
-      }catch(e){
-        console.warn('[SYNC] push error:', e);
-        // Retry
-        if(_retryCount < MAX_RETRIES){
-          _retryCount++;
-          _retryTimer = setTimeout(()=> window.__syncNow(force), 3000*_retryCount);
-        }
-      }
-    }, force ? 300 : 1800);
+    _pushTimer=setTimeout(()=>{
+      const arr=_getLocal();
+      if(!_hasData(arr)&&!force) return; // NEVER push empty
+      _pushToFirebase(arr, force);
+    }, force?300:1800);
   };
 
-  // Reconnect
-  window.addEventListener('online', ()=>{
-    setTimeout(()=>{
-      if(window.__syncPending) window.__syncNow(true);
-    }, 1500);
+  // Reconnect → push pending
+  window.addEventListener('online',()=>{
+    setTimeout(()=>{ if(window.__syncPending) window.__syncNow(true); },1500);
   });
 
-  // ── Patch save functions ──────────────────────────────────────
+  // ── PATCH SAVE ───────────────────────────────────────────────
   function _patch(){
     ['save'].forEach(fn=>{
-      if(typeof window[fn]==='function' && !window[fn].__fbP){
-        const orig = window[fn];
-        window[fn] = function(){
-          const r = orig.apply(this, arguments);
+      if(typeof window[fn]==='function'&&!window[fn].__fbP){
+        const orig=window[fn];
+        window[fn]=function(){
+          const r=orig.apply(this,arguments);
           if(!_applying) window.__syncNow();
           return r;
         };
-        window[fn].__fbP = true;
+        window[fn].__fbP=true;
       }
     });
   }
 
-  // ── Apply Firebase data ───────────────────────────────────────
+  // ── APPLY FIREBASE DATA ───────────────────────────────────────
   function _apply(payload, force){
     if(!payload) return;
-    if(_applying && !force) return;
+    if(_applying&&!force) return;
     try{
-      const raw = payload.data !== undefined ? payload.data : payload;
-      const arr = _fix(raw);
-      const str = JSON.stringify(arr);
+      const raw=payload.data!==undefined?payload.data:payload;
+      const arr=_fix(raw);
+      const str=JSON.stringify(arr);
 
-      // SAFETY: never apply empty data over existing data
-      const local = _getLocal();
-      if(!_hasData(arr) && _hasData(local) && !force){
-        console.warn('[SYNC] Refused to apply empty Firebase data over existing local data');
+      // SAFETY 1: never overwrite existing data with empty
+      const local=_getLocal();
+      if(!_hasData(arr)&&_hasData(local)&&!force){
+        console.warn('[FORTRESS] Refused empty overwrite');
         return;
       }
 
-      if(str === _lastStr && !force) return; // our own echo
+      // SAFETY 2: skip our own echo
+      if(str===_lastStr&&!force) return;
 
-      // Don't interrupt typing
-      if(!force && _typing()){
+      // SAFETY 3: don't interrupt typing
+      if(!force&&_typing()){
         clearTimeout(_apply._t);
-        _apply._t = setTimeout(()=> _apply(payload, false), 2500);
+        _apply._t=setTimeout(()=>_apply(payload,false),2500);
         return;
       }
 
-      const current = JSON.stringify(local);
-      if(str === current && !force) return;
+      // SAFETY 4: skip if no real change
+      const current=JSON.stringify(local);
+      if(str===current&&!force) return;
 
-      _applying = true;
-      _setLocal(arr);   // saves backup automatically
-      _lastStr = str;
+      _applying=true;
+      _setLocal(arr);   // auto-saves backup before overwriting
+      _lastStr=str;
 
       try{
         if(typeof load==='function'){ load(); render(); }
-      }catch(e){ console.warn('[SYNC] reload error:', e); }
+      }catch(e){ console.warn('[FORTRESS] reload:',e); }
 
-      setTimeout(()=>{ _applying = false; }, 3000);
+      setTimeout(()=>{ _applying=false; },3000);
     }catch(e){
-      console.warn('[SYNC] apply error:', e);
-      _applying = false;
+      console.warn('[FORTRESS] apply:',e);
+      _applying=false;
     }
   }
 
-  // ── Init ──────────────────────────────────────────────────────
-  function _fbInit(){
-    if(!window.__fbLoad){ setTimeout(_fbInit, 300); return; }
+  // ── SMART INITIAL LOAD ────────────────────────────────────────
+  function _smartLoad(payload){
+    _initialized=true;
 
-    if(document.readyState==='loading')
-      document.addEventListener('DOMContentLoaded', _patch);
-    else _patch();
-    setTimeout(_patch, 2000);
-
-    // Check backup on start
-    setTimeout(_checkBackup, 500);
-
-    // Initial load — smart merge by timestamp
-    window.__fbLoad(FB_KEY, function(payload){
-      if(!payload){
-        // Nothing on Firebase — push local
-        const local = _getLocal();
-        if(_hasData(local)){
-          _lastStr = JSON.stringify(local);
-          if(!_getTs()) _setTs(Date.now());
-          window.__syncNow(true);
-        }
-        return;
-      }
-
-      const fbTs    = payload.ts || 0;
-      const fbCount = payload.count || 0;
-      const localTs = _getTs();
-      const local   = _getLocal();
-      const localEmpty = !_hasData(local);
-
-      if(localEmpty){
-        // Local empty → Firebase wins
-        _apply(payload, true);
-      } else if(fbTs > localTs + 5000){
-        // Firebase is clearly newer
-        _apply(payload, true);
-      } else if(localTs > fbTs){
-        // Local is newer → push to Firebase
-        _lastStr = JSON.stringify(local);
+    if(!payload){
+      // Firebase empty → try to push local
+      const local=_getLocal();
+      if(_hasData(local)){
+        _lastStr=JSON.stringify(local);
+        if(!_getTs()) _setTs(Date.now());
         window.__syncNow(true);
       } else {
-        // Same timestamp or very close — use whichever has MORE data
-        const fbArr = _fix(payload.data !== undefined ? payload.data : payload);
-        if(fbArr.length > local.length){
-          _apply(payload, true);
-        } else {
-          _lastStr = JSON.stringify(local);
-          window.__syncNow(true);
+        // Both empty — try to restore backup
+        const restored=_restoreBestBackup();
+        if(restored){
+          _apply({data:restored,ts:0},true);
+          setTimeout(()=>window.__syncNow(true),1000);
+          if(typeof toast==='function') toast('⚠️ Dados restaurados do backup local');
         }
       }
+      return;
+    }
+
+    const fbTs    = payload.ts||0;
+    const fbCount = payload.count || _fix(payload.data||payload).length;
+    const localTs = _getTs();
+    const local   = _getLocal();
+
+    if(!_hasData(local)){
+      // Local empty → Firebase wins
+      _apply(payload,true);
+    } else if(fbTs > localTs+5000){
+      // Firebase clearly newer
+      _apply(payload,true);
+    } else if(localTs > fbTs+5000){
+      // Local clearly newer → push to Firebase
+      _lastStr=JSON.stringify(local);
+      window.__syncNow(true);
+    } else {
+      // Timestamps close → use whichever has MORE products
+      const fbArr=_fix(payload.data!==undefined?payload.data:payload);
+      if(fbArr.length > local.length){
+        _apply(payload,true);
+      } else if(local.length > fbArr.length){
+        _lastStr=JSON.stringify(local);
+        window.__syncNow(true);
+      } else {
+        // Same count → trust Firebase (already synced)
+        _apply(payload,true);
+      }
+    }
+  }
+
+  // ── INIT ─────────────────────────────────────────────────────
+  function _fbInit(){
+    if(!window.__fbLoad){ setTimeout(_fbInit,300); return; }
+
+    if(document.readyState==='loading')
+      document.addEventListener('DOMContentLoaded',_patch);
+    else _patch();
+    setTimeout(_patch,2000);
+
+    // Check integrity on start
+    setTimeout(()=>{
+      const local=_getLocal();
+      if(!_hasData(local)){
+        const restored=_restoreBestBackup();
+        if(restored&&typeof load==='function'){ load(); render(); }
+      }
+    },800);
+
+    // Load from Firebase main path
+    window.__fbLoad(FB_KEY, function(payload){
+      if(payload){ _smartLoad(payload); return; }
+      // Main empty → try backup path
+      window.__fbLoad(FB_KEY_BKP, function(bkp){
+        _smartLoad(bkp); // may also be null
+      });
     });
 
-    // Real-time listener
-    let _ready = false;
-    setTimeout(()=>{ _ready = true; }, 8000);
+    // Real-time listener (activates after 8s)
+    let _ready=false;
+    setTimeout(()=>{ _ready=true; },8000);
 
-    window.__fbListen(FB_KEY, function(payload){
-      if(!_ready || _applying) return;
+    window.__fbListen(FB_KEY,function(payload){
+      if(!_ready||_applying) return;
       try{
-        const raw = payload&&payload.data!==undefined ? payload.data : payload;
-        const str = JSON.stringify(_fix(raw));
-        if(str === _lastStr) return; // echo
+        const raw=payload&&payload.data!==undefined?payload.data:payload;
+        const str=JSON.stringify(_fix(raw));
+        if(str===_lastStr) return; // echo
       }catch(e){}
-      _apply(payload, false);
+      _apply(payload,false);
     });
+
+    // Periodic auto-push every 5min (extra safety)
+    setInterval(()=>{
+      if(!navigator.onLine||_applying) return;
+      const arr=_getLocal();
+      if(_hasData(arr)) _pushToFirebase(arr,false);
+    }, 5*60*1000);
   }
 
   if(window.__fbReady) _fbInit();
-  else window.addEventListener('fbReady', _fbInit, {once:true});
+  else window.addEventListener('fbReady',_fbInit,{once:true});
 })();
 </script>
-
-<!-- CALCULADORA MODAL -->
-<div class="ov" id="calcOv">
-<div class="modal" style="max-width:440px;">
-  <div class="modal-hdr">
-    <div class="modal-ttl">🧮 Calculadora de Preço</div>
-    <button class="modal-close" onclick="fecharCalc()">✕</button>
-  </div>
-  <div class="modal-body">
-    <div style="font-size:12px;color:var(--mu);line-height:1.6;background:var(--s2);border-radius:var(--rs);padding:10px 12px;">
-      Informe o custo do serviço ou produto e o sistema calcula o preço de venda com base no markup configurado.
-    </div>
-
-    <!-- Tipo de cálculo -->
-    <div style="background:var(--s2);border:1px solid var(--bd);border-radius:var(--rs);padding:4px;display:flex;gap:4px;" id="calc-tipo-wrap">
-      <button type="button" id="calc-m2-btn" onclick="setCalcTipo('m2')"
-        style="flex:1;border:none;border-radius:6px;padding:8px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;background:var(--acc);color:#fff;">
-        📐 Por m²
-      </button>
-      <button type="button" id="calc-total-btn" onclick="setCalcTipo('total')"
-        style="flex:1;border:none;border-radius:6px;padding:8px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;background:transparent;color:var(--mu);">
-        💰 Valor total
-      </button>
-    </div>
-
-    <!-- Inputs -->
-    <div class="field-row fr2" id="calc-m2-row">
-      <div class="field">
-        <label class="flbl">Largura (mm)</label>
-        <input class="finp" id="calc-larg" type="number" min="0" placeholder="Ex: 1200" oninput="calcResult()">
-      </div>
-      <div class="field">
-        <label class="flbl">Altura (mm)</label>
-        <input class="finp" id="calc-alt" type="number" min="0" placeholder="Ex: 2100" oninput="calcResult()">
-      </div>
-    </div>
-
-    <div class="field">
-      <label class="flbl">Custo (R$) <span id="calc-custo-unit" style="color:var(--mu);font-weight:400;">por m²</span></label>
-      <div style="position:relative;">
-        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--mu);pointer-events:none;">R$</span>
-        <input class="finp" id="calc-custo" type="number" step="0.01" min="0" placeholder="0,00" style="padding-left:30px;font-size:15px;" oninput="calcResult()">
-      </div>
-    </div>
-
-    <!-- Resultado -->
-    <div id="calc-resultado" style="display:none;background:linear-gradient(135deg,rgba(0,229,160,.08),rgba(0,229,160,.03));border:1.5px solid rgba(0,229,160,.25);border-radius:var(--r);padding:16px 18px;">
-      <div id="calc-m2-info" style="font-size:12px;color:var(--mu);margin-bottom:10px;"></div>
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;">
-        <div>
-          <div style="font-size:10px;color:var(--mu);font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px;">Preço de venda sugerido</div>
-          <div id="calc-preco-final" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:36px;color:var(--grn);letter-spacing:.5px;"></div>
-          <div id="calc-formula" style="font-size:11px;color:var(--mu);margin-top:3px;"></div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:10px;color:var(--mu);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">MARKUP</div>
-          <div id="calc-markup-badge" style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;color:var(--gold);"></div>
-          <div style="font-size:10px;color:var(--mu);margin-top:2px;">Índice: <span id="calc-idx"></span></div>
-        </div>
-      </div>
-      <div style="border-top:1px solid rgba(0,229,160,.15);margin-top:12px;padding-top:10px;display:flex;gap:16px;flex-wrap:wrap;">
-        <div><div style="font-size:10px;color:var(--mu);">Custo</div><div id="calc-custo-total" style="font-size:14px;font-weight:700;color:var(--tx);"></div></div>
-        <div><div style="font-size:10px;color:var(--mu);">Lucro estimado</div><div id="calc-lucro" style="font-size:14px;font-weight:700;color:var(--grn);"></div></div>
-      </div>
-    </div>
-
-    <div class="modal-btns">
-      <button class="mbtn" onclick="limparCalc()">🗑 Limpar</button>
-      <button class="mbtn" onclick="fecharCalc()">Fechar</button>
-    </div>
-  </div>
-</div>
-</div>
 
 </body>
 </html>
