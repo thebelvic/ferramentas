@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catálogo de Produtos — Brasil Vidros</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0e1a;--s1:#111827;--s2:#1a2236;--s3:#222d42;
+  --bd:#2a3550;--bd2:#354060;
+  --tx:#f0f4ff;--mu:#6b7fa8;--fa:#2a3550;
+  --acc:#4f8ef7;--grn:#00e5a0;--grn2:#00b87d;
+  --gold:#f5c842;--red:#ff4d6d;--red2:#cc2244;
+  --orange:#f97316;--purple:#a78bfa;--cyan:#06b6d4;
+  --r:14px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;}
+input,select,textarea,button{font-family:'DM Sans',sans-serif;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
+
+/* ── HEADER ── */
+#hdr{
+  background:linear-gradient(135deg,#0f1a2e,#1a2d4a);
+  border-bottom:1px solid var(--bd);
+  padding:0 20px;height:58px;
+  display:flex;align-items:center;gap:14px;
+  position:sticky;top:0;z-index:100;
+}
+.hdr-logo{display:flex;align-items:center;gap:10px;}
+.hdr-ico{width:36px;height:36px;background:linear-gradient(135deg,#4f8ef7,#06b6d4);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.hdr-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;letter-spacing:.5px;}
+.hdr-sub{font-size:10px;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;}
+.hdr-sep{flex:1;}
+.hdr-btn{border:none;border-radius:var(--rs);padding:7px 14px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.3px;transition:all .15s;display:flex;align-items:center;gap:6px;}
+.btn-add{background:var(--grn);color:#0a0e1a;}
+.btn-add:hover{background:var(--grn2);}
+.btn-ghost{background:var(--s2);border:1px solid var(--bd);color:var(--mu);}
+.btn-ghost:hover{border-color:var(--acc);color:var(--acc);}
+
+/* ── LAYOUT ── */
+#layout{display:flex;height:calc(100vh - 58px);}
+#sidebar{width:240px;min-width:240px;background:var(--s1);border-right:1px solid var(--bd);overflow-y:auto;display:flex;flex-direction:column;}
+#main{flex:1;overflow-y:auto;padding:20px;}
+
+/* ── SIDEBAR ── */
+.sb-hdr{padding:14px 16px 8px;font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.8px;text-transform:uppercase;}
+.sb-cat-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;transition:background .12s;border-left:3px solid transparent;}
+.sb-cat-item:hover{background:var(--s2);}
+.sb-cat-item.active{background:var(--s2);border-left-color:var(--acc);}
+.sb-cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.sb-cat-name{font-size:13px;font-weight:500;flex:1;}
+.sb-cat-count{font-size:11px;color:var(--mu);font-weight:700;background:var(--s3);padding:2px 7px;border-radius:10px;}
+.sb-sep{border:none;border-top:1px solid var(--bd);margin:8px 0;}
+
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.stat-card.blue::before{background:var(--acc);}
+.stat-card.green::before{background:var(--grn);}
+.stat-card.gold::before{background:var(--gold);}
+.stat-card.cyan::before{background:var(--cyan);}
+.stat-lbl{font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.7px;text-transform:uppercase;margin-bottom:6px;}
+.stat-val{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:24px;letter-spacing:.3px;}
+.stat-card.blue .stat-val{color:var(--acc);}
+.stat-card.green .stat-val{color:var(--grn);}
+.stat-card.gold .stat-val{color:var(--gold);}
+.stat-card.cyan .stat-val{color:var(--cyan);}
+
+/* ── SEARCH BAR ── */
+.search-bar{display:flex;gap:10px;margin-bottom:16px;align-items:center;}
+.search-wrap{position:relative;flex:1;}
+.search-wrap input{width:100%;background:var(--s1);border:1px solid var(--bd);border-radius:var(--rs);padding:9px 12px 9px 36px;font-size:13px;color:var(--tx);outline:none;transition:border-color .15s;}
+.search-wrap input:focus{border-color:var(--acc);}
+.search-wrap input::placeholder{color:var(--mu);}
+.search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:15px;pointer-events:none;}
+.sort-sel{background:var(--s1);border:1px solid var(--bd);border-radius:var(--rs);padding:9px 12px;font-size:12px;color:var(--mu);outline:none;cursor:pointer;}
+.sort-sel:focus{border-color:var(--acc);}
+
+/* ── PRODUCT GRID ── */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+.prod-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:16px;transition:all .15s;position:relative;overflow:hidden;}
+.prod-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;}
+.prod-card:hover{border-color:var(--bd2);box-shadow:0 4px 20px rgba(0,0,0,.3);}
+.prod-num{position:absolute;top:12px;right:12px;font-size:10px;font-weight:700;color:var(--mu);background:var(--s2);padding:2px 7px;border-radius:10px;}
+.prod-name{font-weight:700;font-size:14px;margin-bottom:4px;padding-right:40px;line-height:1.3;}
+.prod-cat{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;}
+.prod-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.prod-tag{font-size:11px;font-weight:600;padding:3px 8px;border-radius:5px;background:var(--s2);color:var(--mu);border:1px solid var(--bd);}
+.prod-price-row{display:flex;align-items:baseline;gap:6px;margin-bottom:4px;}
+.prod-price{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;color:var(--grn);}
+.prod-price-unit{font-size:11px;color:var(--mu);}
+.prod-cost{font-size:11px;color:var(--mu);margin-bottom:12px;}
+.prod-markup{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;background:rgba(0,229,160,.1);color:var(--grn);border:1px solid rgba(0,229,160,.2);}
+.prod-actions{display:flex;gap:8px;margin-top:12px;border-top:1px solid var(--bd);padding-top:12px;}
+.act-btn{flex:1;border:1px solid var(--bd);border-radius:var(--rs);padding:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:.3px;background:transparent;transition:all .15s;}
+.act-btn.edit{color:var(--acc);border-color:var(--acc);}
+.act-btn.edit:hover{background:rgba(79,142,247,.1);}
+.act-btn.del{color:var(--red);border-color:var(--red);}
+.act-btn.del:hover{background:rgba(255,77,109,.1);}
+.empty-state{text-align:center;padding:60px 20px;color:var(--mu);}
+.empty-ico{font-size:48px;opacity:.3;margin-bottom:12px;}
+.empty-ttl{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:6px;}
+.count-lbl{font-size:12px;color:var(--mu);margin-bottom:14px;font-weight:500;}
+
+/* ── MODAL ── */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;padding:16px;}
+.ov.open{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r);width:min(560px,100%);max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.5);}
+.modal-hdr{padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--s1);z-index:1;border-bottom:1px solid var(--bd);padding-bottom:14px;}
+.modal-ttl{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:.5px;}
+.modal-close{background:var(--s2);border:1px solid var(--bd);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--mu);font-size:14px;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{border-color:var(--red);color:var(--red);}
+.modal-body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:12px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field-row{display:grid;gap:10px;}
+.fr2{grid-template-columns:1fr 1fr;}
+.fr3{grid-template-columns:1fr 1fr 1fr;}
+.flbl{font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.7px;text-transform:uppercase;}
+.finp{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rs);padding:9px 12px;font-size:13px;color:var(--tx);outline:none;transition:border-color .15s;width:100%;}
+.finp:focus{border-color:var(--acc);background:var(--s3);}
+.finp::placeholder{color:var(--fa);}
+.finp option{background:var(--s2);}
+.markup-preview{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rs);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;}
+.markup-preview .mp-lbl{font-size:11px;color:var(--mu);font-weight:600;}
+.markup-preview .mp-val{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--grn);}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;padding-top:4px;}
+.mbtn{border:1px solid var(--bd);border-radius:var(--rs);padding:9px 18px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;background:transparent;color:var(--mu);transition:all .15s;letter-spacing:.3px;}
+.mbtn:hover{border-color:var(--bd2);color:var(--tx);}
+.mbtn.ok{background:var(--grn);color:#0a0e1a;border-color:var(--grn);}
+.mbtn.ok:hover{background:var(--grn2);}
+
+/* ── MARKUP MODAL ── */
+.markup-card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rs);padding:14px;}
+.markup-formula{font-size:11px;color:var(--mu);margin-top:8px;text-align:center;}
+.markup-idx{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;color:var(--gold);text-align:center;margin:6px 0;}
+
+/* ── REAJUSTE MODAL ── */
+.reaj-info{background:rgba(245,200,66,.08);border:1px solid rgba(245,200,66,.2);border-radius:var(--rs);padding:10px 12px;font-size:12px;color:var(--gold);}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:16px;right:16px;background:var(--s1);border:1px solid var(--bd2);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:500;color:var(--tx);box-shadow:0 4px 20px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:all .25s;z-index:9999;transform:translateY(10px);}
+#toast.show{opacity:1;transform:translateY(0);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  #sidebar{display:none;}
+  .prod-grid{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <div class="hdr-logo">
+    <div class="hdr-ico">📦</div>
+    <div>
+      <div class="hdr-title">CATÁLOGO DE PRODUTOS</div>
+      <div class="hdr-sub">Brasil Vidros</div>
+    </div>
+  </div>
+  <div class="hdr-sep"></div>
+  <button class="hdr-btn btn-ghost" onclick="restaurarBackup()" title="Restaurar backup local">🔄 Backup</button>
+  <button class="hdr-btn btn-ghost" onclick="abrirCalc()">🧮 Calculadora</button>
+  <button class="hdr-btn btn-ghost" onclick="abrirMarkupModal()">⚙️ Markup</button>
+  <button class="hdr-btn btn-ghost" onclick="abrirReajusteModal()">📊 Reajuste</button>
+  <button class="hdr-btn btn-add" onclick="abrirModal()">＋ Produto</button>
+</div>
+
+<div id="layout">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sb-hdr">Categorias</div>
+    <div id="sb-cats"></div>
+    <hr class="sb-sep">
+    <div class="sb-hdr">Ações</div>
+    <div class="sb-cat-item" onclick="abrirMarkupModal()">
+      <span>⚙️</span><span class="sb-cat-name" style="font-size:13px;">Config. Markup</span>
+    </div>
+    <div class="sb-cat-item" onclick="abrirReajusteModal()">
+      <span>📊</span><span class="sb-cat-name" style="font-size:13px;">Reajuste em massa</span>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div class="stats-row">
+      <div class="stat-card blue"><div class="stat-lbl">Total de produtos</div><div class="stat-val" id="st-total">0</div></div>
+      <div class="stat-card cyan"><div class="stat-lbl">Categorias</div><div class="stat-val" id="st-cats">0</div></div>
+      <div class="stat-card green"><div class="stat-lbl">Menor preço/m²</div><div class="stat-val" id="st-min">—</div></div>
+      <div class="stat-card gold"><div class="stat-lbl">Maior preço/m²</div><div class="stat-val" id="st-max">—</div></div>
+    </div>
+
+    <div class="search-bar">
+      <div class="search-wrap">
+        <span class="search-ico">🔍</span>
+        <input id="srch" type="text" placeholder="Buscar por nome, cor, espessura..." oninput="render()">
+      </div>
+      <select class="sort-sel" id="sortSel" onchange="render()">
+        <option value="nome">Nome A-Z</option>
+        <option value="preco_asc">Menor preço</option>
+        <option value="preco_desc">Maior preço</option>
+        <option value="novo">Mais recente</option>
+      </select>
+    </div>
+
+    <div class="count-lbl" id="count-lbl"></div>
+    <div class="prod-grid" id="prod-list"></div>
+  </div>
+</div>
+
+<!-- PRODUTO MODAL -->
+<div class="ov" id="prodOv">
+<div class="modal">
+  <div class="modal-hdr">
+    <div class="modal-ttl" id="modal-ttl">＋ Novo Produto</div>
+    <button class="modal-close" onclick="fecharModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="field">
+      <label class="flbl">Nome do produto *</label>
+      <input class="finp" id="fn-nome" placeholder="Ex: Vidro temperado incolor 8mm">
+    </div>
+    <div class="field-row fr2">
+      <div class="field">
+        <label class="flbl">Categoria</label>
+        <select class="finp" id="fn-cat">
+          <option>Vidro Temperado</option>
+          <option>Vidro Comum</option>
+          <option>Vidro Laminado</option>
+          <option>Espelho</option>
+          <option>Esquadria Alumínio Suprema</option>
+          <option>Esquadria Alumínio Gold</option>
+          <option>Box / Especial</option>
+          <option>Película</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="flbl">Espessura (mm)</label>
+        <input class="finp" id="fn-esp" type="text" placeholder="4, 6, 8, 10...">
+      </div>
+    </div>
+    <div class="field-row fr2">
+      <div class="field">
+        <label class="flbl">Cor / Acabamento</label>
+        <input class="finp" id="fn-cor" placeholder="Incolor, Fumê, Bronze...">
+      </div>
+      <div class="field">
+        <label class="flbl">Fornecedor</label>
+        <input class="finp" id="fn-forn" placeholder="Primos, UBVA...">
+      </div>
+    </div>
+    <div class="field">
+      <label class="flbl">Preço de venda por m² (R$) *</label>
+      <div style="position:relative;">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--mu);pointer-events:none;">R$</span>
+        <input class="finp" id="fn-preco" type="number" step="0.01" min="0" placeholder="0,00" style="padding-left:30px;font-size:15px;font-weight:600;">
+      </div>
+    </div>
+        <div class="field">
+      <label class="flbl">Observação</label>
+      <input class="finp" id="fn-obs" placeholder="Notas adicionais...">
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn" onclick="fecharModal()">Cancelar</button>
+      <button class="mbtn ok" onclick="salvar()">✓ Salvar</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- MARKUP CONFIG MODAL -->
+<div class="ov" id="markupOv">
+<div class="modal" style="max-width:420px;">
+  <div class="modal-hdr">
+    <div class="modal-ttl">⚙️ Configuração de Markup</div>
+    <button class="modal-close" onclick="fecharMarkup()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="markup-card">
+      <div class="field-row fr3">
+        <div class="field">
+          <label class="flbl">Custo fixo (%)</label>
+          <input class="finp" id="mk-fixo" type="number" step="0.1" value="30" oninput="calcMarkup()">
+        </div>
+        <div class="field">
+          <label class="flbl">Simples Nac. (%)</label>
+          <input class="finp" id="mk-imposto" type="number" step="0.1" value="12" oninput="calcMarkup()">
+        </div>
+        <div class="field">
+          <label class="flbl">Lucro (%)</label>
+          <input class="finp" id="mk-lucro" type="number" step="0.1" value="21" oninput="calcMarkup()">
+        </div>
+      </div>
+      <div class="markup-formula" id="mk-formula">Índice de markup</div>
+      <div class="markup-idx" id="mk-idx">—</div>
+      <div class="markup-formula">Preço de venda = Custo × índice</div>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn" onclick="fecharMarkup()">Cancelar</button>
+      <button class="mbtn ok" onclick="salvarMarkup()">✓ Salvar</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- REAJUSTE MODAL -->
+<div class="ov" id="reajOv">
+<div class="modal" style="max-width:420px;">
+  <div class="modal-hdr">
+    <div class="modal-ttl">📊 Reajuste em Massa</div>
+    <button class="modal-close" onclick="fecharReajuste()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="reaj-info">⚠️ Esta ação altera os preços de venda de vários produtos de uma vez. Pode ser desfeita com Ctrl+Z.</div>
+    <div class="field">
+      <label class="flbl">Aplicar em</label>
+      <select class="finp" id="rj-cat">
+        <option value="Todas">Todos os produtos</option>
+        <option>Vidro Temperado</option>
+        <option>Vidro Comum</option>
+        <option>Vidro Laminado</option>
+        <option>Espelho</option>
+        <option>Esquadria Alumínio Suprema</option>
+        <option>Esquadria Alumínio Gold</option>
+        <option>Box / Especial</option>
+        <option>Película</option>
+        <option>Outro</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="flbl">Percentual de reajuste (%)</label>
+      <input class="finp" id="rj-pct" type="number" step="0.1" placeholder="Ex: 10 para +10%, -5 para -5%">
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn" onclick="fecharReajuste()">Cancelar</button>
+      <button class="mbtn ok" onclick="aplicarReajuste()">✓ Aplicar</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const STORE   = 'catalogo_v1';
+const MK_STORE = 'catalogo_mk_v1';
+
+const CAT_COLORS = {
+  'Vidro Temperado':'#4f8ef7','Vidro Comum':'#8fa3ac','Vidro Laminado':'#6e9cb0',
+  'Espelho':'#a78bfa','Esquadria Alumínio Suprema':'#f97316','Esquadria Alumínio Gold':'#f5c842',
+  'Box / Especial':'#00e5a0','Película':'#06b6d4','Outro':'#6b7fa8'
+};
+
+let produtos = [];
+let filtroCategoria = 'Todas';
+let editId = null;
+let undoStack = [];
+let redoStack = [];
+let markup = {fixo:30, imposto:12, lucro:21};
+
+// ── STORAGE ────────────────────────────────────────────────────
+function load(){
+  try{ produtos = JSON.parse(localStorage.getItem(STORE))||[]; }catch{ produtos=[]; }
+  try{ const m=JSON.parse(localStorage.getItem(MK_STORE)); if(m)markup=m; }catch{}
+}
+function save(){
+  localStorage.setItem(STORE, JSON.stringify(produtos));
+  localStorage.setItem(MK_STORE, JSON.stringify(markup));
+  window.__syncNow&&window.__syncNow();
+}
+
+// ── HELPERS ────────────────────────────────────────────────────
+function fmtBRL(v){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0); }
+function fmtBRLShort(v){
+  if(v>=1000) return 'R$'+(v/1000).toFixed(1).replace('.',',')+'k';
+  return fmtBRL(v).replace('R$\u00a0','R$');
+}
+function getMarkupIdx(){
+  const total = markup.fixo + markup.imposto + markup.lucro;
+  return total >= 100 ? 99 : parseFloat((100/(100-total)).toFixed(4));
+}
+function calcPrecoSugerido(custo){
+  return Math.round(custo * getMarkupIdx() * 100) / 100;
+}
+
+
+// ── CALCULADORA ────────────────────────────────────────────────
+let _calcTipo = 'm2';
+
+function abrirCalc(){
+  document.getElementById('calcOv').classList.add('open');
+  setTimeout(()=>document.getElementById('calc-custo').focus(),50);
+}
+function fecharCalc(){ document.getElementById('calcOv').classList.remove('open'); }
+function limparCalc(){
+  ['calc-larg','calc-alt','calc-custo'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('calc-resultado').style.display='none';
+}
+
+function setCalcTipo(tipo){
+  _calcTipo=tipo;
+  const btnM2    = document.getElementById('calc-m2-btn');
+  const btnTotal = document.getElementById('calc-total-btn');
+  const rowM2    = document.getElementById('calc-m2-row');
+  const unitLbl  = document.getElementById('calc-custo-unit');
+
+  if(tipo==='m2'){
+    btnM2.style.background='var(--acc)';    btnM2.style.color='#fff';
+    btnTotal.style.background='transparent'; btnTotal.style.color='var(--mu)';
+    rowM2.style.display='grid';
+    unitLbl.textContent='por m²';
+    document.getElementById('calc-custo').placeholder='0,00';
+  } else {
+    btnTotal.style.background='var(--acc)'; btnTotal.style.color='#fff';
+    btnM2.style.background='transparent';   btnM2.style.color='var(--mu)';
+    rowM2.style.display='none';
+    unitLbl.textContent='total do serviço';
+    document.getElementById('calc-custo').placeholder='Custo total R$';
+  }
+  calcResult();
+}
+
+function calcResult(){
+  const custo = parseFloat(document.getElementById('calc-custo').value)||0;
+  if(!custo){ document.getElementById('calc-resultado').style.display='none'; return; }
+
+  const idx   = getMarkupIdx();
+  const total = markup.fixo + markup.imposto + markup.lucro;
+
+  let custoTotal=custo, m2=null, precoFinal=0;
+
+  if(_calcTipo==='m2'){
+    const larg = parseFloat(document.getElementById('calc-larg').value)||0;
+    const alt  = parseFloat(document.getElementById('calc-alt').value)||0;
+    if(larg>0 && alt>0){
+      m2 = (larg/1000)*(alt/1000);
+      custoTotal = custo * m2;
+    } else {
+      custoTotal = custo; // sem dimensões = custo por m² diretamente
+    }
+  }
+
+  precoFinal = custoTotal * idx;
+
+  // Show resultado
+  document.getElementById('calc-resultado').style.display='block';
+
+  if(_calcTipo==='m2' && m2){
+    const larg=parseFloat(document.getElementById('calc-larg').value);
+    const alt=parseFloat(document.getElementById('calc-alt').value);
+    document.getElementById('calc-m2-info').textContent=
+      `${larg}×${alt}mm = ${m2.toFixed(3)} m² · Custo total: ${fmtBRL(custoTotal)}`;
+  } else if(_calcTipo==='m2'){
+    document.getElementById('calc-m2-info').textContent='Sem dimensões — calculando pelo custo informado';
+  } else {
+    document.getElementById('calc-m2-info').textContent='';
+  }
+
+  document.getElementById('calc-preco-final').textContent = fmtBRL(precoFinal);
+  document.getElementById('calc-formula').textContent =
+    `${fmtBRL(custoTotal)} × ${idx.toFixed(4)} = ${fmtBRL(precoFinal)}`;
+  document.getElementById('calc-markup-badge').textContent = `+${total.toFixed(1)}%`;
+  document.getElementById('calc-idx').textContent = idx.toFixed(4).replace('.',',');
+  document.getElementById('calc-custo-total').textContent = fmtBRL(custoTotal);
+  document.getElementById('calc-lucro').textContent = fmtBRL(precoFinal - custoTotal);
+}
+
+// ── BACKUP & RECOVERY ─────────────────────────────────────────
+function restaurarBackup(){
+  try{
+    const backup = localStorage.getItem('catalogo_v1_backup');
+    const ts = localStorage.getItem('catalogo_v1_backup_ts');
+    if(!backup || backup==='[]'){
+      toast('Nenhum backup local disponível',true);
+      return;
+    }
+    const arr = JSON.parse(backup);
+    const dtStr = ts ? new Date(parseInt(ts)).toLocaleString('pt-BR') : 'desconhecido';
+    if(!confirm(`Restaurar backup de ${dtStr}?\n${arr.length} produto(s) encontrado(s).\n\nOs dados atuais serão substituídos.`)) return;
+    localStorage.setItem('catalogo_v1', backup);
+    localStorage.setItem('catalogo_v1_ts', ts||Date.now().toString());
+    load(); render();
+    window.__syncNow&&window.__syncNow(true);
+    toast(`✅ Backup restaurado — ${arr.length} produto(s)`);
+  }catch(e){
+    toast('Erro ao restaurar backup',true);
+  }
+}
+
+// ── UNDO/REDO ──────────────────────────────────────────────────
+function snapshot(){ return JSON.parse(JSON.stringify(produtos)); }
+function recordHistory(){ undoStack.push(snapshot()); if(undoStack.length>50)undoStack.shift(); redoStack=[]; }
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'&&!e.shiftKey){ e.preventDefault(); undo(); }
+  if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.shiftKey&&e.key==='Z'))){ e.preventDefault(); redo(); }
+  if(e.key==='Escape'){ fecharModal(); fecharMarkup(); fecharReajuste(); }
+});
+function undo(){
+  if(!undoStack.length)return;
+  redoStack.push(snapshot());
+  produtos=undoStack.pop();
+  save(); render(); toast('Ação desfeita');
+}
+function redo(){
+  if(!redoStack.length)return;
+  undoStack.push(snapshot());
+  produtos=redoStack.pop();
+  save(); render(); toast('Ação refeita');
+}
+
+// ── TOAST ──────────────────────────────────────────────────────
+function toast(msg,err){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.style.borderColor=err?'var(--red)':'var(--bd2)';
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+// ── MARKUP MODAL ───────────────────────────────────────────────
+function calcMarkup(){
+  const fixo=parseFloat(document.getElementById('mk-fixo').value)||0;
+  const imp=parseFloat(document.getElementById('mk-imposto').value)||0;
+  const luc=parseFloat(document.getElementById('mk-lucro').value)||0;
+  const total=fixo+imp+luc;
+  const idx=total>=100?'∞':parseFloat((100/(100-total)).toFixed(2));
+  document.getElementById('mk-idx').textContent=typeof idx==='number'?idx.toFixed(2).replace('.',','):'∞';
+  document.getElementById('mk-formula').textContent=`Fixo ${fixo}% + Imposto ${imp}% + Lucro ${luc}% = ${total}%`;
+}
+function abrirMarkupModal(){
+  document.getElementById('mk-fixo').value=markup.fixo;
+  document.getElementById('mk-imposto').value=markup.imposto;
+  document.getElementById('mk-lucro').value=markup.lucro;
+  calcMarkup();
+  document.getElementById('markupOv').classList.add('open');
+}
+function fecharMarkup(){ document.getElementById('markupOv').classList.remove('open'); }
+function salvarMarkup(){
+  markup.fixo=parseFloat(document.getElementById('mk-fixo').value)||0;
+  markup.imposto=parseFloat(document.getElementById('mk-imposto').value)||0;
+  markup.lucro=parseFloat(document.getElementById('mk-lucro').value)||0;
+  save(); fecharMarkup(); toast('Markup atualizado ✓');
+}
+
+// ── CALC PREÇO AUTO ────────────────────────────────────────────
+
+
+// ── PRODUTO MODAL ──────────────────────────────────────────────
+function abrirModal(id){
+  editId=id||null;
+  const p=id?produtos.find(x=>x.id===id):null;
+  document.getElementById('modal-ttl').textContent=p?'✏️ Editar Produto':'＋ Novo Produto';
+  document.getElementById('fn-nome').value=p?.nome||'';
+  document.getElementById('fn-cat').value=p?.cat||'Vidro Temperado';
+  document.getElementById('fn-esp').value=p?.esp||'';
+  document.getElementById('fn-cor').value=p?.cor||'';
+  document.getElementById('fn-forn').value=p?.forn||'';
+  document.getElementById('fn-preco').value=p?.preco||'';
+  document.getElementById('fn-obs').value=p?.obs||'';
+  document.getElementById('prodOv').classList.add('open');
+  setTimeout(()=>document.getElementById('fn-nome').focus(),50);
+}
+function fecharModal(){ document.getElementById('prodOv').classList.remove('open'); editId=null; }
+function salvar(){
+  const nome=document.getElementById('fn-nome').value.trim();
+  if(!nome){ toast('Informe o nome do produto',true); return; }
+  recordHistory();
+  const preco = parseFloat(document.getElementById('fn-preco').value)||0;
+  if(!preco||preco<=0){ toast('Informe o preço de venda por m²',true); return; }
+
+  const d={
+    nome, cat:document.getElementById('fn-cat').value,
+    esp:document.getElementById('fn-esp').value.trim(),
+    cor:document.getElementById('fn-cor').value.trim(),
+    forn:document.getElementById('fn-forn').value.trim(),
+    preco,
+    obs:document.getElementById('fn-obs').value.trim(),
+  };
+  if(editId){
+    const idx=produtos.findIndex(x=>x.id===editId);
+    if(idx>=0) produtos[idx]={...produtos[idx],...d};
+    toast('Produto atualizado ✓');
+  } else {
+    produtos.push({id:'p'+Date.now()+Math.random().toString(36).slice(2),...d});
+    toast('Produto cadastrado ✓');
+  }
+  save(); fecharModal(); render();
+}
+
+// ── REAJUSTE ───────────────────────────────────────────────────
+function abrirReajusteModal(){ document.getElementById('reajOv').classList.add('open'); }
+function fecharReajuste(){ document.getElementById('reajOv').classList.remove('open'); }
+function aplicarReajuste(){
+  const cat=document.getElementById('rj-cat').value;
+  const pct=parseFloat(document.getElementById('rj-pct').value);
+  if(!pct||pct===0){ toast('Informe um percentual',true); return; }
+  const alvo=cat==='Todas'?produtos:produtos.filter(p=>p.cat===cat);
+  if(!alvo.length){ toast('Nenhum produto nessa categoria',true); return; }
+  if(!confirm(`Reajustar ${pct>0?'+':''}${pct}% em ${alvo.length} produto(s)?`)) return;
+  recordHistory();
+  alvo.forEach(p=>{ p.preco=Math.round(p.preco*(1+pct/100)*100)/100; });
+  save(); fecharReajuste(); render();
+  toast(`Reajuste ${pct>0?'+':''}${pct}% aplicado em ${alvo.length} produto(s) ✓`);
+}
+
+// ── EXCLUIR ────────────────────────────────────────────────────
+function excluir(id){
+  if(!confirm('Excluir este produto?')) return;
+  recordHistory();
+  produtos=produtos.filter(p=>p.id!==id);
+  save(); render(); toast('Produto excluído');
+}
+
+// ── RENDER ─────────────────────────────────────────────────────
+function renderSidebar(){
+  const el=document.getElementById('sb-cats');
+  const cats=['Todas',...Object.keys(CAT_COLORS)];
+  el.innerHTML=cats.map(c=>{
+    const count=c==='Todas'?produtos.length:produtos.filter(p=>p.cat===c).length;
+    if(c!=='Todas'&&count===0) return '';
+    return `<div class="sb-cat-item ${filtroCategoria===c?'active':''}" onclick="setFilter('${c.replace(/'/g,"\\'")}')">
+      ${c!=='Todas'?`<div class="sb-cat-dot" style="background:${CAT_COLORS[c]||'#6b7fa8'}"></div>`:'<span>📦</span>'}
+      <span class="sb-cat-name">${c}</span>
+      <span class="sb-cat-count">${count}</span>
+    </div>`;
+  }).join('');
+}
+
+function setFilter(c){ filtroCategoria=c; render(); }
+
+function render(){
+  renderSidebar();
+  const q=(document.getElementById('srch').value||'').toLowerCase();
+  const sort=document.getElementById('sortSel').value;
+  let list=produtos.filter(p=>{
+    if(filtroCategoria!=='Todas'&&p.cat!==filtroCategoria) return false;
+    if(q&&!(p.nome||'').toLowerCase().includes(q)&&
+       !(p.cor||'').toLowerCase().includes(q)&&
+       !(p.esp||'').toLowerCase().includes(q)&&
+       !(p.cat||'').toLowerCase().includes(q)&&
+       !(p.forn||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  // Sort
+  if(sort==='nome') list.sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
+  else if(sort==='preco_asc') list.sort((a,b)=>a.preco-b.preco);
+  else if(sort==='preco_desc') list.sort((a,b)=>b.preco-a.preco);
+  else list.sort((a,b)=>b.id.localeCompare(a.id));
+
+  // Stats
+  document.getElementById('st-total').textContent=produtos.length;
+  document.getElementById('st-cats').textContent=new Set(produtos.map(p=>p.cat)).size;
+  const precos=produtos.map(p=>p.preco).filter(Boolean);
+  document.getElementById('st-min').textContent=precos.length?fmtBRLShort(Math.min(...precos)):'—';
+  document.getElementById('st-max').textContent=precos.length?fmtBRLShort(Math.max(...precos)):'—';
+
+  // Count
+  document.getElementById('count-lbl').textContent=list.length?`${list.length} produto${list.length!==1?'s':''} encontrado${list.length!==1?'s':''}`:produtos.length?'Nenhum produto encontrado':'';
+
+  const el=document.getElementById('prod-list');
+  if(!produtos.length){
+    el.innerHTML=`<div class="empty-state" style="grid-column:1/-1;">
+      <div class="empty-ico">📦</div>
+      <div class="empty-ttl">Nenhum produto cadastrado</div>
+      <div style="font-size:13px;margin-top:6px;">Clique em ＋ Produto para começar</div>
+    </div>`;
+    return;
+  }
+  if(!list.length){
+    el.innerHTML=`<div class="empty-state" style="grid-column:1/-1;">
+      <div class="empty-ico">🔍</div>
+      <div class="empty-ttl">Nada encontrado</div>
+      <div style="font-size:13px;margin-top:6px;">Tente outro termo de busca</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML=list.map((p,i)=>{
+    const cor=CAT_COLORS[p.cat]||'#6b7fa8';
+    const markup_pct=p.custo&&p.preco?((p.preco/p.custo-1)*100).toFixed(0):null;
+    return `<div class="prod-card" style="border-left-color:${cor};">
+      <div class="prod-num">#${produtos.indexOf(p)+1}</div>
+      <div class="prod-name">${esc(p.nome)}</div>
+      <div class="prod-cat" style="color:${cor};">${esc(p.cat)}</div>
+      <div class="prod-tags">
+        ${p.cor?`<span class="prod-tag">🎨 ${esc(p.cor)}</span>`:''}
+        ${p.esp?`<span class="prod-tag">📏 ${esc(p.esp)}mm</span>`:''}
+        ${p.forn?`<span class="prod-tag">🏭 ${esc(p.forn)}</span>`:''}
+      </div>
+      <div class="prod-price-row">
+        <div class="prod-price">${fmtBRL(p.preco)}</div>
+        <div class="prod-price-unit">/m²</div>
+      </div>
+      ${p.custo?`<div class="prod-cost">Custo: ${fmtBRL(p.custo)}/m²</div>`:''}
+      ${markup_pct?`<span class="prod-markup">📈 +${markup_pct}% markup</span>`:''}
+      ${p.obs?`<div style="font-size:11px;color:var(--mu);margin-top:6px;">📝 ${esc(p.obs)}</div>`:''}
+      <div class="prod-actions">
+        <button class="act-btn edit" onclick="abrirModal('${p.id}')">✏️ Editar</button>
+        <button class="act-btn del" onclick="excluir('${p.id}')">🗑 Excluir</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── INIT ──────────────────────────────────────────────────────
+load(); render();
+
+// Close overlays on backdrop click
+['prodOv','markupOv','reajOv','calcOv'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{
+    if(e.target===document.getElementById(id)) {
+      document.getElementById(id).classList.remove('open');
+    }
+  });
+});
+</script>
+
+<!-- FIREBASE SYNC ULTRA ────────────────────────────────────────────
+(function(){
+  const FB_KEY='catalogo_produtos', LS_KEY='catalogo_v1', TS_KEY='catalogo_v1_ts';
+  let _pushTimer=null, _lastPushedStr='', _applying=false;
+
+  function _ensureArray(v){ if(Array.isArray(v))return v; if(v&&typeof v==='object')return Object.values(v); return []; }
+  function _fixData(data){ if(!data)return []; const fixed=window.__fixArrays?window.__fixArrays(data):data; return _ensureArray(fixed); }
+  function _getLocal(){ try{ const r=localStorage.getItem(LS_KEY); return r?_ensureArray(JSON.parse(r)):[];}catch{return [];} }
+  function _setLocal(arr){ try{ localStorage.setItem(LS_KEY,JSON.stringify(arr));}catch(e){} }
+  function _getTs(){ return parseInt(localStorage.getItem(TS_KEY)||'0'); }
+  function _setTs(ts){ localStorage.setItem(TS_KEY,String(ts||Date.now())); }
+  function _isTyping(){ const el=document.activeElement; return el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT'||el.contentEditable==='true'); }
+
+  window.__syncNow=function(force){
+    if(!navigator.onLine||!window.__fbSave){ window.__syncPending=true; return; }
+    clearTimeout(_pushTimer);
+    _pushTimer=setTimeout(()=>{
+      try{
+        const arr=_getLocal(), str=JSON.stringify(arr);
+        if(str===_lastPushedStr&&!force)return;
+        _lastPushedStr=str;
+        window.__syncPending=false;
+        const ts=Date.now(); _setTs(ts);
+        window.__fbSave(FB_KEY,{data:arr,ts:ts,v:2});
+      }catch(e){}
+    },force?200:1500);
+  };
+
+  window.addEventListener('online',()=>{ setTimeout(()=>{ if(window.__syncPending)window.__syncNow(true); },1500); });
+
+  function _patch(){
+    ['save'].forEach(fn=>{ if(typeof window[fn]==='function'&&!window[fn].__fbP){ const orig=window[fn]; window[fn]=function(){ const r=orig.apply(this,arguments); if(!_applying)window.__syncNow(); return r; }; window[fn].__fbP=true; } });
+  }
+
+  function _apply(fbPayload,force){
+    if(!fbPayload)return;
+    try{
+      const raw=fbPayload.data!==undefined?fbPayload.data:fbPayload;
+      const arr=_fixData(raw), str=JSON.stringify(arr);
+      if(str===_lastPushedStr&&!force)return;
+      if(!force&&_isTyping()){ clearTimeout(_apply._t); _apply._t=setTimeout(()=>_apply(fbPayload,false),2000); return; }
+      const current=JSON.stringify(_getLocal());
+      if(str===current&&!force)return;
+      _applying=true; _setLocal(arr); _lastPushedStr=str;
+      try{ if(typeof load==='function'){load(); render();} }catch(e){}
+      setTimeout(()=>_applying=false,2500);
+    }catch(e){ _applying=false; }
+  }
+
+  function _fbInit(){
+    if(!window.__fbLoad){ setTimeout(_fbInit,300); return; }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',_patch); else _patch();
+    setTimeout(_patch,2000);
+    window.__fbLoad(FB_KEY,function(fbPayload){
+      if(!fbPayload){ const local=_getLocal(); if(local.length){ _lastPushedStr=JSON.stringify(local); if(!_getTs())_setTs(Date.now()); window.__syncNow(true); } return; }
+      const fbTs=fbPayload.ts||0, localTs=_getTs(), local=_getLocal();
+      if(!local.length){ _apply(fbPayload,true); }
+      else if(fbTs>localTs+5000){ _apply(fbPayload,true); }
+      else if(localTs>=fbTs){ _lastPushedStr=JSON.stringify(local); window.__syncNow(true); }
+      else{ _apply(fbPayload,true); }
+    });
+    let _listenerReady=false; setTimeout(()=>_listenerReady=true,7000);
+    window.__fbListen(FB_KEY,function(fbPayload){
+      if(!_listenerReady||_applying)return;
+      try{ const raw=fbPayload&&fbPayload.data!==undefined?fbPayload.data:fbPayload; const str=JSON.stringify(_fixData(raw)); if(str===_lastPushedStr)return; }catch(e){}
+      _apply(fbPayload,false);
+    });
+  }
+  if(window.__fbReady)_fbInit(); else window.addEventListener('fbReady',_fbInit,{once:true});
+})(); -->
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
+const firebaseConfig={apiKey:"AIzaSyCE5G8Lk3bgocndE1hZSUePvronW1t3SAE",authDomain:"brasil-vidros-c7c3a.firebaseapp.com",databaseURL:"https://brasil-vidros-c7c3a-default-rtdb.firebaseio.com",projectId:"brasil-vidros-c7c3a",storageBucket:"brasil-vidros-c7c3a.firebasestorage.app",messagingSenderId:"669693663227",appId:"1:669693663227:web:22a3bc8110a88c03c35d5e"};
+const fbApp=initializeApp(firebaseConfig);const db=getDatabase(fbApp);
+function __fix(d){if(d===null||d===undefined||typeof d!=='object'||Array.isArray(d))return d;const keys=Object.keys(d);const isArr=keys.length>0&&keys.every(k=>/^\d+$/.test(k))&&keys.map(Number).sort((a,b)=>a-b).every((v,i)=>v===i);if(isArr){const a=[];keys.map(Number).sort((a,b)=>a-b).forEach(k=>a.push(__fix(d[k])));return a;}const o={};for(const k of keys)o[k]=__fix(d[k]);return o;}
+window.__fixArrays=__fix;
+function badge(msg,c,bg,keep){let el=document.getElementById('fbSync');if(!el){el=document.createElement('div');el.id='fbSync';el.style.cssText='position:fixed;bottom:14px;right:14px;font-size:11px;font-weight:600;padding:5px 14px;border-radius:20px;pointer-events:none;z-index:9999;transition:opacity .4s;box-shadow:0 2px 8px rgba(0,0,0,.3);';document.body.appendChild(el);}el.textContent=msg;el.style.color=c||'#00e5a0';el.style.background=bg||'rgba(0,0,0,.7)';el.style.opacity='1';clearTimeout(el.__t);if(!keep)el.__t=setTimeout(()=>el.style.opacity='0',3000);}
+window.addEventListener('online',()=>{badge('✅ Online — sincronizando...','#00e5a0');setTimeout(()=>window.__syncNow&&window.__syncNow(true),600);});
+window.addEventListener('offline',()=>badge('📵 Sem internet','#f5c842','rgba(100,60,0,.9)',true));
+if(!navigator.onLine)badge('📵 Sem internet','#f5c842','rgba(100,60,0,.9)',true);
+let __st=null;
+window.__fbSave=function(key,data){if(!navigator.onLine){badge('📵 Sem internet','#f5c842','rgba(100,60,0,.9)',true);return;}clearTimeout(__st);badge('☁ sincronizando...','#f5c842');__st=setTimeout(()=>{set(ref(db,key),data).then(()=>badge('☁ sincronizado','#00e5a0')).catch(e=>{console.warn(e);badge('⚠ erro sync','#ff4d6d');});},600);};
+window.__fbLoad=function(key,cb){if(!navigator.onLine){cb(null);return;}get(ref(db,key)).then(s=>cb(s.exists()?__fix(s.val()):null)).catch(()=>cb(null));};
+window.__fbListen=function(key,cb){onValue(ref(db,key),s=>{if(s.exists())cb(__fix(s.val()));});};
+window.__fbReady=true;window.dispatchEvent(new Event('fbReady'));
+</script>
+
+<script>
+// ── FIREBASE SYNC ULTRA (Catálogo) ─────────────────────────────
+(function(){
+  const FB_KEY     = 'catalogo_produtos';
+  const LS_KEY     = 'catalogo_v1';
+  const TS_KEY     = 'catalogo_v1_ts';
+  const BACKUP_KEY = 'catalogo_v1_backup'; // local backup antes de qualquer sobrescrita
+  const MAX_RETRIES = 5;
+
+  let _pushTimer   = null;
+  let _lastStr     = '';
+  let _applying    = false;
+  let _retryCount  = 0;
+  let _retryTimer  = null;
+
+  // ── Helpers ──────────────────────────────────────────────────
+  function _arr(v){
+    if(Array.isArray(v)) return v;
+    if(v && typeof v==='object') return Object.values(v);
+    return [];
+  }
+  function _fix(data){
+    if(!data) return [];
+    const f = window.__fixArrays ? window.__fixArrays(data) : data;
+    return _arr(f);
+  }
+  function _getLocal(){
+    try{
+      const r = localStorage.getItem(LS_KEY);
+      if(!r||r==='null'||r==='[]') return [];
+      return _arr(JSON.parse(r));
+    }catch{ return []; }
+  }
+  function _setLocal(arr){
+    try{
+      // Always save backup before overwriting
+      const current = localStorage.getItem(LS_KEY);
+      if(current && current!=='[]' && current!=='null'){
+        localStorage.setItem(BACKUP_KEY, current);
+        localStorage.setItem(BACKUP_KEY+'_ts', Date.now().toString());
+      }
+      localStorage.setItem(LS_KEY, JSON.stringify(arr));
+    }catch(e){ console.warn('setLocal:', e); }
+  }
+  function _getTs(){ return parseInt(localStorage.getItem(TS_KEY)||'0'); }
+  function _setTs(ts){ localStorage.setItem(TS_KEY, String(ts||Date.now())); }
+  function _typing(){
+    const el = document.activeElement;
+    return el && (el.tagName==='INPUT'||el.tagName==='TEXTAREA'||
+                  el.tagName==='SELECT'||el.contentEditable==='true');
+  }
+  function _hasData(arr){ return Array.isArray(arr) && arr.length > 0; }
+
+  // ── Restore backup if main data is lost ──────────────────────
+  function _checkBackup(){
+    const main = _getLocal();
+    if(_hasData(main)) return; // all good
+    try{
+      const backup = localStorage.getItem(BACKUP_KEY);
+      if(backup && backup!=='[]'){
+        console.warn('[SYNC] Main data empty, restoring backup...');
+        localStorage.setItem(LS_KEY, backup);
+        if(typeof load==='function'){ load(); render(); }
+        toast('⚠️ Dados restaurados do backup local');
+      }
+    }catch(e){}
+  }
+
+  // ── Push to Firebase with retry ──────────────────────────────
+  window.__syncNow = function(force){
+    if(!navigator.onLine || !window.__fbSave){
+      window.__syncPending = true;
+      return;
+    }
+    clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(()=>{
+      try{
+        const arr = _getLocal();
+        if(!_hasData(arr) && !force) return; // never push empty (protect data)
+        const str = JSON.stringify(arr);
+        if(str===_lastStr && !force) return;
+        _lastStr = str;
+        window.__syncPending = false;
+        const ts = Date.now();
+        _setTs(ts);
+        // Push with version and checksum
+        window.__fbSave(FB_KEY, {
+          data: arr,
+          ts: ts,
+          v: 3,
+          count: arr.length,
+        });
+        _retryCount = 0;
+      }catch(e){
+        console.warn('[SYNC] push error:', e);
+        // Retry
+        if(_retryCount < MAX_RETRIES){
+          _retryCount++;
+          _retryTimer = setTimeout(()=> window.__syncNow(force), 3000*_retryCount);
+        }
+      }
+    }, force ? 300 : 1800);
+  };
+
+  // Reconnect
+  window.addEventListener('online', ()=>{
+    setTimeout(()=>{
+      if(window.__syncPending) window.__syncNow(true);
+    }, 1500);
+  });
+
+  // ── Patch save functions ──────────────────────────────────────
+  function _patch(){
+    ['save'].forEach(fn=>{
+      if(typeof window[fn]==='function' && !window[fn].__fbP){
+        const orig = window[fn];
+        window[fn] = function(){
+          const r = orig.apply(this, arguments);
+          if(!_applying) window.__syncNow();
+          return r;
+        };
+        window[fn].__fbP = true;
+      }
+    });
+  }
+
+  // ── Apply Firebase data ───────────────────────────────────────
+  function _apply(payload, force){
+    if(!payload) return;
+    if(_applying && !force) return;
+    try{
+      const raw = payload.data !== undefined ? payload.data : payload;
+      const arr = _fix(raw);
+      const str = JSON.stringify(arr);
+
+      // SAFETY: never apply empty data over existing data
+      const local = _getLocal();
+      if(!_hasData(arr) && _hasData(local) && !force){
+        console.warn('[SYNC] Refused to apply empty Firebase data over existing local data');
+        return;
+      }
+
+      if(str === _lastStr && !force) return; // our own echo
+
+      // Don't interrupt typing
+      if(!force && _typing()){
+        clearTimeout(_apply._t);
+        _apply._t = setTimeout(()=> _apply(payload, false), 2500);
+        return;
+      }
+
+      const current = JSON.stringify(local);
+      if(str === current && !force) return;
+
+      _applying = true;
+      _setLocal(arr);   // saves backup automatically
+      _lastStr = str;
+
+      try{
+        if(typeof load==='function'){ load(); render(); }
+      }catch(e){ console.warn('[SYNC] reload error:', e); }
+
+      setTimeout(()=>{ _applying = false; }, 3000);
+    }catch(e){
+      console.warn('[SYNC] apply error:', e);
+      _applying = false;
+    }
+  }
+
+  // ── Init ──────────────────────────────────────────────────────
+  function _fbInit(){
+    if(!window.__fbLoad){ setTimeout(_fbInit, 300); return; }
+
+    if(document.readyState==='loading')
+      document.addEventListener('DOMContentLoaded', _patch);
+    else _patch();
+    setTimeout(_patch, 2000);
+
+    // Check backup on start
+    setTimeout(_checkBackup, 500);
+
+    // Initial load — smart merge by timestamp
+    window.__fbLoad(FB_KEY, function(payload){
+      if(!payload){
+        // Nothing on Firebase — push local
+        const local = _getLocal();
+        if(_hasData(local)){
+          _lastStr = JSON.stringify(local);
+          if(!_getTs()) _setTs(Date.now());
+          window.__syncNow(true);
+        }
+        return;
+      }
+
+      const fbTs    = payload.ts || 0;
+      const fbCount = payload.count || 0;
+      const localTs = _getTs();
+      const local   = _getLocal();
+      const localEmpty = !_hasData(local);
+
+      if(localEmpty){
+        // Local empty → Firebase wins
+        _apply(payload, true);
+      } else if(fbTs > localTs + 5000){
+        // Firebase is clearly newer
+        _apply(payload, true);
+      } else if(localTs > fbTs){
+        // Local is newer → push to Firebase
+        _lastStr = JSON.stringify(local);
+        window.__syncNow(true);
+      } else {
+        // Same timestamp or very close — use whichever has MORE data
+        const fbArr = _fix(payload.data !== undefined ? payload.data : payload);
+        if(fbArr.length > local.length){
+          _apply(payload, true);
+        } else {
+          _lastStr = JSON.stringify(local);
+          window.__syncNow(true);
+        }
+      }
+    });
+
+    // Real-time listener
+    let _ready = false;
+    setTimeout(()=>{ _ready = true; }, 8000);
+
+    window.__fbListen(FB_KEY, function(payload){
+      if(!_ready || _applying) return;
+      try{
+        const raw = payload&&payload.data!==undefined ? payload.data : payload;
+        const str = JSON.stringify(_fix(raw));
+        if(str === _lastStr) return; // echo
+      }catch(e){}
+      _apply(payload, false);
+    });
+  }
+
+  if(window.__fbReady) _fbInit();
+  else window.addEventListener('fbReady', _fbInit, {once:true});
+})();
+</script>
+
+<!-- CALCULADORA MODAL -->
+<div class="ov" id="calcOv">
+<div class="modal" style="max-width:440px;">
+  <div class="modal-hdr">
+    <div class="modal-ttl">🧮 Calculadora de Preço</div>
+    <button class="modal-close" onclick="fecharCalc()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div style="font-size:12px;color:var(--mu);line-height:1.6;background:var(--s2);border-radius:var(--rs);padding:10px 12px;">
+      Informe o custo do serviço ou produto e o sistema calcula o preço de venda com base no markup configurado.
+    </div>
+
+    <!-- Tipo de cálculo -->
+    <div style="background:var(--s2);border:1px solid var(--bd);border-radius:var(--rs);padding:4px;display:flex;gap:4px;" id="calc-tipo-wrap">
+      <button type="button" id="calc-m2-btn" onclick="setCalcTipo('m2')"
+        style="flex:1;border:none;border-radius:6px;padding:8px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;background:var(--acc);color:#fff;">
+        📐 Por m²
+      </button>
+      <button type="button" id="calc-total-btn" onclick="setCalcTipo('total')"
+        style="flex:1;border:none;border-radius:6px;padding:8px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;background:transparent;color:var(--mu);">
+        💰 Valor total
+      </button>
+    </div>
+
+    <!-- Inputs -->
+    <div class="field-row fr2" id="calc-m2-row">
+      <div class="field">
+        <label class="flbl">Largura (mm)</label>
+        <input class="finp" id="calc-larg" type="number" min="0" placeholder="Ex: 1200" oninput="calcResult()">
+      </div>
+      <div class="field">
+        <label class="flbl">Altura (mm)</label>
+        <input class="finp" id="calc-alt" type="number" min="0" placeholder="Ex: 2100" oninput="calcResult()">
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="flbl">Custo (R$) <span id="calc-custo-unit" style="color:var(--mu);font-weight:400;">por m²</span></label>
+      <div style="position:relative;">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--mu);pointer-events:none;">R$</span>
+        <input class="finp" id="calc-custo" type="number" step="0.01" min="0" placeholder="0,00" style="padding-left:30px;font-size:15px;" oninput="calcResult()">
+      </div>
+    </div>
+
+    <!-- Resultado -->
+    <div id="calc-resultado" style="display:none;background:linear-gradient(135deg,rgba(0,229,160,.08),rgba(0,229,160,.03));border:1.5px solid rgba(0,229,160,.25);border-radius:var(--r);padding:16px 18px;">
+      <div id="calc-m2-info" style="font-size:12px;color:var(--mu);margin-bottom:10px;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-size:10px;color:var(--mu);font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px;">Preço de venda sugerido</div>
+          <div id="calc-preco-final" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:36px;color:var(--grn);letter-spacing:.5px;"></div>
+          <div id="calc-formula" style="font-size:11px;color:var(--mu);margin-top:3px;"></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:10px;color:var(--mu);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">MARKUP</div>
+          <div id="calc-markup-badge" style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;color:var(--gold);"></div>
+          <div style="font-size:10px;color:var(--mu);margin-top:2px;">Índice: <span id="calc-idx"></span></div>
+        </div>
+      </div>
+      <div style="border-top:1px solid rgba(0,229,160,.15);margin-top:12px;padding-top:10px;display:flex;gap:16px;flex-wrap:wrap;">
+        <div><div style="font-size:10px;color:var(--mu);">Custo</div><div id="calc-custo-total" style="font-size:14px;font-weight:700;color:var(--tx);"></div></div>
+        <div><div style="font-size:10px;color:var(--mu);">Lucro estimado</div><div id="calc-lucro" style="font-size:14px;font-weight:700;color:var(--grn);"></div></div>
+      </div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="mbtn" onclick="limparCalc()">🗑 Limpar</button>
+      <button class="mbtn" onclick="fecharCalc()">Fechar</button>
+    </div>
+  </div>
+</div>
+</div>
+
+</body>
+</html>
