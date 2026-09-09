@@ -155,44 +155,41 @@ input,select,textarea,button{font-family:'Inter',sans-serif;}
 
 /* ── GRID ── */
 .count-lbl{font-size:12px;color:var(--mu);margin-bottom:14px;font-weight:500;}
-.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;}
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;}
 
 /* ── PRODUCT CARD ── */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;}
 .prod-card{
   background:#fff;border:1px solid var(--bd);border-radius:var(--r);
-  padding:0;transition:all .2s;position:relative;overflow:hidden;
+  overflow:hidden;transition:all .2s;
   box-shadow:0 1px 4px rgba(0,0,0,.05);
+  display:flex;flex-direction:column;
 }
-.prod-card:hover{box-shadow:0 6px 24px rgba(0,0,0,.1);transform:translateY(-2px);border-color:var(--bd2);}
-.prod-card-bar{height:4px;width:100%;}
-.prod-card-body{padding:16px;}
+.prod-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.1);border-color:var(--bd2);}
+.prod-card-bar{height:3px;width:100%;flex-shrink:0;}
+.prod-card-body{padding:14px 16px;flex:1;display:flex;flex-direction:column;gap:0;}
+.prod-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
 .prod-num{
-  position:absolute;top:12px;right:12px;
   font-size:10px;font-weight:700;color:var(--mu);
-  background:var(--s3);padding:2px 8px;border-radius:20px;
+  background:var(--s3);padding:2px 8px;border-radius:20px;flex-shrink:0;
 }
-.prod-name{font-weight:700;font-size:14px;margin-bottom:3px;padding-right:44px;line-height:1.4;color:var(--tx);}
-.prod-cat{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;margin-bottom:10px;}
-.prod-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.prod-name{font-weight:700;font-size:14px;line-height:1.4;color:var(--tx);flex:1;margin-right:10px;}
+.prod-cat{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;}
+.prod-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
 .prod-tag{
-  font-size:11px;font-weight:500;padding:3px 8px;border-radius:20px;
+  font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;
   background:var(--s3);color:var(--tx2);border:1px solid var(--bd);
 }
-.prod-price-row{display:flex;align-items:baseline;gap:5px;margin-bottom:4px;}
-.prod-price{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;color:var(--grn);}
+.prod-price-row{display:flex;align-items:center;justify-content:space-between;margin-top:auto;}
+.prod-price-left{display:flex;align-items:baseline;gap:4px;}
+.prod-price{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;color:var(--grn);}
 .prod-price-unit{font-size:11px;color:var(--mu);font-weight:500;}
-.prod-markup{
-  display:inline-flex;align-items:center;gap:4px;
-  font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;
-  background:#f0fdf4;color:var(--grn);border:1px solid #bbf7d0;
-}
-.prod-obs{font-size:11px;color:var(--mu);margin-top:6px;line-height:1.5;}
+.prod-obs{font-size:11px;color:var(--mu);margin-top:6px;line-height:1.5;border-top:1px solid var(--bd);padding-top:8px;}
 .prod-actions{
-  display:flex;gap:0;
-  border-top:1px solid var(--bd);
+  display:flex;border-top:1px solid var(--bd);flex-shrink:0;
 }
 .act-btn{
-  flex:1;border:none;border-radius:0;padding:10px;
+  flex:1;border:none;border-radius:0;padding:9px;
   font-size:12px;font-weight:600;cursor:pointer;
   font-family:'Inter',sans-serif;background:transparent;
   transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;
@@ -314,22 +311,22 @@ input,select,textarea,button{font-family:'Inter',sans-serif;}
     </div>
   </div>
   <div class="hdr-sep"></div>
-  <button class="hdr-btn" onclick="restaurarBackup()" title="Restaurar backup local">🔄 <span class="lbl">Backup</span></button>
-  <button class="hdr-btn" onclick="abrirCalc()">🧮 <span class="lbl">Calculadora</span></button>
-  <button class="hdr-btn" onclick="abrirReajusteModal()">📊 <span class="lbl">Reajuste</span></button>
-  <button class="hdr-btn" onclick="abrirMarkupModal()">⚙️ <span class="lbl">Markup</span></button>
-  <button class="hdr-btn btn-add" onclick="abrirModal()">＋ Produto</button>
+  <button class="hdr-btn" onclick="abrirCalc()">🧮 Calculadora</button>
+  <button class="hdr-btn btn-add" onclick="abrirModal()">＋ Novo produto</button>
 </div>
 
 <div id="layout">
   <div id="sidebar">
-    <div class="sb-hdr">Categorias</div>
+    <div class="sb-hdr">Filtrar por categoria</div>
     <div id="sb-cats"></div>
     <div class="sb-divider"></div>
-    <div class="sb-hdr">Ações</div>
-    <div class="sb-action" onclick="abrirCalc()">🧮 Calculadora</div>
+    <div class="sb-hdr">Configurações</div>
     <div class="sb-action" onclick="abrirMarkupModal()">⚙️ Config. Markup</div>
     <div class="sb-action" onclick="abrirReajusteModal()">📊 Reajuste em massa</div>
+    <div class="sb-divider"></div>
+    <div class="sb-hdr">Backup</div>
+    <div class="sb-action" onclick="salvarBackupManual()">💾 Salvar backup</div>
+    <div class="sb-action" id="sb-restaurar" onclick="restaurarBackup()">🔄 <span id="bkp-info">Restaurar backup</span></div>
   </div>
 
   <div id="main">
@@ -596,6 +593,17 @@ function save(){
   localStorage.setItem(STORE, JSON.stringify(produtos));
   localStorage.setItem(MK_STORE, JSON.stringify(markup));
   window.__syncNow&&window.__syncNow();
+  // Auto-backup on every save
+  try{
+    if(produtos.length){
+      const str=JSON.stringify(produtos);
+      const old1=localStorage.getItem('catalogo_bkp_1');
+      if(old1&&old1!==str) localStorage.setItem('catalogo_bkp_2',old1);
+      localStorage.setItem('catalogo_bkp_1',str);
+      localStorage.setItem('catalogo_bkp_ts',Date.now().toString());
+    }
+  }catch(e){}
+  setTimeout(updateBackupInfo, 100);
 }
 
 // ── HELPERS ────────────────────────────────────────────────────
@@ -693,6 +701,46 @@ function calcResult(){
 }
 
 // ── BACKUP & RECOVERY ─────────────────────────────────────────
+function salvarBackupManual(){
+  const arr = _getLocalCatalog();
+  if(!arr.length){ toast('Nenhum produto para fazer backup',true); return; }
+  try{
+    const str = JSON.stringify(arr);
+    const old1 = localStorage.getItem('catalogo_bkp_1');
+    if(old1) localStorage.setItem('catalogo_bkp_2', old1);
+    localStorage.setItem('catalogo_bkp_1', str);
+    localStorage.setItem('catalogo_bkp_ts', Date.now().toString());
+    updateBackupInfo();
+    toast('✅ Backup salvo — '+arr.length+' produto(s)');
+  }catch(e){ toast('Erro ao salvar backup',true); }
+}
+
+function _getLocalCatalog(){
+  try{
+    const r=localStorage.getItem('catalogo_v1');
+    if(!r||r==='[]'||r==='null') return [];
+    const p=JSON.parse(r);
+    return Array.isArray(p)?p:Object.values(p||{});
+  }catch{ return []; }
+}
+
+function updateBackupInfo(){
+  try{
+    const el = document.getElementById('bkp-info');
+    if(!el) return;
+    const bkp = localStorage.getItem('catalogo_bkp_1');
+    const ts  = localStorage.getItem('catalogo_bkp_ts');
+    if(!bkp||bkp==='[]'){
+      el.textContent='Restaurar backup';
+      return;
+    }
+    const arr = JSON.parse(bkp);
+    const count = Array.isArray(arr)?arr.length:0;
+    const hora = ts ? new Date(parseInt(ts)).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '—';
+    el.textContent=`Restaurar (${count} prod · ${hora})`;
+  }catch(e){}
+}
+
 function restaurarBackup(){
   // Try all backup slots
   const slots = [
@@ -924,17 +972,21 @@ function render(){
     return `<div class="prod-card">
       <div class="prod-card-bar" style="background:${cor};"></div>
       <div class="prod-card-body">
-        <div class="prod-num">#${num}</div>
-        <div class="prod-name">${esc(p.nome)}</div>
+        <div class="prod-card-top">
+          <div class="prod-name">${esc(p.nome)}</div>
+          <div class="prod-num">#${num}</div>
+        </div>
         <div class="prod-cat" style="color:${cor};">${esc(p.cat)}</div>
         <div class="prod-tags">
-          ${p.cor?`<span class="prod-tag">🎨 ${esc(p.cor)}</span>`:''}
           ${p.esp?`<span class="prod-tag">📏 ${esc(p.esp)}mm</span>`:''}
+          ${p.cor?`<span class="prod-tag">🎨 ${esc(p.cor)}</span>`:''}
           ${p.forn?`<span class="prod-tag">🏭 ${esc(p.forn)}</span>`:''}
         </div>
         <div class="prod-price-row">
-          <div class="prod-price">${fmtBRL(p.preco)}</div>
-          <div class="prod-price-unit">/m²</div>
+          <div class="prod-price-left">
+            <div class="prod-price">${fmtBRL(p.preco)}</div>
+            <div class="prod-price-unit">por m²</div>
+          </div>
         </div>
         ${p.obs?`<div class="prod-obs">📝 ${esc(p.obs)}</div>`:''}
       </div>
@@ -1245,7 +1297,7 @@ window.__fbReady=true;window.dispatchEvent(new Event('fbReady'));
       const local=_getLocal();
       if(!_hasData(local)){
         const restored=_restoreBestBackup();
-        if(restored&&typeof load==='function'){ load(); render(); }
+        if(restored&&typeof load==='function'){ load(); render(); updateBackupInfo(); }
       }
     },800);
 
